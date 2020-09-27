@@ -423,7 +423,7 @@ class T_ghost():
 
         p_wrapper.pybdsm_search_pq([4,5])
 
-    def create_G_stef(self, R, M, imax, tau):
+    def create_G_stef(self, N, R, M, temp, imax, tau):
        '''This function finds argmin G ||R-GMG^H|| using StEFCal.
         R is your observed visibilities matrx.
         M is your predicted visibilities.
@@ -431,38 +431,31 @@ class T_ghost():
         tau stopping criteria.
         g the antenna gains.
         G = gg^H.'''
-       N = R.shape[0] #7
-       temp =np.ones((R.shape[0],R.shape[1]) ,dtype=complex) #7,7
-       G = np.zeros(R.shape,dtype=complex) #7,7,175
-       g = np.zeros((R.shape[0],R.shape[2]),dtype=complex) #7,175
-
-       for t in xrange(R.shape[2]):
-           g_temp = np.ones((N,),dtype=complex)
-           for i in xrange(imax):
-               g_old = np.copy(g_temp)
-               for p in xrange(N):
-
-                   z = g_old*M[:,p,t]
-                   g_temp[p] = np.sum(np.conj(R[:,p,t])*z)/(np.sum(np.conj(z)*z))
-                   if (t == 0):
-                      if (i == 0):
-                        if (p == 0):
-                           print "R = ",R[:,:,t]
-                           print "M = ",M[:,:,t]
+       g_temp = np.ones((N,),dtype=complex)
+       for k in xrange(imax):
+           g_old = np.copy(g_temp)
+           for p in xrange(N):
+               z = g_old*M[:,p]
+               g_temp[p] = np.sum(np.conj(R[:,p])*z)/(np.sum(np.conj(z)*z))
+               if (t == 0):
+                   if (k == 0):
+                       if (p == 0):
+                           print "R = ",R[:,:]
+                           print "M = ",M[:,:]
                            print "z = ",z
                            print "g_temp[0] = ",g_temp[0]
 
-               if  (i%2 == 0):
-                   if (np.sqrt(np.sum(np.absolute(g_temp-g_old)**2))/np.sqrt(np.sum(np.absolute(g_temp)**2)) <= tau):
-                      break
-                   else:
-                      g_temp = (g_temp + g_old)/2
+           if  (k%2 == 0):
+               if (np.sqrt(np.sum(np.absolute(g_temp-g_old)**2))/np.sqrt(np.sum(np.absolute(g_temp)**2)) <= tau):
+                   break
+               else:
+                   g_temp = (g_temp + g_old)/2
 
-           G_m = np.dot(np.diag(g_temp),temp)
-           G_m = np.dot(G_m,np.diag(g_temp.conj()))
+       G_m = np.dot(np.diag(g_temp),temp)
+       G_m = np.dot(G_m,np.diag(g_temp.conj()))
 
-           g[:,t] = g_temp
-           G[:,:,t] = G_m
+       g = g_temp
+       G = G_m
 
        return g,G
 
@@ -548,7 +541,7 @@ class T_ghost():
 
         V_R_pq = np.zeros(uu.shape,dtype=complex)
         V_G_pq = np.zeros(uu.shape,dtype=complex)
-        temp =np.ones(phi_new.shape ,dtype=complex)
+        temp = np.ones(phi_new.shape ,dtype=complex)
 
         for i in xrange(u_dim1):
             for j in xrange(u_dim2):
@@ -590,18 +583,6 @@ class T_ghost():
 
                 R = self.A_1 + self.A_2*np.exp(-2*1j*np.pi*(u_t_m*self.l_0+v_t_m*self.m_0))
 
-                # g = np.array([1.2+1.3j,1.1-1.5j,-1.3+0.7j,1.3+1.7j,-1.2-1.1j,1.7+1.1j,1.5-1.4j])
-                # G = np.diag(g)
-                # sig = 0.1
-                # Corrupt_R = R
-                #
-                # #Step 2: Corrupting the Visibilities
-                # Corrupt_R[:,:] = np.dot(G,Corrupt_R[:,:])
-                # Corrupt_R[:,:] = np.dot(Corrupt_R[:,:],G.conj())
-                #
-                # #Step 3: Adding Noise
-                # Corrupt_R[:,:] = Corrupt_R[:,:] + sig*np.random.randn(u_t_m.shape[0],u_t_m.shape[1]) + sig*np.random.randn(u_t_m.shape[0],u_t_m.shape[1])*1j
-
                 d,Q = np.linalg.eigh(R)
                 D = np.diag(d)
                 Q_H = Q.conj().transpose()
@@ -610,48 +591,38 @@ class T_ghost():
 
                 if len(sys.argv) == 2 and sys.argv[1] == "stefcal":
                     N = R.shape[0]
-                    imax = 20
-                    tau = 1e-6
+                    # imax = 20
+                    # tau = 1e-6
 
+                    M = self.A_1*np.ones(R.shape,dtype=complex)
 
-
-                    u_t_R = u_t*np.cos(theta_new) - v_t*np.sin(theta_new)
-                    v_t_R = u_t*np.sin(theta_new) + v_t*np.cos(theta_new)
-                    r = self.A_1 + self.A_2*np.exp(-2*1j*np.pi*(u_t_R*self.l_0+v_t_R*self.m_0))
-
-                    M = R
-                    # Probably wrong
-                    # M = Corrupt_R
-                    # R = vv
-
-                    # Need to find the predicted visibilities
-
-                    g_temp = np.ones((N,),dtype=complex)
-                    for k in xrange(imax):
-                        g_old = np.copy(g_temp)
-                        for p in xrange(N):
-
-                            z = g_old*M[:,p]
-                            g_temp[p] = np.sum(np.conj(r[:,p])*z)/(np.sum(np.conj(z)*z))
-                            if (t == 0):
-                                if (k == 0):
-                                    if (p == 0):
-                                        print "R = ",r[:,:]
-                                        print "M = ",M[:,:]
-                                        print "z = ",z
-                                        print "g_temp[0] = ",g_temp[0]
-
-                        if  (k%2 == 0):
-                            if (np.sqrt(np.sum(np.absolute(g_temp-g_old)**2))/np.sqrt(np.sum(np.absolute(g_temp)**2)) <= tau):
-                                break
-                            else:
-                                g_temp = (g_temp + g_old)/2
-
-                    G_m = np.dot(np.diag(g_temp),temp)
-                    G_m = np.dot(G_m,np.diag(g_temp.conj()))
-
-                    g = g_temp
-                    G = G_m
+                    g, G = self.create_G_stef(N, R, M, temp, 20, 1e-6)
+                    # g_temp = np.ones((N,),dtype=complex)
+                    # for k in xrange(imax):
+                    #     g_old = np.copy(g_temp)
+                    #     for p in xrange(N):
+                    #
+                    #         z = g_old*M[:,p]
+                    #         g_temp[p] = np.sum(np.conj(R[:,p])*z)/(np.sum(np.conj(z)*z))
+                    #         if (t == 0):
+                    #             if (k == 0):
+                    #                 if (p == 0):
+                    #                     print "R = ",R[:,:]
+                    #                     print "M = ",M[:,:]
+                    #                     print "z = ",z
+                    #                     print "g_temp[0] = ",g_temp[0]
+                    #
+                    #     if  (k%2 == 0):
+                    #         if (np.sqrt(np.sum(np.absolute(g_temp-g_old)**2))/np.sqrt(np.sum(np.absolute(g_temp)**2)) <= tau):
+                    #             break
+                    #         else:
+                    #             g_temp = (g_temp + g_old)/2
+                    #
+                    # G_m = np.dot(np.diag(g_temp),temp)
+                    # G_m = np.dot(G_m,np.diag(g_temp.conj()))
+                    #
+                    # g = g_temp
+                    # G = G_m
                 else:
                     # g_0 = np.ones((2*N,))
                     # g_0[N:] = 0
