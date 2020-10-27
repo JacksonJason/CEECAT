@@ -3,6 +3,7 @@ import numpy as np
 import pylab as plt
 import pickle
 import sys
+import argparse
 
 class T_ghost():
     def __init__(self,
@@ -437,13 +438,6 @@ class T_ghost():
            for p in xrange(N):
                z = g_old*M[:,p]
                g_temp[p] = np.sum(np.conj(R[:,p])*z)/(np.sum(np.conj(z)*z))
-               if (t == 0):
-                   if (k == 0):
-                       if (p == 0):
-                           print "R = ",R[:,:]
-                           print "M = ",M[:,:]
-                           print "z = ",z
-                           print "g_temp[0] = ",g_temp[0]
 
            if  (k%2 == 0):
                if (np.sqrt(np.sum(np.absolute(g_temp-g_old)**2))/np.sqrt(np.sum(np.absolute(g_temp)**2)) <= tau):
@@ -582,6 +576,7 @@ class T_ghost():
                 #print "v_t_m = ",v_t_m
 
                 R = self.A_1 + self.A_2*np.exp(-2*1j*np.pi*(u_t_m*self.l_0+v_t_m*self.m_0))
+                M = self.A_1*np.ones(R.shape,dtype=complex)
 
                 d,Q = np.linalg.eigh(R)
                 D = np.diag(d)
@@ -589,57 +584,12 @@ class T_ghost():
                 abs_d=np.absolute(d)
                 index=abs_d.argmax()
 
-                if len(sys.argv) == 2 and sys.argv[1] == "stefcal":
+                if args.stefcal:
                     N = R.shape[0]
                     # imax = 20
                     # tau = 1e-6
-
-                    M = self.A_1*np.ones(R.shape,dtype=complex)
-
                     g, G = self.create_G_stef(N, R, M, temp, 20, 1e-6)
-                    # g_temp = np.ones((N,),dtype=complex)
-                    # for k in xrange(imax):
-                    #     g_old = np.copy(g_temp)
-                    #     for p in xrange(N):
-                    #
-                    #         z = g_old*M[:,p]
-                    #         g_temp[p] = np.sum(np.conj(R[:,p])*z)/(np.sum(np.conj(z)*z))
-                    #         if (t == 0):
-                    #             if (k == 0):
-                    #                 if (p == 0):
-                    #                     print "R = ",R[:,:]
-                    #                     print "M = ",M[:,:]
-                    #                     print "z = ",z
-                    #                     print "g_temp[0] = ",g_temp[0]
-                    #
-                    #     if  (k%2 == 0):
-                    #         if (np.sqrt(np.sum(np.absolute(g_temp-g_old)**2))/np.sqrt(np.sum(np.absolute(g_temp)**2)) <= tau):
-                    #             break
-                    #         else:
-                    #             g_temp = (g_temp + g_old)/2
-                    #
-                    # G_m = np.dot(np.diag(g_temp),temp)
-                    # G_m = np.dot(G_m,np.diag(g_temp.conj()))
-                    #
-                    # g = g_temp
-                    # G = G_m
                 else:
-                    # g_0 = np.ones((2*N,))
-                    # g_0[N:] = 0
-                    # r_r = np.ravel(R[:,:,t].real)
-                    # r_i = np.ravel(R[:,:,t].imag)
-                    # r = np.hstack([r_r,r_i])
-                    # m_r = np.ravel(M[:,:,t].real)
-                    # m_i = np.ravel(M[:,:,t].imag)
-                    # m = np.hstack([m_r,m_i])
-                    # g_lstsqr_temp = optimize.leastsq(err_func, g_0, args=(r, m))
-                    # g_lstsqr = g_lstsqr_temp[0]
-                    #
-                    # G_m = np.dot(np.diag(g_lstsqr[0:N]+1j*g_lstsqr[N:]),temp)
-                    # G_m = np.dot(G_m,np.diag((g_lstsqr[0:N]+1j*g_lstsqr[N:]).conj()))
-                    #
-                    # g[:,t] = g_lstsqr[0:N]+1j*g_lstsqr[N:]
-                    # G[:,:,t] = G_m
                     if (d[index] >= 0):
                        g=Q[:,index]*np.sqrt(d[index])
                     else:
@@ -941,6 +891,21 @@ class T_ghost():
 
 
 if  __name__=="__main__":
+       parser = argparse.ArgumentParser()
+       parser.add_argument("--stefcal",
+                    type=bool,
+                    default=False,
+                    help="Choose to use StEFCal or not")
+       parser.add_argument("--baseline",
+                     type=int,
+                     nargs='+',
+                     default=[3, 5],
+                     help="The baseline to calculate on")
+       global args
+       args = parser.parse_args()
+
+       # if len(sys.argv) >= 6 and sys.argv[1] == "stefcal":
+       # baseline_1 = sys.
        point_sources = np.array([(1,0,0),(0.2,(1*np.pi)/180,(0*np.pi)/180)]) #creates your two point sources
        t = T_ghost(point_sources,"all","KAT7_1445_1x16_12h.ms") #creates a T_ghost object instance
-       image,l_v,m_v = t.sky_pq_2D([3,5],250,3,2,sigma = 0.05,type_w="G-1",avg_v=False,plot=True,mask=True)
+       image,l_v,m_v = t.sky_pq_2D(args.baseline, 250,3,2,sigma = 0.05,type_w="G-1",avg_v=False,plot=True,mask=True)
