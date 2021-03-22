@@ -356,7 +356,6 @@ class T_ghost():
     # sigma --- degrees, resolution --- arcsecond, image_s --- degrees
     def sky_pq_2D(self, baseline, resolution, image_s, s, sigma=None, type_w="G-1", avg_v=False, plot=False,
                   mask=False):
-
         if avg_v:
             baseline_new = [0, 0]
             baseline_new[0] = baseline[1]
@@ -425,11 +424,19 @@ if __name__ == "__main__":
     parser.add_argument("--mask",
                         action="store_true",
                         help="Set to apply the mask to the image")
+    parser.add_argument("--sigma",
+                        type=float,
+                        default=0.05,
+                        help="Larger values increases the size of the point sources, a smaller value decreases the size")
 
     global args
     args = parser.parse_args()
 
     point_sources = np.array([(1, 0, 0), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])  # creates your two point sources
     t = T_ghost(point_sources, "all")  # creates a T_ghost object instance
-    image, l_v, m_v = t.sky_pq_2D(args.baseline, args.resolution, args.radius, 1, sigma=0.05, type_w="G-1", avg_v=False,
+    image, l_v, m_v = t.sky_pq_2D(args.baseline, args.resolution, args.radius, 1, sigma=args.sigma, type_w="G-1", avg_v=False,
                                   plot=True, mask=args.mask)
+    # ? Fourier Transform of a Gaussian:
+    # if gaussian is F_x(x) = e**(-a*x**2)
+    # Then transform is F_x(k) = np.sqrt(np.pi/a) * np.exp(-np.pi**2 * k**2 / a)
+
