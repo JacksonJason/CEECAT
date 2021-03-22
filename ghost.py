@@ -13,7 +13,6 @@ class T_ghost():
         self.A_2 = point_sources[1, 0]
         self.l_0 = point_sources[1, 1]
         self.m_0 = point_sources[1, 2]
-        # v.MS = MS
         # v.PICKLENAME = "antnames"
         self.ant_names = pickle.load(open("KAT7_1445_1x16_12h_antnames.p", "rb"))
 
@@ -379,7 +378,6 @@ class T_ghost():
 
         delta_u = u[1] - u[0]
         delta_v = v[1] - v[0]
-
         if sigma <> None:
             uu, vv = np.meshgrid(u, v)
             sigma = (np.pi / 180) * sigma
@@ -387,6 +385,7 @@ class T_ghost():
             vis = vis * g_kernal
             vis = np.roll(vis, -1 * (N - 1) / 2, axis=0)
             vis = np.roll(vis, -1 * (N - 1) / 2, axis=1)
+            # Changes will be needed here, implement gaussian here somehow
             image = np.fft.fft2(vis) * (delta_u * delta_v)
         else:
             image = np.fft.fft2(vis) / N ** 2
