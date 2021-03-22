@@ -439,4 +439,5 @@ if __name__ == "__main__":
     # ? Fourier Transform of a Gaussian:
     # if gaussian is F_x(x) = e**(-a*x**2)
     # Then transform is F_x(k) = np.sqrt(np.pi/a) * np.exp(-np.pi**2 * k**2 / a)
+    # https: // mathworld.wolfram.com / FourierTransformGaussian.html
 
