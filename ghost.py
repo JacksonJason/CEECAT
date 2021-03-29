@@ -390,6 +390,8 @@ class T_ghost():
         else:
             image = np.fft.fft2(vis) / N ** 2
 
+        image = image / self.A_2 * 100
+
         image = np.roll(image, 1 * (N - 1) / 2, axis=0)
         image = np.roll(image, 1 * (N - 1) / 2, axis=1)
 
