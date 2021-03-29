@@ -333,7 +333,7 @@ class T_ghost():
 
         fig = plt.figure()
         cs = plt.imshow(image, interpolation="bicubic", cmap="cubehelix",
-                        extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
+                        extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]], vmin=12, vmax=-30)
         fig.colorbar(cs)
         self.plt_circle_grid(radius)
 
