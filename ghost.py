@@ -435,7 +435,7 @@ if __name__ == "__main__":
 
     point_sources = np.array([(1, 0, 0), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])  # creates your two point sources
     t = T_ghost(point_sources, "all")  # creates a T_ghost object instance
-    image, l_v, m_v = t.sky_pq_2D(args.baseline, args.resolution, args.radius, 1, sigma=args.sigma, type_w="GTR-1", avg_v=False,
+    image, l_v, m_v = t.sky_pq_2D(args.baseline, args.resolution, args.radius, 1, sigma=args.sigma, type_w="GTR-R", avg_v=False,
                                   plot=True, mask=args.mask)
     # ? Fourier Transform of a Gaussian:
     # if gaussian is F_x(x) = e**(-a*x**2)
