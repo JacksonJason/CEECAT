@@ -333,7 +333,7 @@ class T_ghost():
 
         fig = plt.figure()
         cs = plt.imshow(image, interpolation="bicubic", cmap="cubehelix",
-                        extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]], vmin=12, vmax=-30)
+                        extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]], vmax=12, vmin=-30)
         fig.colorbar(cs)
         self.plt_circle_grid(radius)
 
@@ -435,7 +435,7 @@ if __name__ == "__main__":
 
     point_sources = np.array([(1, 0, 0), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])  # creates your two point sources
     t = T_ghost(point_sources, "all")  # creates a T_ghost object instance
-    image, l_v, m_v = t.sky_pq_2D(args.baseline, args.resolution, args.radius, 1, sigma=args.sigma, type_w="GT-1", avg_v=False,
+    image, l_v, m_v = t.sky_pq_2D(args.baseline, args.resolution, args.radius, 1, sigma=args.sigma, type_w="GTR-1", avg_v=False,
                                   plot=True, mask=args.mask)
     # ? Fourier Transform of a Gaussian:
     # if gaussian is F_x(x) = e**(-a*x**2)
