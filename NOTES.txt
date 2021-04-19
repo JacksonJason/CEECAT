@@ -87,3 +87,18 @@ pass in position and size, need 1 extra paramater for size, in point_sources may
 g_kernal is fft of gaussian at center, make it shift with an e value
 image a guassian fitst to make this work, check papino and paperino, use gaussian at center
 
+
+Notes 3:
+
+Plot suppression ghost Percentage as function of baseline length
+Suppression ghost will be the same for all baseline lenghts in normal emmisions
+For extended emmison case this will not be the case, the baseline lenghts will influence it.
+
+Page 2350 X axis should be baseline now
+Find image from original email NB Create these sky models
+
+change R = np.zeros(u_t_m.shape) and M to be gaussians
+R is true and M is model
+Big circle means extended emmisions Dot means point source and x mean no value
+7 and 2 are important experiemnts
+
