@@ -1,6 +1,8 @@
 import numpy as np
 import pylab as plt
 import pickle
+
+import scipy.special
 from scipy import optimize
 import matplotlib as mpl
 import argparse
@@ -497,6 +499,9 @@ class T_ghost():
                 # u_t_m[np.absolute(u_t_m)>4000] = 0
                 # v_t_m[np.absolute(v_t_m)>4000] = 0
                 R = np.zeros(u_t_m.shape)
+                # Not quite right, need to refine the formula
+                Gauss = lambda x, mu, sigma: mu + np.sqrt(2) * sigma * scipy.special.erfinv(2*x-1)
+                print(Gauss(R, 1, 0.05))
                 for k in range(len(self.true_point_sources)):
                     R = R + self.true_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
                             u_t_m * self.true_point_sources[k, 1] + v_t_m * self.true_point_sources[k, 2]))

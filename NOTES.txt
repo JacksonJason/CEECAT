@@ -69,15 +69,12 @@ divide it out to get its actual flux.
 
 Notes 2:
 
-make dotted lines
 check table befoew apendix
 check absolute value graphs
-divide cm by a2
 equation 38 paper 2, beta detrines how much real and imaginary
 check wavelength is correct
 change beta value to correct flux
 add percent of A2 to CM
-correct graph title
 add param for type_w
 replicate fig 15 and 16
 
@@ -102,3 +99,8 @@ R is true and M is model
 Big circle means extended emmisions Dot means point source and x mean no value
 7 and 2 are important experiemnts
 
+
+# ? Fourier Transform of a Gaussian:
+# if gaussian is F_x(x) = e**(-a*x**2)
+# Then transform is F_x(k) = np.sqrt(np.pi/a) * np.exp(-np.pi**2 * k**2 / a)
+# https: // mathworld.wolfram.com / FourierTransformGaussian.html
