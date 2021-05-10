@@ -499,14 +499,18 @@ class T_ghost():
                 # u_t_m[np.absolute(u_t_m)>4000] = 0
                 # v_t_m[np.absolute(v_t_m)>4000] = 0
                 R = np.zeros(u_t_m.shape)
-                # Not quite right, need to refine the formula
-                Gauss = lambda x, mu, sigma: mu + np.sqrt(2) * sigma * scipy.special.erfinv(2*x-1)
-                print(Gauss(R, 1, 0.05))
+
+                Gauss = lambda x, mu, sigma: np.exp(-((x - mu) ** 2 / (2.0 * sigma ** 2)))
+                print(self.true_point_sources)
+                # print(Gauss(self.true_point_sources, 0, 0.05))
+
                 for k in range(len(self.true_point_sources)):
+                    # R = R + Gauss(self.true_point_sources[k], 0, u_t_m) + Gauss(self.true_point_sources[k], 0, v_t_m)
                     R = R + self.true_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
                             u_t_m * self.true_point_sources[k, 1] + v_t_m * self.true_point_sources[k, 2]))
                     # R = R + -1*1j*np.sin(2*np.pi*(u_t_m*self.true_point_sources[k,1]+v_t_m*self.true_point_sources[k,2]))
-
+                print(R)
+                
                 M = np.zeros(u_t_m.shape)
                 for k in range(len(self.model_point_sources)):
                     M = M + self.model_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
