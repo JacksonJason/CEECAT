@@ -504,18 +504,19 @@ class T_ghost():
 
                 Gauss = lambda sigma, uu, vv: (2 * np.pi * sigma ** 2) * np.exp(
                     -2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
-                # print(Gauss(self.true_point_sources, 0, 0.05))
 
                 for k in range(len(self.true_point_sources)):
                     R = R + self.true_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
                             u_t_m * self.true_point_sources[k, 1] + v_t_m * self.true_point_sources[k, 2])) * Gauss(
-                        sigma, u_t_m, v_t_m) #later sigma will be true_point_sources[k, 3]
+                        self.true_point_sources[k, 3], u_t_m, v_t_m)
 
                 M = np.zeros(u_t_m.shape)
                 for k in range(len(self.model_point_sources)):
                     M = M + self.model_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
                             u_t_m * self.model_point_sources[k, 1] + v_t_m * self.model_point_sources[k, 2])) * Gauss(
-                        sigma, u_t_m, v_t_m)
+                        self.true_point_sources[k, 3], u_t_m, v_t_m)
+
+
 
                 if algo == "STEFCAL":
                     g_stef, G = self.create_G_stef(R, M, 200, 1e-9, temp, no_auto=no_auto)
@@ -896,9 +897,9 @@ class T_ghost():
 
             sigma = (np.pi / 180) * sigma
 
-            g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
+            # g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
 
-            vis = vis * g_kernal
+            vis = vis #* g_kernal
 
             vis = np.roll(vis, -1 * (N - 1) / 2, axis=0)
             vis = np.roll(vis, -1 * (N - 1) / 2, axis=1)
@@ -1062,15 +1063,15 @@ class T_ghost():
 
         # vis = V_G_pq-1
 
-        if sigma != None:
+        if sigma is not None:
 
             uu, vv = np.meshgrid(u, v)
 
             sigma = (np.pi / 180) * sigma
 
-            g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
+            # g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
 
-            vis = vis * g_kernal
+            vis = vis #* g_kernal
 
             vis = np.roll(vis, -1 * (N - 1) / 2, axis=0)
             vis = np.roll(vis, -1 * (N - 1) / 2, axis=1)
@@ -1839,6 +1840,7 @@ def plot_ghost_pat_p(pat1, pat2, pat3, t):
     plt.ylabel("$m$ [degrees]")
     plt.show()
 
+
 def progress_bar(count, total):
     """
     Taken from https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
@@ -1852,6 +1854,7 @@ def progress_bar(count, total):
 
     sys.stdout.write('[%s] %s%s iteration %s\r' % (bar, percents, '%', count))
     sys.stdout.flush()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -1943,8 +1946,8 @@ if __name__ == "__main__":
     # initializes ghost object
     # ant_list = ['CS001LBA', 'CS002LBA', 'CS003LBA', 'CS004LBA', 'CS005LBA', 'CS006LBA', 'CS007LBA', 'CS011LBA', 'CS013LBA', 'CS017LBA', 'CS021LBA', 'CS024LBA', 'CS026LBA', 'CS028LBA', 'CS030LBA', 'CS031LBA', 'CS032LBA', 'CS101LBA', 'CS103LBA', 'CS201LBA', 'CS301LBA', 'CS302LBA', 'CS401LBA', 'CS501LBA', 'RS106LBA', 'RS205LBA', 'RS208LBA', 'RS306LBA', 'RS307LBA', 'RS406LBA', 'RS503LBA', 'RS508LBA', 'RS509LBA']
     ant_list = "all"
-    point_sources_true = np.array([(1, 0, 0), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])
-    point_sources_model = np.array([(1, 0, 0)])
+    point_sources_true = np.array([(1, 0, 0, args.sigma), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma)])
+    point_sources_model = np.array([(1, 0, 0, 0.05)])
     t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
     # t.plot_ghost_mask_paper([4,5],pickle_file="pat1.p")
 
