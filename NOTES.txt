@@ -104,3 +104,4 @@ Big circle means extended emmisions Dot means point source and x mean no value
 # if gaussian is F_x(x) = e**(-a*x**2)
 # Then transform is F_x(k) = np.sqrt(np.pi/a) * np.exp(-np.pi**2 * k**2 / a)
 # https: // mathworld.wolfram.com / FourierTransformGaussian.html
+g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))

@@ -1,6 +1,7 @@
 import numpy as np
 import pylab as plt
 import pickle
+import sys
 
 import scipy.special
 from scipy import optimize
@@ -362,7 +363,7 @@ class T_ghost():
 
     # resolution --- arcsecond, image_s --- degrees
     def visibilities_pq_2D_LM(self, baseline, u=None, v=None, resolution=0, image_s=0, s=0, wave=None, dec=None,
-                              algo="STEFCAL", no_auto=True):
+                              algo="STEFCAL", no_auto=True, sigma=0):
         if wave == None:
             wave = self.wave
         if dec == None:
@@ -451,12 +452,13 @@ class T_ghost():
         temp = np.ones(phi_new.shape, dtype=complex)
 
         for i in range(u_dim1):
-            print("u_dim1 = ", u_dim1)
-            print("i = ", i)
+            # print("u_dim1 = ", u_dim1)
+            progress_bar(i, u_dim1)
+            # print("i = ", i)
             for j in range(u_dim2):
                 # print "u_dim1 = ",u_dim1
                 # print "i = ",i
-                # print "j = ",j
+                # print("j = ",j)
                 if u_dim2 != 1:
                     u_t = uu[i, j]
                     v_t = vv[i, j]
@@ -500,21 +502,20 @@ class T_ghost():
                 # v_t_m[np.absolute(v_t_m)>4000] = 0
                 R = np.zeros(u_t_m.shape)
 
-                Gauss = lambda x, mu, sigma: np.exp(-((x - mu) ** 2 / (2.0 * sigma ** 2)))
-                print(self.true_point_sources)
+                Gauss = lambda sigma, uu, vv: (2 * np.pi * sigma ** 2) * np.exp(
+                    -2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
                 # print(Gauss(self.true_point_sources, 0, 0.05))
 
                 for k in range(len(self.true_point_sources)):
-                    # R = R + Gauss(self.true_point_sources[k], 0, u_t_m) + Gauss(self.true_point_sources[k], 0, v_t_m)
                     R = R + self.true_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
-                            u_t_m * self.true_point_sources[k, 1] + v_t_m * self.true_point_sources[k, 2]))
-                    # R = R + -1*1j*np.sin(2*np.pi*(u_t_m*self.true_point_sources[k,1]+v_t_m*self.true_point_sources[k,2]))
-                print(R)
-                
+                            u_t_m * self.true_point_sources[k, 1] + v_t_m * self.true_point_sources[k, 2])) * Gauss(
+                        sigma, u_t_m, v_t_m) #later sigma will be true_point_sources[k, 3]
+
                 M = np.zeros(u_t_m.shape)
                 for k in range(len(self.model_point_sources)):
                     M = M + self.model_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
-                            u_t_m * self.model_point_sources[k, 1] + v_t_m * self.model_point_sources[k, 2]))
+                            u_t_m * self.model_point_sources[k, 1] + v_t_m * self.model_point_sources[k, 2])) * Gauss(
+                        sigma, u_t_m, v_t_m)
 
                 if algo == "STEFCAL":
                     g_stef, G = self.create_G_stef(R, M, 200, 1e-9, temp, no_auto=no_auto)
@@ -861,7 +862,8 @@ class T_ghost():
                                                                                                          s=s, wave=wave,
                                                                                                          dec=dec,
                                                                                                          algo=algo,
-                                                                                                         no_auto=no_auto)
+                                                                                                         no_auto=no_auto,
+                                                                                                         sigma=sigma)
                 else:
                     V_G_qp = 0
 
@@ -870,7 +872,8 @@ class T_ghost():
                                                                                                      image_s=image_s,
                                                                                                      s=s, wave=wave,
                                                                                                      dec=dec, algo=algo,
-                                                                                                     no_auto=no_auto)
+                                                                                                     no_auto=no_auto,
+                                                                                                     sigma=sigma)
 
                 if (k == 0) and (j == 1):
                     vis = self.vis_function(type_w, avg_v, V_G_pq, V_G_qp, V_R_pq)
@@ -1007,7 +1010,8 @@ class T_ghost():
                                                                                                  image_s=image_s, s=s,
                                                                                                  wave=wave, dec=dec,
                                                                                                  algo=algo,
-                                                                                                 no_auto=no_auto)
+                                                                                                 no_auto=no_auto,
+                                                                                                 sigma=sigma)
         else:
             V_G_qp = 0
 
@@ -1015,7 +1019,8 @@ class T_ghost():
                                                                                              resolution=resolution,
                                                                                              image_s=image_s, s=s,
                                                                                              wave=wave, dec=dec,
-                                                                                             algo=algo, no_auto=no_auto)
+                                                                                             algo=algo, no_auto=no_auto,
+                                                                                             sigma=sigma)
 
         l_old = np.copy(l_cor)
         m_old = np.copy(m_cor)
@@ -1038,7 +1043,8 @@ class T_ghost():
                                                                                                        s=s, wave=wave,
                                                                                                        dec=dec,
                                                                                                        algo=algo2,
-                                                                                                       no_auto=no_auto)
+                                                                                                       no_auto=no_auto,
+                                                                                                       sigma=sigma)
             else:
                 V_G_qp = 0
 
@@ -1048,7 +1054,8 @@ class T_ghost():
                                                                                                      s=s, wave=wave,
                                                                                                      dec=dec,
                                                                                                      algo=algo2,
-                                                                                                     no_auto=no_auto)
+                                                                                                     no_auto=no_auto,
+                                                                                                     sigma=sigma)
 
             vis2 = self.vis_function(type_w, avg_v, V_G_pq, V_G_qp, V_R_pq, take_conj2)
             vis = vis - vis2
@@ -1120,7 +1127,8 @@ class T_ghost():
             plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
 
             if save_fig:
-                plt.savefig("Figure_R_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png", bbox_inches="tight")
+                plt.savefig("Figure_R_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
+                            bbox_inches="tight")
                 plt.clf()
             else:
                 plt.show()
@@ -1152,7 +1160,8 @@ class T_ghost():
             plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Imag")
             plt.ylabel("$m$ [degrees]")
             if save_fig:
-                plt.savefig("Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png", bbox_inches="tight")
+                plt.savefig("Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
+                            bbox_inches="tight")
                 plt.clf()
             else:
                 plt.show()
@@ -1830,6 +1839,19 @@ def plot_ghost_pat_p(pat1, pat2, pat3, t):
     plt.ylabel("$m$ [degrees]")
     plt.show()
 
+def progress_bar(count, total):
+    """
+    Taken from https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
+    """
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+    # print('[%s] %s%s iteration %s\r' % (bar, percents, '%', count))
+
+    sys.stdout.write('[%s] %s%s iteration %s\r' % (bar, percents, '%', count))
+    sys.stdout.flush()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -1943,8 +1965,10 @@ if __name__ == "__main__":
     # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GTR",plot=True,mask=False,algo="PHASE",no_auto=False)
     # image,l_v,m_v = t.sky_pq_2D_LM([0,1],150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="STEFCAL",no_auto=True,pickle_file="EW_01.p")
     # plot_image("EW_01.p")
-    image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type, plot=True, mask=args.mask,
-                                     algo=args.algo, no_auto=True, pickle_file=args.pickle_file, save_fig=args.dont_save)
+    image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type, plot=True,
+                                     mask=args.mask,
+                                     algo=args.algo, no_auto=True, pickle_file=args.pickle_file,
+                                     save_fig=args.dont_save)
     # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="PHASE_STEF",no_auto=True,pickle_file="PHASE_STEF_45_image.p")
     # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="PHASE_STEF",pickle_file="PHASE_STEF_image.p",no_auto=True)
     # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="STEFCAL",no_auto=False,pickle_file="STEF_45_image.p")
