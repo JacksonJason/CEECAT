@@ -1,0 +1,1 @@
+import osimport pickleimport numpy  as npfor file in os.listdir(os.getcwd()):    if (file.endswith(".p")):        data = np.array(pickle.load(open(os.path.join(os.getcwd(), file), 'rb')))        fileName = os.path.join(os.getcwd(), file)[0:-2]        print(fileName)        np.save(fileName, data)        
