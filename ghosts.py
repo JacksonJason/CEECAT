@@ -1944,8 +1944,8 @@ if __name__ == "__main__":
     # initializes ghost object
     # ant_list = ['CS001LBA', 'CS002LBA', 'CS003LBA', 'CS004LBA', 'CS005LBA', 'CS006LBA', 'CS007LBA', 'CS011LBA', 'CS013LBA', 'CS017LBA', 'CS021LBA', 'CS024LBA', 'CS026LBA', 'CS028LBA', 'CS030LBA', 'CS031LBA', 'CS032LBA', 'CS101LBA', 'CS103LBA', 'CS201LBA', 'CS301LBA', 'CS302LBA', 'CS401LBA', 'CS501LBA', 'RS106LBA', 'RS205LBA', 'RS208LBA', 'RS306LBA', 'RS307LBA', 'RS406LBA', 'RS503LBA', 'RS508LBA', 'RS509LBA']
     ant_list = "all"
-    point_sources_true = np.array([(1, 0, 0), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])
-    point_sources_model = np.array([(1, 0, 0)])
+    point_sources_true = np.array([(1, 0, 0, args.sigma * np.pi/180), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi/180)])
+    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi/180)])
     t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
     # t.plot_ghost_mask_paper([4,5],pickle_file="pat1.p")
 
