@@ -965,7 +965,7 @@ class T_ghost():
             plt.ylabel("$m$ [degrees]")
             plt.show()
         if pickle_file != None:
-            np.dump(self.A_2, pickle_file)
+            (self.A_2, pickle_file)
             np.dump(l_cor, pickle_file)
             np.dump(m_cor, pickle_file)
             np.dump(image, pickle_file)
@@ -1532,91 +1532,6 @@ class T_ghost():
         return mask[proto_mask], p_labels[proto_mask]
 
 
-def experiment(A_min, A_max, num, file_name, algo="PHASE", type_w="GT-1"):
-    A_v = np.linspace(A_min, A_max, num)
-    result = np.zeros((6, len(A_v)))
-    point_sources = np.zeros((6, 3))
-    point_sources[0, :] = (1.0, 0, 0)
-    point_sources[1, :] = (1.0, (1 * np.pi) / 180, (0 * np.pi) / 180)
-    point_sources[2, :] = (1.0, (-1 * np.pi) / 180, (0 * np.pi) / 180)
-    for k in range(len(A_v)):
-        print("************")
-        print("k = ", k)
-        print("algo = ", algo)
-        print("type_w =", type_w)
-        print("experiment1")
-        print("************")
-        # Left out
-        point_sources_true = np.array([(1.0, 0, 0), (A_v[k], (1 * np.pi) / 180, (0 * np.pi) / 180)])
-        # point_sources_extract = np.array([(88.7,0,0),(30,(1*np.pi)/180,(0*np.pi)/180),(30,(-1*np.pi)/180,(0*np.pi)/180)])
-        point_sources_model = np.array([(1.0, 0, 0)])
-        ant_list = "all"
-        # ant_list = ['CS001LBA', 'CS002LBA', 'CS003LBA', 'CS004LBA', 'CS005LBA', 'CS006LBA', 'CS007LBA', 'CS011LBA', 'CS013LBA', 'CS017LBA', 'CS021LBA', 'CS024LBA', 'CS026LBA', 'CS028LBA', 'CS030LBA', 'CS031LBA', 'CS032LBA', 'CS101LBA', 'CS103LBA', 'CS201LBA', 'CS301LBA', 'CS302LBA', 'CS401LBA', 'CS501LBA', 'RS106LBA', 'RS205LBA', 'RS208LBA', 'RS306LBA', 'RS307LBA', 'RS406LBA', 'RS503LBA', 'RS508LBA', 'RS509LBA']
-        t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
-        image, l_v, m_v = t.sky_pq_2D_LM([4, 5], 150, 3, 2, sigma=0.05, type_w=type_w, plot=False, mask=True, algo=algo)
-        mask, p_labels = t.create_mask([4, 5], plot_v=False, dec=None, plot_markers=False)
-        point_sources_temp, point_labels = t.extract_proto_mask([4, 5], mask, p_labels)
-        point_sources[3, :] = point_sources_temp[0, :]
-        point_sources[4, :] = point_sources_temp[0, :]
-        point_sources[4, 1:] = point_sources[4, 1:] * (-1)
-        point_sources[5, :] = (1.0, (2 * np.pi) / 180, (0 * np.pi) / 180)
-        point_real, point_imag = t.extract_flux(image, l_v, m_v, 0.5, point_sources, False)
-        result[:, k] = np.sqrt(point_real[:, 0] ** 2 + point_imag[:, 0] ** 2)
-    # print "result = ",(result/0.5)*100
-    # for k in xrange(3):
-    #    plt.plot(A_v,result[k,:])
-    #    plt.hold('on')
-    # plt.show()
-    pickle.dump(A_v, file_name)
-    pickle.dump(result, file_name)
-    pickle.dump(point_sources_true, file_name)
-    pickle.dump(point_sources_model, file_name)
-    return result
-
-
-def experiment2(A_min, A_max, num, file_name, algo="PHASE", type_w="GT-1"):
-    A_v = np.linspace(A_min, A_max, num)
-    result = np.zeros((6, len(A_v)))
-    point_sources = np.zeros((6, 3))
-    point_sources[0, :] = (1.0, 0, 0)
-    point_sources[1, :] = (1.0, (1 * np.pi) / 180, (0 * np.pi) / 180)
-    point_sources[2, :] = (1.0, (-1 * np.pi) / 180, (0 * np.pi) / 180)
-    for k in range(len(A_v)):
-        print("************")
-        print("k = ", k)
-        print("algo = ", algo)
-        print("type_w =", type_w)
-        print("experiment 2")
-        print("************")
-        # Left out
-        point_sources_true = np.array([(1.0, 0, 0), (A_v[k], (1 * np.pi) / 180, (0 * np.pi) / 180)])
-        # point_sources_extract = np.array([(88.7,0,0),(30,(1*np.pi)/180,(0*np.pi)/180),(30,(-1*np.pi)/180,(0*np.pi)/180)])
-        point_sources_model = np.array([(1.0, 0, 0)])
-        ant_list = "all"
-        # ant_list = ['CS001LBA', 'CS002LBA', 'CS003LBA', 'CS004LBA', 'CS005LBA', 'CS006LBA', 'CS007LBA', 'CS011LBA', 'CS013LBA', 'CS017LBA', 'CS021LBA', 'CS024LBA', 'CS026LBA', 'CS028LBA', 'CS030LBA', 'CS031LBA', 'CS032LBA', 'CS101LBA', 'CS103LBA', 'CS201LBA', 'CS301LBA', 'CS302LBA', 'CS401LBA', 'CS501LBA', 'RS106LBA', 'RS205LBA', 'RS208LBA', 'RS306LBA', 'RS307LBA', 'RS406LBA', 'RS503LBA', 'RS508LBA', 'RS509LBA']
-        t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
-        image, l_v, m_v = t.sky_2D([4, 5], 150, 3, 2, sigma=0.05, type_w=type_w, plot=False, mask=True, algo=algo,
-                                   avg_v=True)
-        mask, p_labels = t.create_mask([4, 5], plot_v=False, dec=None, plot_markers=False)
-        point_sources_temp, point_labels = t.extract_proto_mask([4, 5], mask, p_labels)
-        point_sources[3, :] = point_sources_temp[0, :]
-        point_sources[4, :] = point_sources_temp[0, :]
-        point_sources[4, 1:] = point_sources[4, 1:] * (-1)
-        point_real, point_imag = t.extract_flux(image, l_v, m_v, 0.5, point_sources, False)
-        point_sources[5, :] = (1.0, (2 * np.pi) / 180, (0 * np.pi) / 180)
-        result[:, k] = np.sqrt(point_real[:, 0] ** 2 + point_imag[:, 0] ** 2)
-    # print "result = ",(result/0.5)*100
-    # for k in xrange(3):
-    #    plt.plot(A_v,result[k,:])
-    #    plt.hold('on')
-    # plt.show()
-    np.dump(A_v, file_name)
-    np.dump(result, file_name)
-    np.dump(point_sources_true, file_name)
-    np.dump(point_sources_model, file_name)
-    return result
-
-
 def plot_results(file_name, algo="STEF", type_plot="G", avg_baseline=21, N=7.0, ylim1=[0, 35], ylim2=[0, 0.8]):
     # self.phi_m = pickle.load(open(file_name,"rb"))
     A_v = np.load(file_name)
@@ -1836,6 +1751,81 @@ def progress_bar(count, total):
     sys.stdout.flush()
 
 
+def experiment1():
+    print("Experiment 1")
+    ant_list = "all"
+    point_sources_true = np.array(
+        [(1, 0, 0, args.sigma * np.pi / 180),
+         (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi / 180)])
+    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
+    t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
+    if args.pickle_file is not None:
+        pickle = "output/" + args.pickle_file
+    else:
+        pickle = None
+    image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type,
+                                     plot=True,
+                                     mask=args.mask,
+                                     algo=args.algo, no_auto=True, pickle_file=pickle,
+                                     save_fig=args.dont_save)
+
+
+def experiment2():
+    print("Experiment 2")
+    ant_list = "all"
+    point_sources_true = np.array(
+        [(1, 0, 0, args.sigma * np.pi / 180),
+         (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])
+    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
+    t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
+    if args.pickle_file is not None:
+        pickle = "output/" + args.pickle_file
+    else:
+        pickle = None
+    image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type,
+                                     plot=True,
+                                     mask=args.mask,
+                                     algo=args.algo, no_auto=True, pickle_file=pickle,
+                                     save_fig=args.dont_save)
+
+
+def experiment3():
+    print("Experiment 3")
+    ant_list = "all"
+    point_sources_true = np.array(
+        [(1, 0, 0),
+         (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi / 180)])
+    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
+    t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
+    if args.pickle_file is not None:
+        pickle = "output/" + args.pickle_file
+    else:
+        pickle = None
+    image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type,
+                                     plot=True,
+                                     mask=args.mask,
+                                     algo=args.algo, no_auto=True, pickle_file=pickle,
+                                     save_fig=args.dont_save)
+
+
+def experiment4():
+    print("Experiment 4")
+    ant_list = "all"
+    point_sources_true = np.array(
+        [(1, 0, 0, args.sigma * np.pi / 180)])
+    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
+    t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
+    if args.pickle_file is not None:
+        pickle = "output/" + args.pickle_file
+    else:
+        pickle = None
+    image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type,
+                                     plot=True,
+                                     mask=args.mask,
+                                     algo=args.algo, no_auto=True, pickle_file=pickle,
+                                     save_fig=args.dont_save)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline",
@@ -1869,120 +1859,32 @@ if __name__ == "__main__":
                         type=int,
                         default=3,
                         help="The radius of the circle on the image")
+    parser.add_argument("--experiment",
+                        type=int,
+                        default=0,
+                        help="Run a pre-defined experiment")
 
     global args
     args = parser.parse_args()
 
-    # experiment(0.001,0.5,20,"KAT7_STEFGT1.p",algo="STEFCAL",type_w="GT-1")
-    # experiment2(0.001,0.5,20,"KAT7_STEFGT2.p",algo="STEFCAL",type_w="GT-1")
-    # experiment(0.001,0.5,20,"KAT7_PHASEGT1.p",algo="PHASE_STEF",type_w="GT-1")
-    # experiment2(0.001,0.5,20,"KAT7_PHASEGT2.p",algo="PHASE_STEF",type_w="GT-1")
-
-    # experiment(0.001,0.5,20,"KAT7_STEFR1.p",algo="STEFCAL",type_w="GTR-R")
-    # experiment2(0.001,0.5,20,"KAT7_STEFR2.p",algo="STEFCAL",type_w="GTR-R")
-    # experiment(0.001,0.5,20,"KAT7_PHASER1.p",algo="PHASE_STEF",type_w="GTR-R")
-    # experiment2(0.001,0.5,20,"KAT7_PHASER2.p",algo="PHASE_STEF",type_w="GTR-R")
-
-    # experiment(0.001,0.5,20,"KAT7_PHASE_STEF.p",algo="PHASE_STEF")
-    # experiment(0.001,0.5,20,"KAT7_PHASE_STEF2.p",algo="PHASE_STEF")
-    # plot_results("KAT7_STEFGT1.p",type_plot="G")
-    # plot_results("KAT7_STEFR1.p",type_plot="R")
-    # plot_results("KAT7_PHASEGT1.p",algo="PHASE",type_plot="G")
-    # plot_results("KAT7_PHASER1.p",algo="PHASE",type_plot="R")
-    # plot_results("KAT7_STEFR1.p",type_plot="R")
-    # plot_results("KAT7_PHASER1.p",type_plot="R",algo="PHASE")
-    # plot_results("EW_EXAMPLE.p")
-    # plt.show()
-    # two source model, can only support two point sources (at center and 1 degree right of origin) [flux,l coordinate,m coordinate]
-    # plot_image("PHASE_STEF_45_image.p")
-    # plot_image("STEF_45_image.p",convert_to_degrees = False)
-    # plot_image("PHASE_STEF_3S_45_image.p")
-    # plot_image_full("PHASE_STEF_image.p")
-    # plot_image_full("STEF_image.p")
-    # plot_image_full("PHASE_STEF_3S_image.p")
-    # plot_image("PHASE_STEF_IN_45_image.p",precentage=False)
-    # plot_image("PHASE_IN_45_image.p",precentage=False)
-
-    # Left out
-    # point_sources_true = np.array([(1,0,0),(0.5,(1*np.pi)/180,(0*np.pi)/180),(1,(0.5*np.pi)/180,(0.5*np.pi)/180),(0.5,(-0.5*np.pi)/180,(0*np.pi)/180),(0.5,(-np.sqrt(2)*np.pi)/180,(1.3*np.pi)/180)])
-    # point_sources_model = np.array([(1,0,0),(1,(0.5*np.pi)/180,(0.5*np.pi)/180)])
-
-    # SYMMETRIC SOURCE GONE?
-    # point_sources_true = np.array([(1,0,0),(0.8,(np.sqrt(2)*np.pi)/180,(0*np.pi)/180),(0.2,(-1*np.pi)/180,(0.3*np.pi)/180),(0.2,(1*np.pi)/180,(1.3*np.pi)/180)])
-    # point_sources_model = np.array([(1,0,0),(0.8,(np.sqrt(2)*np.pi)/180,(0*np.pi)/180)])
-
-    # point_sources_true = np.array([(1,0,0),(0.1,(1*np.pi)/180,(0*np.pi)/180),(0.1,(np.sqrt(2)*np.pi)/180,(np.sqrt(2)*np.pi)/180),(0.1,(-2*np.pi)/180,(1*np.pi)/180)])
-    # point_sources_true = np.array([(1,0,0),(0.2,(1*np.pi)/180,(0*np.pi)/180)])
-    # point_sources_model = np.array([(1,0,0)])
-
-    # LOFAR POSITIONS
-    # point_sources_true = np.array([(60,0,0),(10,(-2.87454196*np.pi)/180,(1.45538186*np.pi)/180),(10,(2.7595439*np.pi)/180,(-1.56301629*np.pi)/180)])
-    # point_sources_model = np.array([(60,0,0),(50,(-2.87454196*np.pi)/180,(1.45538186*np.pi)/180)])
-
-    # SYMMETRIC SOURCE GONE?
-    # point_sources_true = np.array([(60,0,0),(10,(1*np.pi)/180,(0*np.pi)/180),(10,(-1*np.pi)/180,(0*np.pi)/180)])
-    # point_sources_model = np.array([(60,0,0),(30,(1*np.pi)/180,(0*np.pi)/180)])
     print("EXECUTING....")
-    # initializes ghost object
-    # ant_list = ['CS001LBA', 'CS002LBA', 'CS003LBA', 'CS004LBA', 'CS005LBA', 'CS006LBA', 'CS007LBA', 'CS011LBA', 'CS013LBA', 'CS017LBA', 'CS021LBA', 'CS024LBA', 'CS026LBA', 'CS028LBA', 'CS030LBA', 'CS031LBA', 'CS032LBA', 'CS101LBA', 'CS103LBA', 'CS201LBA', 'CS301LBA', 'CS302LBA', 'CS401LBA', 'CS501LBA', 'RS106LBA', 'RS205LBA', 'RS208LBA', 'RS306LBA', 'RS307LBA', 'RS406LBA', 'RS503LBA', 'RS508LBA', 'RS509LBA']
-    ant_list = "all"
-    point_sources_true = np.array(
-        [(1, 0, 0, args.sigma * np.pi / 180), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi / 180)])
-    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
-    t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
-    # t.plot_ghost_mask_paper([4,5],pickle_file="pat1.p")
-
-    # point_sources_true = np.array([(1,0,0),(0.2,(-2*np.pi)/180,(1*np.pi)/180)])
-    # point_sources_model = np.array([(1,0,0)])
-    # t = T_ghost(point_sources_true,point_sources_model,ant_list,"KAT7")
-    # 3t.plot_ghost_mask_paper([4,5],pickle_file="pat2.p")
-
-    # point_sources_true = np.array([(1,0,0),(0.2,(np.sqrt(2)*np.pi)/180,(np.sqrt(2)*np.pi)/180)])
-    # point_sources_model = np.array([(1,0,0)])
-    # t = T_ghost(point_sources_true,point_sources_model,ant_list,"KAT7")
-    # t.plot_ghost_mask_paper([4,5],pickle_file="pat3.p")
-
-    # plot_ghost_pat_p("pat1.p","pat2.p","pat3.p",t)
-    # plots ghost map for baseline 01 (resolution 150 arcseconds, extend 3 degrees)
-    # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GTR-R",plot=True,mask=False,algo="STEFCAL")
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma=0.05,type_w="GT-1",plot=True,mask=False,algo="PHASE",algo2="PHASE_STEF",no_auto=True,take_conj1=False,take_conj2=False)
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GTR",plot=True,mask=False,algo="PHASE",no_auto=False)
-    # image,l_v,m_v = t.sky_pq_2D_LM([0,1],150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="STEFCAL",no_auto=True,pickle_file="EW_01.p")
-    # plot_image("EW_01.p")
-    image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type, plot=True,
-                                     mask=args.mask,
-                                     algo=args.algo, no_auto=True, pickle_file="output/" + args.pickle_file,
-                                     save_fig=args.dont_save)
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="PHASE_STEF",no_auto=True,pickle_file="PHASE_STEF_45_image.p")
-    # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="PHASE_STEF",pickle_file="PHASE_STEF_image.p",no_auto=True)
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="STEFCAL",no_auto=False,pickle_file="STEF_45_image.p")
-    # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="STEFCAL",pickle_file="STEF_image.p",no_auto=False)
-    # plot_image("PHASE_STEF_45_image.p")
-
-    # point_sources_true = np.array([(1,0,0),(0.1,(1*np.pi)/180,(0*np.pi)/180),(0.1,(np.sqrt(2)*np.pi)/180,(np.sqrt(2)*np.pi)/180),(0.1,(-2*np.pi)/180,(1*np.pi)/180)])
-    # t = T_ghost(point_sources_true,point_sources_model,ant_list,"KAT7")
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="PHASE_STEF",no_auto=True,pickle_file="PHASE_STEF_3S_45_image.p")
-    # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="PHASE_STEF",pickle_file="PHASE_STEF_3S_image.p")
-
-    # point_sources_true = np.array([(1,0,0),(1.5,(1*np.pi)/180,(0*np.pi)/180)])
-    # t = T_ghost(point_sources_true,point_sources_model,ant_list,"KAT7")
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="PHASE_STEF",no_auto=True,pickle_file="PHASE_STEF_IN_45_image.p")
-    # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="PHASE_STEF",pickle_file="PHASE_STEF_IN_image.p")
-
-    # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="STEFCAL")
-    # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="PHASE_STEF")
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="PHASE",algo2="PHASE_STEF",no_auto=True)
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="PHASE",algo2="PHASE_STEF_NORM1",no_auto=True)
-    # t.plot_ghost_mask_paper([4,5])
-    # image,l_v,m_v = t.sky_pq_2D_LM([2,3],150,8,2,sigma = 0.1,type_w="GT-1",plot=True,mask=False,algo="STEFCAL",no_auto=True)
-    # image,l_v,m_v = t.sky_pq_2D_LM([2,3],150,8,2,sigma = 0.1,type_w="GT-1",plot=True,mask=False,algo="STEFCAL",no_auto=False)
-
-    # image,l_v,m_v = t.sky_pq_2D_LM([1,5],90,2,2,sigma = 0.021,type_w="GT-1",plot=True,mask=False,algo="STEFCAL",no_auto=True)
-    # image,l_v,m_v = t.sky_pq_2D_LM([1,5],90,2,2,sigma = 0.021,type_w="GT-1",plot=True,mask=False,algo="STEFCAL",no_auto=False)
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=True,mask=False,algo="STEFCAL",no_auto=False)
-    # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GTR-R",plot=True,mask=False,algo="PHASE")
-    # image,l_v,m_v = t.sky_pq_2D_LM([0,1],250,3,2,sigma = 0.05,type_w="GTR-R",plot=True,mask=True)
-    # plots ghost map for baseline 12 (resolution 150 arcseconds, extend 3 degrees)
-    # image,l_v,m_v = t.sky_pq_2D_LM([1,2],150,3,2,sigma = 0.05,type_w="GTR",plot=True,mask=True)
-
-    # NB naive noise implementation verify if correct yourself....
+    if args.experiment == 1:
+        experiment1()
+    elif args.experiment == 2:
+        experiment2()
+    elif args.experiment == 3:
+        experiment3()
+    elif args.experiment == 4:
+        experiment4()
+    else:
+        ant_list = "all"
+        point_sources_true = np.array(
+            [(1, 0, 0, args.sigma * np.pi / 180),
+             (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi / 180)])
+        point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
+        t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
+        image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type,
+                                         plot=True,
+                                         mask=args.mask,
+                                         algo=args.algo, no_auto=True, pickle_file="output/" + args.pickle_file,
+                                         save_fig=args.dont_save)
