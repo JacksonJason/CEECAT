@@ -1,6 +1,5 @@
 import numpy as np
 import pylab as plt
-import pickle
 import sys
 
 import scipy.special
@@ -79,61 +78,61 @@ class T_ghost():
             self.wave = 3e8 / 1.45e9  # observational wavelenght
             self.dec = np.pi / 2.0  # declination
         elif MS == "KAT7":
-            file_name = "./Pickle/KAT7_1445_1x16_12h_antnames.p"
-            self.ant_names = pickle.load(open(file_name, "rb"))
+            file_name = "./Pickle/KAT7_1445_1x16_12h_antnames.npy"
+            self.ant_names = np.load(file_name)
 
             # print "ant_names = ",self.ant_names
             self.a_list = self.get_antenna(self.antenna, self.ant_names)
             # print "a_list = ",self.a_list
 
-            file_name = "./Pickle/KAT7_1445_1x16_12h_phi_m.p"
-            self.phi_m = pickle.load(open(file_name, "rb"))
+            file_name = "./Pickle/KAT7_1445_1x16_12h_phi_m.npy"
+            self.phi_m = np.load(file_name)
             # print self.phi_m
             # print "self.phi_m = ",self.phi_m
-            # self.phi_m =  pickle.load(open(MS[2:-4]+"_phi_m.p","rb"))
+            # self.phi_m =  pickle.load(open(MS[2:-4]+"_phi_m.npy","rb"))
 
-            file_name = "./Pickle/KAT7_1445_1x16_12h_b_m.p"
-            self.b_m = pickle.load(open(file_name, "rb"))
+            file_name = "./Pickle/KAT7_1445_1x16_12h_b_m.npy"
+            self.b_m = np.load(file_name)
             # print "self.b_m = ",self.b_m
-            # self.b_m = pickle.load(open(MS[2:-4]+"_b_m.p","rb"))
+            # self.b_m = pickle.load(open(MS[2:-4]+"_b_m.npy","rb"))
 
-            file_name = "./Pickle/KAT7_1445_1x16_12h_theta_m.p"
-            self.theta_m = pickle.load(open(file_name, "rb"))
+            file_name = "./Pickle/KAT7_1445_1x16_12h_theta_m.npy"
+            self.theta_m = np.load(file_name)
             # print "self.theta_m = ",self.theta_m
-            # self.theta_m = pickle.load(open(MS[2:-4]+"_theta_m.p","rb"))
+            # self.theta_m = pickle.load(open(MS[2:-4]+"_theta_m.npy","rb"))
 
             self.sin_delta = None
 
-            file_name = "./Pickle/KAT7_1445_1x16_12h_wave.p"
-            self.wave = pickle.load(open(file_name, "rb"))
-            file_name = "./Pickle/KAT7_1445_1x16_12h_declination.p"
-            self.dec = pickle.load(open(file_name, "rb"))
+            file_name = "./Pickle/KAT7_1445_1x16_12h_wave.npy"
+            self.wave = np.load(file_name)
+            file_name = "./Pickle/KAT7_1445_1x16_12h_declination.npy"
+            self.dec = np.load(file_name)
             # print "self.dec = ",self.dec
             # self.dec = np.pi/2.0 #declination
         elif MS == "LOFAR":
-            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_antnames.p"
-            self.ant_names = pickle.load(open(file_name, "rb"))
+            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_antnames.npy"
+            self.ant_names = np.load(file_name)
 
             # print "ant_names = ",self.ant_names
             self.a_list = self.get_antenna(self.antenna, self.ant_names)
             # print "a_list = ",self.a_list
 
-            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_phi_m.p"
-            self.phi_m = pickle.load(open(file_name, "rb"))
-            # self.phi_m =  pickle.load(open(MS[2:-4]+"_phi_m.p","rb"))
+            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_phi_m.npy"
+            self.phi_m = np.load(file_name)
+            # self.phi_m =  pickle.load(open(MS[2:-4]+"_phi_m.npy","rb"))
 
-            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_b_m.p"
-            self.b_m = pickle.load(open(file_name, "rb"))
-            # self.b_m = pickle.load(open(MS[2:-4]+"_b_m.p","rb"))
+            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_b_m.npy"
+            self.b_m = np.load(file_name)
+            # self.b_m = pickle.load(open(MS[2:-4]+"_b_m.npy","rb"))
 
-            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_theta_m.p"
-            self.theta_m = pickle.load(open(file_name, "rb"))
-            # self.theta_m = pickle.load(open(MS[2:-4]+"_theta_m.p","rb"))
+            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_theta_m.npy"
+            self.theta_m = np.load(file_name)
+            # self.theta_m = pickle.load(open(MS[2:-4]+"_theta_m.npy","rb"))
 
             self.sin_delta = None
 
-            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_wave.p"
-            self.wave = pickle.load(open(file_name, "rb"))
+            file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_wave.npy"
+            self.wave = np.load(file_name)
             self.dec = np.pi / 2.0  # declination
 
     """Function processes your antenna selection string
@@ -383,10 +382,12 @@ class T_ghost():
         p = np.cumsum(p, axis=0) - 1
         q = p.transpose()
 
-        if d_list == np.array([]):
+        if d_list.size == 0:
             p_new = p
             q_new = q
             phi_new = self.phi_m
+            theta_new = self.theta_m
+            b_new = self.b_m
         else:
             p_new = np.delete(p, d_list, axis=0)
             p_new = np.delete(p_new, d_list, axis=1)
@@ -508,13 +509,15 @@ class T_ghost():
                 for k in range(len(self.true_point_sources)):
                     R = R + self.true_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
                             u_t_m * self.true_point_sources[k, 1] + v_t_m * self.true_point_sources[k, 2]))
-                    R *= Gauss(self.true_point_sources[k, 3], u_t_m, v_t_m) if len(self.true_point_sources[k]) > 3 else 1
+                    R *= Gauss(self.true_point_sources[k, 3], u_t_m, v_t_m) if len(
+                        self.true_point_sources[k]) > 3 else 1
 
                 M = np.zeros(u_t_m.shape)
                 for k in range(len(self.model_point_sources)):
                     M = M + self.model_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
                             u_t_m * self.model_point_sources[k, 1] + v_t_m * self.model_point_sources[k, 2]))
-                    M *= Gauss(self.model_point_sources[k, 3], u_t_m, v_t_m) if len(self.model_point_sources[k]) > 3 else 1
+                    M *= Gauss(self.model_point_sources[k, 3], u_t_m, v_t_m) if len(
+                        self.model_point_sources[k]) > 3 else 1
 
                 if algo == "STEFCAL":
                     g_stef, G = self.create_G_stef(R, M, 200, 1e-9, temp, no_auto=no_auto)
@@ -897,10 +900,10 @@ class T_ghost():
 
             # g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
 
-            vis = vis #* g_kernal
+            vis = vis  # * g_kernal
 
-            vis = np.roll(vis, -1 * (N - 1) / 2, axis=0)
-            vis = np.roll(vis, -1 * (N - 1) / 2, axis=1)
+            vis = np.roll(vis, int(-1 * (N - 1) / 2), axis=0)
+            vis = np.roll(vis, int(-1 * (N - 1) / 2), axis=1)
 
             image = np.fft.fft2(vis) * (delta_u * delta_v)
         else:
@@ -909,8 +912,8 @@ class T_ghost():
 
         # ll,mm = np.meshgrid(l_cor,m_cor)
 
-        image = np.roll(image, 1 * (N - 1) / 2, axis=0)
-        image = np.roll(image, 1 * (N - 1) / 2, axis=1)
+        image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
+        image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
 
         image = image[:, ::-1]
         # image = image[::-1,:]
@@ -962,13 +965,11 @@ class T_ghost():
             plt.ylabel("$m$ [degrees]")
             plt.show()
         if pickle_file != None:
-            f = open(pickle_file, 'wb')
-            pickle.dump(self.A_2, f)
-            pickle.dump(l_cor, f)
-            pickle.dump(m_cor, f)
-            pickle.dump(image, f)
-            pickle.dump(image_s, f)
-            f.close()
+            np.dump(self.A_2, pickle_file)
+            np.dump(l_cor, pickle_file)
+            np.dump(m_cor, pickle_file)
+            np.dump(image, pickle_file)
+            np.dump(image_s, pickle_file)
 
         return image, l_old, m_old
 
@@ -1069,10 +1070,9 @@ class T_ghost():
 
             # g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
 
-            vis = vis #* g_kernal
-
-            vis = np.roll(vis, -1 * (N - 1) / 2, axis=0)
-            vis = np.roll(vis, -1 * (N - 1) / 2, axis=1)
+            vis = vis  # * g_kernal
+            vis = np.roll(vis, int(int(-1 * (N - 1) / 2)), axis=0)
+            vis = np.roll(vis, int(int(-1 * (N - 1) / 2)), axis=1)
 
             image = np.fft.fft2(vis) * (delta_u * delta_v)
         else:
@@ -1081,8 +1081,8 @@ class T_ghost():
 
         # ll,mm = np.meshgrid(l_cor,m_cor)
 
-        image = np.roll(image, 1 * (N - 1) / 2, axis=0)
-        image = np.roll(image, 1 * (N - 1) / 2, axis=1)
+        image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
+        image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
 
         # JASON I HAD TO ADD THIS LINE FLIPPED IN X AND Y
         image = image[::-1, ::-1]
@@ -1126,7 +1126,7 @@ class T_ghost():
             plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
 
             if save_fig:
-                plt.savefig("Figure_R_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
+                plt.savefig("images\Figure_R_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
                             bbox_inches="tight")
                 plt.clf()
             else:
@@ -1159,20 +1159,18 @@ class T_ghost():
             plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Imag")
             plt.ylabel("$m$ [degrees]")
             if save_fig:
-                plt.savefig("Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
+                plt.savefig("images\Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
                             bbox_inches="tight")
                 plt.clf()
             else:
                 plt.show()
         if pickle_file != None:
-            f = open(pickle_file, 'wb')
-            pickle.dump(self.A_2, f)
-            pickle.dump(l_cor, f)
-            pickle.dump(m_cor, f)
-            pickle.dump(image, f)
-            pickle.dump(image_s, f)
-            pickle.dump(baseline, f)
-            f.close()
+            np.dump(self.A_2, pickle_file)
+            np.dump(l_cor, pickle_file)
+            np.dump(m_cor, pickle_file)
+            np.dump(image, pickle_file)
+            np.dump(image_s, pickle_file)
+            np.dump(baseline, pickle_file)
 
         return image, l_old, m_old
 
@@ -1511,11 +1509,9 @@ class T_ghost():
         plt.ylim([-1 * abs(im_s), abs(im_s)])
         plt.show()
         if pickle_file != None:
-            f = open(pickle_file, 'wb')
-            pickle.dump(proto_mask, f)
-            pickle.dump(im_s, f)
-            pickle.dump(baseline, f)
-            f.close()
+            np.dump(proto_mask, pickle_file)
+            np.dump(im_s, pickle_file)
+            np.dump(baseline, pickle_file)
 
     def extract_proto_mask_phase(self, baseline, mask, p_labels):
         p = baseline[0]
@@ -1571,12 +1567,10 @@ def experiment(A_min, A_max, num, file_name, algo="PHASE", type_w="GT-1"):
     #    plt.plot(A_v,result[k,:])
     #    plt.hold('on')
     # plt.show()
-    f = open(file_name, 'wb')
-    pickle.dump(A_v, f)
-    pickle.dump(result, f)
-    pickle.dump(point_sources_true, f)
-    pickle.dump(point_sources_model, f)
-    f.close()
+    pickle.dump(A_v, file_name)
+    pickle.dump(result, file_name)
+    pickle.dump(point_sources_true, file_name)
+    pickle.dump(point_sources_model, file_name)
     return result
 
 
@@ -1616,20 +1610,17 @@ def experiment2(A_min, A_max, num, file_name, algo="PHASE", type_w="GT-1"):
     #    plt.plot(A_v,result[k,:])
     #    plt.hold('on')
     # plt.show()
-    f = open(file_name, 'wb')
-    pickle.dump(A_v, f)
-    pickle.dump(result, f)
-    pickle.dump(point_sources_true, f)
-    pickle.dump(point_sources_model, f)
-    f.close()
+    np.dump(A_v, file_name)
+    np.dump(result, file_name)
+    np.dump(point_sources_true, file_name)
+    np.dump(point_sources_model, file_name)
     return result
 
 
 def plot_results(file_name, algo="STEF", type_plot="G", avg_baseline=21, N=7.0, ylim1=[0, 35], ylim2=[0, 0.8]):
     # self.phi_m = pickle.load(open(file_name,"rb"))
-    f = open(file_name, 'rb')
-    A_v = pickle.load(f)
-    result = pickle.load(f)
+    A_v = np.load(file_name)
+    result = np.load(file_name)
     c = ["b", "r", "g"]
     one = np.ones(A_v.size)
     # print "result = ",result
@@ -1706,15 +1697,14 @@ def plot_results(file_name, algo="STEF", type_plot="G", avg_baseline=21, N=7.0, 
 
 def plot_image(pickle_file, precentage=False, convert_to_degrees=False):
     t = T_ghost(np.array([(1, 0, 0)]), np.array([(1, 0, 0)]), "all", "KAT7")
-    f = open(pickle_file, 'rb')
-    A_2 = pickle.load(f)
+    A_2 = np.load(pickle_file)
     if convert_to_degrees:
-        l_cor = pickle.load(f) * (180 / np.pi)
-        m_cor = pickle.load(f) * (180 / np.pi)
+        l_cor = np.load(pickle_file) * (180 / np.pi)
+        m_cor = np.load(pickle_file) * (180 / np.pi)
     else:
-        l_cor = pickle.load(f)
-        m_cor = pickle.load(f)
-    image = pickle.load(f)
+        l_cor = np.load(pickle_file)
+        m_cor = np.load(pickle_file)
+    image = np.load(pickle_file)
     # print "Image = ",image
     print("Image.max = ", np.amax(image.real) / A_2 * 100)
     print("image.min = ", np.amin(image.real) / A_2 * 100)
@@ -1722,8 +1712,8 @@ def plot_image(pickle_file, precentage=False, convert_to_degrees=False):
     # print "m_cor = ",m_cor
     # plt.imshow(image.real,extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]])
     # plt.show()
-    image_s = pickle.load(f)
-    baseline = pickle.load(f)
+    image_s = np.load(pickle_file)
+    baseline = np.load(pickle_file)
     fig = plt.figure()
     # cs = plt.imshow((image.real/self.A_2)*100,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]],vmax=8.1,vmin=-27.1)
     if precentage:
@@ -1769,14 +1759,12 @@ def plot_image(pickle_file, precentage=False, convert_to_degrees=False):
 
 def plot_image_full(pickle_file):
     t = T_ghost(np.array([(1, 0, 0)]), np.array([(1, 0, 0)]), "all", "KAT7")
-    f = open(pickle_file, 'rb')
-    A_2 = pickle.load(f)
-    l_cor = pickle.load(f) * (180 / np.pi)
-    m_cor = pickle.load(f) * (180 / np.pi)
-    image = pickle.load(f)
-    image_s = pickle.load(f)
-    f.close()
-    # baseline = pickle.load(f)
+    A_2 = np.load(pickle_file)
+    l_cor = np.load(pickle_file) * (180 / np.pi)
+    m_cor = np.load(pickle_file) * (180 / np.pi)
+    image = np.load(pickle_file)
+    image_s = np.load(pickle_file)
+    # baseline = np.load(file_name)
     fig = plt.figure()
     # cs = plt.imshow((image.real/self.A_2)*100,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]],vmax=8.1,vmin=-27.1)
     cs = plt.imshow((image.real / A_2) * 100, interpolation="bicubic", cmap="cubehelix",
@@ -1810,23 +1798,17 @@ def plot_image_full(pickle_file):
 
 
 def plot_ghost_pat_p(pat1, pat2, pat3, t):
-    f = open(pat1, 'rb')
-    proto_mask = pickle.load(f)
-    im_s = pickle.load(f)
-    baseline = pickle.load(f)
-    f.close()
+    proto_mask = np.load(pat1)
+    im_s = np.load(pat1)
+    baseline = np.load(pat1)
     plt.plot(proto_mask[:, 1] * (180 / np.pi), -1 * proto_mask[:, 2] * (180 / np.pi), "o", mfc='none', mec="b", ms=7)
     plt.plot(-1 * proto_mask[:, 1] * (180 / np.pi), proto_mask[:, 2] * (180 / np.pi), "o", mfc='none', mec="r", ms=7)
-    f = open(pat2, 'rb')
-    proto_mask = pickle.load(f)
-    im_s = pickle.load(f)
-    f.close()
+    proto_mask = np.load(pat2)
+    im_s = np.load(pat2)
     plt.plot(proto_mask[:, 1] * (180 / np.pi), -1 * proto_mask[:, 2] * (180 / np.pi), "^", mfc='none', mec="b", ms=7)
     plt.plot(-1 * proto_mask[:, 1] * (180 / np.pi), proto_mask[:, 2] * (180 / np.pi), "^", mfc='none', mec="r", ms=7)
-    f = open(pat3, 'rb')
-    proto_mask = pickle.load(f)
-    im_s = pickle.load(f)
-    f.close()
+    proto_mask = np.load(pat3)
+    im_s = np.load(pat3)
     plt.plot(proto_mask[:, 1] * (180 / np.pi), -1 * proto_mask[:, 2] * (180 / np.pi), "<", mfc='none', mec="b", ms=7)
     plt.plot(-1 * proto_mask[:, 1] * (180 / np.pi), proto_mask[:, 2] * (180 / np.pi), "<", mfc='none', mec="r", ms=7)
     t.plt_circle_grid(im_s)
@@ -1871,14 +1853,14 @@ if __name__ == "__main__":
                         help="Larger values increases the size of the point sources, a smaller value decreases the size")
     parser.add_argument("--pickle_file",
                         type=str,
-                        default="PHASE_STEF_45_image.p",
+                        default=None,
                         help="The pickle file to use")
     parser.add_argument("--mask",
                         action="store_true",
                         help="Set to apply the mask to the image")
     parser.add_argument("--dont_save",
                         action="store_false",
-                        help="Set to apply the mask to the image")
+                        help="Set to not save the image")
     parser.add_argument("--type",
                         type=str,
                         default="GT-1",
@@ -1944,8 +1926,9 @@ if __name__ == "__main__":
     # initializes ghost object
     # ant_list = ['CS001LBA', 'CS002LBA', 'CS003LBA', 'CS004LBA', 'CS005LBA', 'CS006LBA', 'CS007LBA', 'CS011LBA', 'CS013LBA', 'CS017LBA', 'CS021LBA', 'CS024LBA', 'CS026LBA', 'CS028LBA', 'CS030LBA', 'CS031LBA', 'CS032LBA', 'CS101LBA', 'CS103LBA', 'CS201LBA', 'CS301LBA', 'CS302LBA', 'CS401LBA', 'CS501LBA', 'RS106LBA', 'RS205LBA', 'RS208LBA', 'RS306LBA', 'RS307LBA', 'RS406LBA', 'RS503LBA', 'RS508LBA', 'RS509LBA']
     ant_list = "all"
-    point_sources_true = np.array([(1, 0, 0, args.sigma * np.pi/180), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi/180)])
-    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi/180)])
+    point_sources_true = np.array(
+        [(1, 0, 0, args.sigma * np.pi / 180), (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi / 180)])
+    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
     t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
     # t.plot_ghost_mask_paper([4,5],pickle_file="pat1.p")
 
@@ -1968,7 +1951,7 @@ if __name__ == "__main__":
     # plot_image("EW_01.p")
     image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type, plot=True,
                                      mask=args.mask,
-                                     algo=args.algo, no_auto=True, pickle_file=args.pickle_file,
+                                     algo=args.algo, no_auto=True, pickle_file="output/" + args.pickle_file,
                                      save_fig=args.dont_save)
     # image,l_v,m_v = t.sky_pq_2D_LM([4,5],150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="PHASE_STEF",no_auto=True,pickle_file="PHASE_STEF_45_image.p")
     # image,l_v,m_v = t.sky_2D(150,4,2,sigma = 0.05,type_w="GT-1",plot=False,mask=False,algo="PHASE_STEF",pickle_file="PHASE_STEF_image.p",no_auto=True)
