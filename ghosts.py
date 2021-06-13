@@ -2,7 +2,6 @@ import numpy as np
 import pylab as plt
 import sys
 
-import scipy.special
 from scipy import optimize
 import matplotlib as mpl
 import argparse
@@ -29,11 +28,11 @@ class T_ghost():
         self.antenna = antenna
         self.true_point_sources = true_point_sources
         self.model_point_sources = model_point_sources
-        self.A_1 = true_point_sources[0, 0]
+        self.A_1 = true_point_sources[0][0]
         if len(true_point_sources) > 1:
-            self.A_2 = true_point_sources[1, 0]
-            self.l_0 = true_point_sources[1, 1]
-            self.m_0 = true_point_sources[1, 2]
+            self.A_2 = true_point_sources[1][0]
+            self.l_0 = true_point_sources[1][1]
+            self.m_0 = true_point_sources[1][2]
         else:
             self.A_2 = 0
             self.l_0 = 0
@@ -81,25 +80,16 @@ class T_ghost():
             file_name = "./Pickle/KAT7_1445_1x16_12h_antnames.npy"
             self.ant_names = np.load(file_name)
 
-            # print "ant_names = ",self.ant_names
             self.a_list = self.get_antenna(self.antenna, self.ant_names)
-            # print "a_list = ",self.a_list
 
             file_name = "./Pickle/KAT7_1445_1x16_12h_phi_m.npy"
             self.phi_m = np.load(file_name)
-            # print self.phi_m
-            # print "self.phi_m = ",self.phi_m
-            # self.phi_m =  pickle.load(open(MS[2:-4]+"_phi_m.npy","rb"))
 
             file_name = "./Pickle/KAT7_1445_1x16_12h_b_m.npy"
             self.b_m = np.load(file_name)
-            # print "self.b_m = ",self.b_m
-            # self.b_m = pickle.load(open(MS[2:-4]+"_b_m.npy","rb"))
 
             file_name = "./Pickle/KAT7_1445_1x16_12h_theta_m.npy"
             self.theta_m = np.load(file_name)
-            # print "self.theta_m = ",self.theta_m
-            # self.theta_m = pickle.load(open(MS[2:-4]+"_theta_m.npy","rb"))
 
             self.sin_delta = None
 
@@ -107,27 +97,20 @@ class T_ghost():
             self.wave = np.load(file_name)
             file_name = "./Pickle/KAT7_1445_1x16_12h_declination.npy"
             self.dec = np.load(file_name)
-            # print "self.dec = ",self.dec
-            # self.dec = np.pi/2.0 #declination
         elif MS == "LOFAR":
             file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_antnames.npy"
             self.ant_names = np.load(file_name)
 
-            # print "ant_names = ",self.ant_names
             self.a_list = self.get_antenna(self.antenna, self.ant_names)
-            # print "a_list = ",self.a_list
 
             file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_phi_m.npy"
             self.phi_m = np.load(file_name)
-            # self.phi_m =  pickle.load(open(MS[2:-4]+"_phi_m.npy","rb"))
 
             file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_b_m.npy"
             self.b_m = np.load(file_name)
-            # self.b_m = pickle.load(open(MS[2:-4]+"_b_m.npy","rb"))
 
             file_name = "./Pickle/L40032_SAP003_SB240_uv.MS.NEW_Feb13_1CHNL.calibrated_theta_m.npy"
             self.theta_m = np.load(file_name)
-            # self.theta_m = pickle.load(open(MS[2:-4]+"_theta_m.npy","rb"))
 
             self.sin_delta = None
 
@@ -221,11 +204,11 @@ class T_ghost():
         Rt = R - R * np.eye(R.shape[0])
 
         for k in range(R.shape[0]):
-            theta_v[k] = -1 * (np.sum(Rt[k, :])).imag / (R.shape[0] - 1)
+            theta_v[k] = -1 * (np.sum(Rt[k][:])).imag / (R.shape[0] - 1)
 
         for k in range(R.shape[0]):
             for j in range(R.shape[1]):
-                G[k, j] = 1 + (-1) * (1j) * (theta_v[k] - theta_v[j])
+                G[k][j] = 1 + (-1) * (1j) * (theta_v[k] - theta_v[j])
 
         return theta_v, G
 
@@ -238,8 +221,8 @@ class T_ghost():
         for k in range(imax):
             g_old = np.copy(g_temp)
             for p in range(N):
-                z = g_old * M[:, p]
-                g_temp[p] = np.sum(np.conj(R[:, p]) * z) / (np.sum(np.conj(z) * z))
+                z = g_old * M[:][p]
+                g_temp[p] = np.sum(np.conj(R[:][p]) * z) / (np.sum(np.conj(z) * z))
 
             if (k % 2 == 0):
                 if (np.sqrt(np.sum(np.absolute(g_temp - g_old) ** 2)) / np.sqrt(
@@ -269,8 +252,8 @@ class T_ghost():
         for i in range(imax):
             g_old = np.copy(g_temp)
             for p in range(N):
-                z = g_old * M[:, p]
-                g_temp[p] = np.sum(np.conj(R[:, p]) * z) / (np.sum(np.conj(z) * z))
+                z = g_old * M[:][p]
+                g_temp[p] = np.sum(np.conj(R[:][p]) * z) / (np.sum(np.conj(z) * z))
             if (i % 2 == 0):
                 g_temp = (g_temp + g_old) / 2
             g_temp = g_temp / np.absolute(g_temp)
@@ -298,8 +281,8 @@ class T_ghost():
         for i in range(imax):
             g_old = np.copy(g_temp)
             for p in range(N):
-                z = g_old * M[:, p]
-                g_temp[p] = np.sum(np.conj(R[:, p]) * z) / (np.sum(np.conj(z) * z))
+                z = g_old * M[:][p]
+                g_temp[p] = np.sum(np.conj(R[:][p]) * z) / (np.sum(np.conj(z) * z))
             if (i % 2 == 0):
                 if (np.sqrt(np.sum(np.absolute(g_temp - g_old) ** 2)) / np.sqrt(
                         np.sum(np.absolute(g_temp) ** 2)) <= tau):
@@ -325,15 +308,13 @@ class T_ghost():
         phase = np.zeros((R.shape[0],), dtype=float)
         phase_delta = np.zeros((R.shape[0],), dtype=float)
         m = np.zeros((R.shape[0],), dtype=float)
-        # model_inverse = ((np.sum(np.conj(M[:,p])*M[:,p])).real)**(-1)
         g = np.exp(-1j * phase)
         for i in range(imax):
-            # print "i_p = ",i
             for p in range(N):
                 if i == 0:
-                    m[p] = ((np.sum(np.conj(M[:, p]) * M[:, p])).real) ** (-1)
-                z = g * M[:, p]
-                phase_delta[p] = (-1 * np.conj(g[p]) * np.sum(np.conj(R[:, p]) * z)).imag * m[p]
+                    m[p] = ((np.sum(np.conj(M[:][p]) * M[:][p])).real) ** (-1)
+                z = g * M[:][p]
+                phase_delta[p] = (-1 * np.conj(g[p]) * np.sum(np.conj(R[:][p]) * z)).imag * m[p]
 
             if (i % 2 == 0):
                 phase_new = phase + phase_delta
@@ -346,7 +327,6 @@ class T_ghost():
             else:
                 phase = phase_new
                 g = np.exp(-1j * phase)
-        # print "Phase i = ",i
         G = np.dot(np.diag(g), temp)
         G = np.dot(G, np.diag(g.conj()))
         return phase, G
@@ -370,9 +350,7 @@ class T_ghost():
         # SELECTING ONLY SPECIFIC INTERFEROMETERS
         #####################################################
         b_list = self.get_antenna(baseline, self.ant_names)
-        # print "b_list = ",b_list
         d_list = self.calculate_delete_list()
-        # print "d_list = ",d_list
 
         phi = self.phi_m[b_list[0], b_list[1]]
         delta_b = (self.b_m[b_list[0], b_list[1]] / wave) * np.cos(dec)
@@ -406,15 +384,6 @@ class T_ghost():
             theta_new = np.delete(theta_new, d_list, axis=1)
         #####################################################
 
-        # print "theta_new = ",theta_new
-        # print "b_new = ",b_new
-        # print "phi_new = ",phi_new
-        # print "delta_sin = ",self.sin_delta
-
-        # print "phi = ",phi
-        # print "delta_b = ",delta_b
-        # print "theta = ",theta*(180/np.pi)
-
         if u != None:
             u_dim1 = len(u)
             u_dim2 = 1
@@ -453,16 +422,11 @@ class T_ghost():
         temp = np.ones(phi_new.shape, dtype=complex)
 
         for i in range(u_dim1):
-            # print("u_dim1 = ", u_dim1)
             progress_bar(i, u_dim1)
-            # print("i = ", i)
             for j in range(u_dim2):
-                # print "u_dim1 = ",u_dim1
-                # print "i = ",i
-                # print("j = ",j)
                 if u_dim2 != 1:
-                    u_t = uu[i, j]
-                    v_t = vv[i, j]
+                    u_t = uu[i][j]
+                    v_t = vv[i][j]
                 else:
                     u_t = uu[i]
                     v_t = vv[i]
@@ -476,47 +440,34 @@ class T_ghost():
                 # ROTATION (Clockwise)
                 u_t_r = u_t * np.cos(theta) + v_t * np.sin(theta)
                 v_t_r = -1 * u_t * np.sin(theta) + v_t * np.cos(theta)
-                # u_t_r = u_t
-                # v_t_r = v_t
                 # NON BASELINE TRANSFORMATION (NxN) operations
                 #####################################################
                 # ROTATION (Anti-clockwise)
                 u_t_m = u_t_r * np.cos(theta_new) - v_t_r * np.sin(theta_new)
                 v_t_m = u_t_r * np.sin(theta_new) + v_t_r * np.cos(theta_new)
-                # u_t_m = u_t_r
-                # v_t_m = v_t_r
                 # SCALING
                 u_t_m = phi_new * u_t_m
                 v_t_m = phi_new * np.sin(dec) * v_t_m
                 # ADDITION
                 v_t_m = v_t_m + b_new
 
-                # print "u_t_m = ",u_t_m
-                # print "v_t_m = ",v_t_m
-
                 # NB --- THIS IS WHERE YOU ADD THE NOISE
-                # if scale == None:
-                #   R = self.A_1 + self.A_2*np.exp(-2*1j*np.pi*(u_t_m*self.l_0+v_t_m*self.m_0))
-                # else:
-                #   R = self.A_1 + self.A_2*np.exp(-2*1j*np.pi*(u_t_m*self.l_0+v_t_m*self.m_0)) + np.random.normal(size=u_t_m.shape,scale=scale)
-                # u_t_m[np.absolute(u_t_m)>4000] = 0
-                # v_t_m[np.absolute(v_t_m)>4000] = 0
                 R = np.zeros(u_t_m.shape)
 
                 Gauss = lambda sigma, uu, vv: (2 * np.pi * sigma ** 2) * np.exp(
                     -2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
 
                 for k in range(len(self.true_point_sources)):
-                    R = R + self.true_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
-                            u_t_m * self.true_point_sources[k, 1] + v_t_m * self.true_point_sources[k, 2]))
-                    R *= Gauss(self.true_point_sources[k, 3], u_t_m, v_t_m) if len(
+                    R = R + self.true_point_sources[k][0] * np.exp(-2 * 1j * np.pi * (
+                            u_t_m * self.true_point_sources[k][1] + v_t_m * self.true_point_sources[k][2]))
+                    R *= Gauss(self.true_point_sources[k][3], u_t_m, v_t_m) if len(
                         self.true_point_sources[k]) > 3 else 1
 
                 M = np.zeros(u_t_m.shape)
                 for k in range(len(self.model_point_sources)):
-                    M = M + self.model_point_sources[k, 0] * np.exp(-2 * 1j * np.pi * (
-                            u_t_m * self.model_point_sources[k, 1] + v_t_m * self.model_point_sources[k, 2]))
-                    M *= Gauss(self.model_point_sources[k, 3], u_t_m, v_t_m) if len(
+                    M = M + self.model_point_sources[k][0] * np.exp(-2 * 1j * np.pi * (
+                            u_t_m * self.model_point_sources[k][1] + v_t_m * self.model_point_sources[k][2]))
+                    M *= Gauss(self.model_point_sources[k][3], u_t_m, v_t_m) if len(
                         self.model_point_sources[k]) > 3 else 1
 
                 if algo == "STEFCAL":
@@ -534,21 +485,21 @@ class T_ghost():
 
                 if self.antenna == "all":
                     if u_dim2 != 1:
-                        V_R_pq[i, j] = R[b_list[0], b_list[1]]
-                        V_G_pq[i, j] = G[b_list[0], b_list[1]]
+                        V_R_pq[i][j] = R[b_list[0], b_list[1]]
+                        V_G_pq[i][j] = G[b_list[0], b_list[1]]
                     else:
                         V_R_pq[i] = R[b_list[0], b_list[1]]
                         V_G_pq[i] = G[b_list[0], b_list[1]]
                 else:
                     for k in range(p_new.shape[0]):
                         for l in range(p_new.shape[1]):
-                            if (p_new[k, l] == b_list[0]) and (q_new[k, l] == b_list[1]):
+                            if (p_new[k][l] == b_list[0]) and (q_new[k][l] == b_list[1]):
                                 if u_dim2 != 1:
-                                    V_R_pq[i, j] = R[k, l]
-                                    V_G_pq[i, j] = G[k, l]
+                                    V_R_pq[i][j] = R[k][l]
+                                    V_G_pq[i][j] = G[k][l]
                                 else:
-                                    V_R_pq[i] = R[k, l]
-                                    V_G_pq[i] = G[k, l]
+                                    V_R_pq[i] = R[k][l]
+                                    V_G_pq[i] = G[k][l]
 
         return u, v, V_G_pq, V_R_pq, phi, delta_b, theta, l_cor, m_cor
 
@@ -573,9 +524,7 @@ class T_ghost():
         # SELECTING ONLY SPECIFIC INTERFEROMETERS
         #####################################################
         b_list = self.get_antenna(baseline, self.ant_names)
-        # print "b_list = ",b_list
         d_list = self.calculate_delete_list()
-        # print "d_list = ",d_list
 
         phi = self.phi_m[b_list[0], b_list[1]]
         delta_b = (self.b_m[b_list[0], b_list[1]] / wave) * np.cos(dec)
@@ -607,15 +556,6 @@ class T_ghost():
             theta_new = np.delete(theta_new, d_list, axis=1)
         #####################################################
 
-        # print "theta_new = ",theta_new
-        # print "b_new = ",b_new
-        # print "phi_new = ",phi_new
-        # print "delta_sin = ",self.sin_delta
-
-        # print "phi = ",phi
-        # print "delta_b = ",delta_b
-        # print "theta = ",theta*(180/np.pi)
-
         if u != None:
             u_dim1 = len(u)
             u_dim2 = 1
@@ -656,8 +596,8 @@ class T_ghost():
         for i in range(u_dim1):
             for j in range(u_dim2):
                 if u_dim2 != 1:
-                    u_t = uu[i, j]
-                    v_t = vv[i, j]
+                    u_t = uu[i][j]
+                    v_t = vv[i][j]
                 else:
                     u_t = uu[i]
                     v_t = vv[i]
@@ -671,23 +611,16 @@ class T_ghost():
                 # ROTATION (Clockwise)
                 u_t_r = u_t * np.cos(theta) + v_t * np.sin(theta)
                 v_t_r = -1 * u_t * np.sin(theta) + v_t * np.cos(theta)
-                # u_t_r = u_t
-                # v_t_r = v_t
                 # NON BASELINE TRANSFORMATION (NxN) operations
                 #####################################################
                 # ROTATION (Anti-clockwise)
                 u_t_m = u_t_r * np.cos(theta_new) - v_t_r * np.sin(theta_new)
                 v_t_m = u_t_r * np.sin(theta_new) + v_t_r * np.cos(theta_new)
-                # u_t_m = u_t_r
-                # v_t_m = v_t_r
                 # SCALING
                 u_t_m = phi_new * u_t_m
                 v_t_m = phi_new * np.absolute(np.sin(dec)) * v_t_m
                 # ADDITION
                 v_t_m = v_t_m + b_new
-
-                # print "u_t_m = ",u_t_m
-                # print "v_t_m = ",v_t_m
 
                 # NB --- THIS IS WHERE YOU ADD THE NOISE
                 if scale == None:
@@ -711,21 +644,21 @@ class T_ghost():
                     G = np.dot(G, np.diag(g.conj()))
                     if self.antenna == "all":
                         if u_dim2 != 1:
-                            V_R_pq[i, j] = R[b_list[0], b_list[1]]
-                            V_G_pq[i, j] = G[b_list[0], b_list[1]]
+                            V_R_pq[i][j] = R[b_list[0], b_list[1]]
+                            V_G_pq[i][j] = G[b_list[0], b_list[1]]
                         else:
                             V_R_pq[i] = R[b_list[0], b_list[1]]
                             V_G_pq[i] = G[b_list[0], b_list[1]]
                     else:
                         for k in range(p_new.shape[0]):
                             for l in range(p_new.shape[1]):
-                                if (p_new[k, l] == b_list[0]) and (q_new[k, l] == b_list[1]):
+                                if (p_new[k][l] == b_list[0]) and (q_new[k][l] == b_list[1]):
                                     if u_dim2 != 1:
-                                        V_R_pq[i, j] = R[k, l]
-                                        V_G_pq[i, j] = G[k, l]
+                                        V_R_pq[i][j] = R[k][l]
+                                        V_G_pq[i][j] = G[k][l]
                                     else:
-                                        V_R_pq[i] = R[k, l]
-                                        V_G_pq[i] = G[k, l]
+                                        V_R_pq[i] = R[k][l]
+                                        V_G_pq[i] = G[k][l]
                 else:
                     R1 = (R - self.A_1) / self.A_2
                     P = R1.shape[0]
@@ -733,28 +666,27 @@ class T_ghost():
                         G = self.A_1 + ((0.5 * self.A_2) / P) * (np.sum(R1[b_list[0], :]) + np.sum(R1[:, b_list[1]]))
                         G = (G + ((0.5 * self.A_2) / P) ** 2 * R1[b_list[0], b_list[1]] * np.sum(R1))
                         if u_dim2 != 1:
-                            V_R_pq[i, j] = R[b_list[0], b_list[1]]
-                            V_G_pq[i, j] = G
+                            V_R_pq[i][j] = R[b_list[0], b_list[1]]
+                            V_G_pq[i][j] = G
                         else:
                             V_R_pq[i] = R[b_list[0], b_list[1]]
                             V_G_pq[i] = G
                     else:
                         for k in range(p_new.shape[0]):
                             for l in range(p_new.shape[1]):
-                                if (p_new[k, l] == b_list[0]) and (q_new[k, l] == b_list[1]):
-                                    G = self.A1 + ((0.5 * self.A2) / P) * (np.sum(R1[k, :]) + np.sum(R1[:, l]))
-                                    G = (G + ((0.5 * self.A2) / P) ** 2 * R1[k, l] * np.sum(R1))
+                                if (p_new[k][l] == b_list[0]) and (q_new[k][l] == b_list[1]):
+                                    G = self.A1 + ((0.5 * self.A2) / P) * (np.sum(R1[k][:]) + np.sum(R1[:][l]))
+                                    G = (G + ((0.5 * self.A2) / P) ** 2 * R1[k][l] * np.sum(R1))
                                     if u_dim2 != 1:
-                                        V_R_pq[i, j] = R[k, l]
-                                        V_G_pq[i, j] = G
+                                        V_R_pq[i][j] = R[k][l]
+                                        V_G_pq[i][j] = G
                                     else:
-                                        V_R_pq[i] = R[k, l]
+                                        V_R_pq[i] = R[k][l]
                                         V_G_pq[i] = G
         return u, v, V_G_pq, V_R_pq, phi, delta_b, theta, l_cor, m_cor
 
     def vis_function(self, type_w, avg_v, V_G_pq, V_G_qp, V_R_pq, take_conj=False):
         if type_w == "R":
-            print("Hallo R")
             vis = V_R_pq
         elif type_w == "RT":
             if take_conj:
@@ -844,7 +776,7 @@ class T_ghost():
             dec = self.dec
         ant_len = len(self.a_list)
         counter = 0
-        baseline = [0, 0]
+        baseline = [0][0]
 
         for k in range(ant_len):
             for j in range(k + 1, ant_len):
@@ -855,7 +787,7 @@ class T_ghost():
                 print("baseline = ", baseline)
                 print("pickle_file = ", pickle_file)
                 if avg_v:
-                    baseline_new = [0, 0]
+                    baseline_new = [0][0]
                     baseline_new[0] = baseline[1]
                     baseline_new[1] = baseline[0]
                     u, v, V_G_qp, V_R_qp, phi, delta_b, theta, l_cor, m_cor = self.visibilities_pq_2D_LM(baseline_new,
@@ -889,36 +821,12 @@ class T_ghost():
 
         N = l_cor.shape[0]
 
-        delta_u = u[1] - u[0]
-        delta_v = v[1] - v[0]
-
-        if sigma != None:
-
-            uu, vv = np.meshgrid(u, v)
-
-            sigma = (np.pi / 180) * sigma
-
-            # g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
-
-            vis = vis  # * g_kernal
-
-            vis = np.roll(vis, int(-1 * (N - 1) / 2), axis=0)
-            vis = np.roll(vis, int(-1 * (N - 1) / 2), axis=1)
-
-            image = np.fft.fft2(vis) * (delta_u * delta_v)
-        else:
-
-            image = np.fft.fft2(vis) / N ** 2
-
-        # ll,mm = np.meshgrid(l_cor,m_cor)
+        image = np.fft.fft2(vis) / N ** 2
 
         image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
         image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
 
         image = image[:, ::-1]
-        # image = image[::-1,:]
-
-        # image = (image/1)*100
 
         if plot:
 
@@ -932,16 +840,11 @@ class T_ghost():
             cb.set_label(r"Flux [% of $A_2$]")
             self.plt_circle_grid(image_s)
 
-            # print "amax = ",np.amax(image.real)
-            # print "amax = ",np.amax(np.absolute(image))
-
             plt.xlim([-image_s, image_s])
             plt.ylim([-image_s, image_s])
 
             if mask:
                 self.create_mask_all(plot_v=True, dec=dec)
-
-            # self.create_mask(baseline,plot_v = True)
 
             plt.xlabel("$l$ [degrees]")
             plt.ylabel("$m$ [degrees]")
@@ -959,13 +862,11 @@ class T_ghost():
 
             if mask:
                 self.create_mask_all(plot_v=True)
-            # self.create_mask(baseline,plot_v = True)
-
             plt.xlabel("$l$ [degrees]")
             plt.ylabel("$m$ [degrees]")
             plt.show()
         if pickle_file != None:
-            (self.A_2, pickle_file)
+            np.dump(self.A_2, pickle_file)
             np.dump(l_cor, pickle_file)
             np.dump(m_cor, pickle_file)
             np.dump(image, pickle_file)
@@ -1002,7 +903,7 @@ class T_ghost():
             dec = self.dec
 
         if avg_v:
-            baseline_new = [0, 0]
+            baseline_new = [0][0]
             baseline_new[0] = baseline[1]
             baseline_new[1] = baseline[0]
             u, v, V_G_qp, V_R_qp, phi, delta_b, theta, l_cor, m_cor = self.visibilities_pq_2D_LM(baseline_new,
@@ -1024,7 +925,7 @@ class T_ghost():
 
         l_old = np.copy(l_cor)
         m_old = np.copy(m_cor)
-        print("pickle_file = ", pickle_file)
+        print("\npickle_file = ", pickle_file)
         N = l_cor.shape[0]
 
         vis = self.vis_function(type_w, avg_v, V_G_pq, V_G_qp, V_R_pq, take_conj1)
@@ -1034,7 +935,7 @@ class T_ghost():
         if algo2 != None:
 
             if avg_v:
-                baseline_new = [0, 0]
+                baseline_new = [0][0]
                 baseline_new[0] = baseline[1]
                 baseline_new[1] = baseline[0]
                 u, v, V_G_qp, V_R_qp, phi, delta_b, theta, l_cor2, m_cor2 = self.visibilities_pq_2D_LM(baseline_new,
@@ -1060,36 +961,12 @@ class T_ghost():
             vis2 = self.vis_function(type_w, avg_v, V_G_pq, V_G_qp, V_R_pq, take_conj2)
             vis = vis - vis2
 
-        # vis = V_G_pq-1
-
-        if sigma is not None:
-
-            uu, vv = np.meshgrid(u, v)
-
-            sigma = (np.pi / 180) * sigma
-
-            # g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
-
-            vis = vis  # * g_kernal
-            vis = np.roll(vis, int(int(-1 * (N - 1) / 2)), axis=0)
-            vis = np.roll(vis, int(int(-1 * (N - 1) / 2)), axis=1)
-
-            image = np.fft.fft2(vis) * (delta_u * delta_v)
-        else:
-
-            image = np.fft.fft2(vis) / N ** 2
-
-        # ll,mm = np.meshgrid(l_cor,m_cor)
+        image = np.fft.fft2(vis) / N ** 2
 
         image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
         image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
 
-        # JASON I HAD TO ADD THIS LINE FLIPPED IN X AND Y
         image = image[::-1, ::-1]
-
-        # image = image[::-1,:]
-
-        # image = (image/(50-7.5))*100
 
         if plot:
 
@@ -1097,13 +974,10 @@ class T_ghost():
             m_cor = m_cor * (180 / np.pi)
 
             fig = plt.figure()
-            # cs = plt.imshow((image.real/self.A_2)*100,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]],vmax=8.1,vmin=-27.1)
             cs = plt.imshow((image.real / self.A_2) * 100, interpolation="bicubic", cmap="cubehelix",
                             extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
-            # cs = plt.imshow(image.real,interpolation = "bicubic", cmap = "jet", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]])
             cb = fig.colorbar(cs)
             cb.set_label(r"Flux [% of $A_2$]")
-            # cb.set_label("Jy")
             self.plt_circle_grid(image_s)
             if label_v:
                 self.plot_source_labels_pq(baseline, im=image_s, plot_x=False)
@@ -1118,9 +992,6 @@ class T_ghost():
             if mask:
                 p = self.create_mask(baseline, plot_v=True, dec=dec)
 
-            # for k in xrange(len(p)):
-            #    plt.plot(p[k,1]*(180/np.pi),p[k,2]*(180/np.pi),"kv")
-
             plt.xlabel("$l$ [degrees]")
             plt.ylabel("$m$ [degrees]")
             plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
@@ -1133,14 +1004,10 @@ class T_ghost():
                 plt.show()
 
             fig = plt.figure()
-            # cs = plt.imshow((image.imag/self.A_2)*100,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]],vmax=12.3,vmin=-12.3)
-            # JASON I HAD TO ADD THE -1 HERE (FOR SOME REASON IT WAS PLOTTING THE CONJUGATE)
             cs = plt.imshow(-1 * (image.imag / self.A_2) * 100, interpolation="bicubic", cmap="cubehelix",
                             extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
-            # cs = plt.imshow(image.imag,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]])
             cb = fig.colorbar(cs)
             cb.set_label(r"Flux [% of $A_2$]")
-            # cb.set_label("Flux [\% of A_2]")
 
             print("amax_imag = ", np.amax((image.imag / self.A_2) * 100))
             print("amin_imag = ", np.amin((image.imag / self.A_2) * 100))
@@ -1226,7 +1093,7 @@ class T_ghost():
             plt.plot(-1 * self.l_0 * (180 / np.pi), -1 * self.m_0 * (180 / np.pi), "rx")
 
         len_a = len(self.a_list)
-        b_list = [0, 0]
+        b_list = [0][0]
 
         first = True
 
@@ -1239,13 +1106,13 @@ class T_ghost():
                 theta = self.theta_m[b_list[0], b_list[1]]
                 for j in range(theta_new.shape[0]):
                     for k in range(j + 1, theta_new.shape[0]):
-                        if not np.allclose(phi_new[j, k], phi):
-                            l_cordinate = phi_new[j, k] / phi * (
-                                    np.cos(theta_new[j, k] - theta) * self.l_0 + sin_delta * np.sin(
-                                theta_new[j, k] - theta) * self.m_0)
-                            m_cordinate = phi_new[j, k] / phi * (
-                                    np.cos(theta_new[j, k] - theta) * self.m_0 - sin_delta ** (-1) * np.sin(
-                                theta_new[j, k] - theta) * self.l_0)
+                        if not np.allclose(phi_new[j][k], phi):
+                            l_cordinate = phi_new[j][k] / phi * (
+                                    np.cos(theta_new[j][k] - theta) * self.l_0 + sin_delta * np.sin(
+                                theta_new[j][k] - theta) * self.m_0)
+                            m_cordinate = phi_new[j][k] / phi * (
+                                    np.cos(theta_new[j][k] - theta) * self.m_0 - sin_delta ** (-1) * np.sin(
+                                theta_new[j][k] - theta) * self.l_0)
                             if plot_v == True:
                                 plt.plot(l_cordinate * (180 / np.pi), m_cordinate * (180 / np.pi), "rx")
                                 plt.plot(-1 * l_cordinate * (180 / np.pi), -1 * m_cordinate * (180 / np.pi), "rx")
@@ -1270,9 +1137,7 @@ class T_ghost():
         # SELECTING ONLY SPECIFIC INTERFEROMETERS
         #####################################################
         b_list = self.get_antenna(baseline, self.ant_names)
-        # print "b_list = ",b_list
         d_list = self.calculate_delete_list()
-        # print "d_list = ",d_list
 
         phi = self.phi_m[b_list[0], b_list[1]]
         delta_b = self.b_m[b_list[0], b_list[1]]
@@ -1303,8 +1168,8 @@ class T_ghost():
         #####################################################
         if plot_v == True:
             if plot_markers:
-                mk_string = self.return_color_marker([0, 0])
-                plt.plot(0, 0, self.return_color_marker([0, 0]), label="(0,0)", mfc='none', ms=5)
+                mk_string = self.return_color_marker([0][0])
+                plt.plot(0, 0, self.return_color_marker([0][0]), label="(0,0)", mfc='none', ms=5)
                 mk_string = self.return_color_marker(baseline)
                 plt.plot(self.l_0 * (180 / np.pi), self.m_0 * (180 / np.pi), self.return_color_marker(baseline),
                          label="(" + str(baseline[0]) + "," + str(baseline[1]) + ")", mfc='none', mec=mk_string[0],
@@ -1321,25 +1186,25 @@ class T_ghost():
         for j in range(theta_new.shape[0]):
             for k in range(j + 1, theta_new.shape[0]):
                 # print "Hallo:",j," ",k
-                if not np.allclose(phi_new[j, k], phi):
+                if not np.allclose(phi_new[j][k], phi):
                     # print "phi = ",phi_new[j,k]/phi
-                    l_cordinate = (phi_new[j, k] * 1.0) / (1.0 * phi) * (
-                            np.cos(theta_new[j, k] - theta) * self.l_0 + sin_delta * np.sin(
-                        theta_new[j, k] - theta) * self.m_0)
+                    l_cordinate = (phi_new[j][k] * 1.0) / (1.0 * phi) * (
+                            np.cos(theta_new[j][k] - theta) * self.l_0 + sin_delta * np.sin(
+                        theta_new[j][k] - theta) * self.m_0)
                     # print "l_cordinate = ",l_cordinate*(180/np.pi)
-                    m_cordinate = (phi_new[j, k] * 1.0) / (phi * 1.0) * (
-                            np.cos(theta_new[j, k] - theta) * self.m_0 - sin_delta ** (-1) * np.sin(
-                        theta_new[j, k] - theta) * self.l_0)
+                    m_cordinate = (phi_new[j][k] * 1.0) / (phi * 1.0) * (
+                            np.cos(theta_new[j][k] - theta) * self.m_0 - sin_delta ** (-1) * np.sin(
+                        theta_new[j][k] - theta) * self.l_0)
                     # print "m_cordinate = ",m_cordinate*(180/np.pi)
                     if plot_v == True:
                         if plot_markers:
-                            mk_string = self.return_color_marker([j, k])
+                            mk_string = self.return_color_marker([j][k])
                             plt.plot(l_cordinate * (180 / np.pi), m_cordinate * (180 / np.pi),
-                                     self.return_color_marker([j, k]), label="(" + str(j) + "," + str(k) + ")",
+                                     self.return_color_marker([j][k]), label="(" + str(j) + "," + str(k) + ")",
                                      mfc='none', mec=mk_string[0], ms=5)
-                            mk_string = self.return_color_marker([k, j])
+                            mk_string = self.return_color_marker([k][j])
                             plt.plot(-1 * l_cordinate * (180 / np.pi), -1 * m_cordinate * (180 / np.pi),
-                                     self.return_color_marker([k, j]), label="(" + str(k) + "," + str(j) + ")",
+                                     self.return_color_marker([k][j]), label="(" + str(k) + "," + str(j) + ")",
                                      mfc='none', mec=mk_string[0], ms=5)
                             plt.legend(loc=8, ncol=9, numpoints=1, prop={"size": 7}, columnspacing=0.1)
                         else:
@@ -1358,8 +1223,8 @@ class T_ghost():
         point_sources_real = np.copy(point_sources)
         point_sources_imag = np.copy(point_sources)
         for k in range(len(point_sources)):
-            l_0 = point_sources[k, 1]
-            m_0 = point_sources[k, 2] * (-1)
+            l_0 = point_sources[k][1]
+            m_0 = point_sources[k][2] * (-1)
 
             l_max = l_0 + window / 2.0
             l_min = l_0 - window / 2.0
@@ -1368,17 +1233,9 @@ class T_ghost():
 
             m_rev = m[::-1]
 
-            # ll,mm = np.meshgrid(l,m)
-
             image_sub = image[:, (l < l_max) & (l > l_min)]
-            # ll_sub = ll[:,(l<l_max)&(l>l_min)]
-            # mm_sub = mm[:,(l<l_max)&(l>l_min)]
-
             if image_sub.size != 0:
-                # print "Problem..."
                 image_sub = image_sub[(m_rev < m_max) & (m_rev > m_min), :]
-                # ll_sub = ll_sub[(m_rev<m_max)&(m_rev>m_min),:]
-                # mm_sub = mm_sub[(m_rev<m_max)&(m_rev>m_min),:]
 
             # PLOTTING SUBSET IMAGE
             if plot:
@@ -1389,22 +1246,9 @@ class T_ghost():
                         l_cor = l_new * (180 / np.pi)
                         m_cor = m_new * (180 / np.pi)
 
-                        # plt.contourf(ll_sub*(180/np.pi),mm_sub*(180/np.pi),image_sub.real)
-                        # plt.show()
-
-                        # fig = plt.figure()
-                        # cs = plt.imshow(mm*(180/np.pi),interpolation = "bicubic", cmap = "jet")
-                        # fig.colorbar(cs)
-                        # plt.show()
-                        # fig = plt.figure()
-                        # cs = plt.imshow(ll*(180/np.pi),interpolation = "bicubic", cmap = "jet")
-                        # fig.colorbar(cs)
-                        # plt.show()
-
                         fig = plt.figure()
                         cs = plt.imshow(image_sub.real, interpolation="bicubic", cmap="jet",
                                         extent=[l_cor[0], l_cor[-1], m_cor[0], m_cor[-1]])
-                        # plt.plot(l_0*(180/np.pi),m_0*(180/np.pi),"rx")
                         fig.colorbar(cs)
                         plt.title("REAL")
                         plt.show()
@@ -1414,35 +1258,32 @@ class T_ghost():
                         fig.colorbar(cs)
                         plt.title("IMAG")
                         plt.show()
-            # print "image_sub = ",image_sub
             if image_sub.size != 0:
                 max_v_r = np.amax(image_sub.real)
-                # print "max_v_r = ",max_v_r
                 max_v_i = np.amax(image_sub.imag)
                 min_v_r = np.amin(image_sub.real)
                 min_v_i = np.amin(image_sub.imag)
                 if np.absolute(max_v_r) > np.absolute(min_v_r):
-                    point_sources_real[k, 0] = max_v_r
+                    point_sources_real[k][0] = max_v_r
                 else:
-                    point_sources_real[k, 0] = min_v_r
+                    point_sources_real[k][0] = min_v_r
                 if np.absolute(max_v_i) > np.absolute(min_v_i):
-                    point_sources_imag[k, 0] = max_v_i
+                    point_sources_imag[k][0] = max_v_i
                 else:
-                    point_sources_imag[k, 0] = min_v_i
+                    point_sources_imag[k][0] = min_v_i
 
             else:
-                # print "PROBLEM 2"
-                point_sources_real[k, 0] = 0
-                point_sources_imag[k, 0] = 0
+                point_sources_real[k][0] = 0
+                point_sources_imag[k][0] = 0
 
         return point_sources_real, point_sources_imag
 
     def extract_deteuro_mask(self, baseline, mask, p_labels):
         p = baseline[0]
         q = baseline[1]
-        mask1 = np.logical_not(np.logical_or(p_labels[:, 0] == p, p_labels[:, 1] == q))
-        mask2 = np.logical_not(np.logical_and(p_labels[:, 0] == 0, p_labels[:, 1] == 0))
-        mask3 = np.logical_not(np.logical_and(p_labels[:, 0] == q, p_labels[:, 1] == p))
+        mask1 = np.logical_not(np.logical_or(p_labels[:][0] == p, p_labels[:][1] == q))
+        mask2 = np.logical_not(np.logical_and(p_labels[:][0] == 0, p_labels[:][1] == 0))
+        mask3 = np.logical_not(np.logical_and(p_labels[:][0] == q, p_labels[:][1] == p))
         deteuro_mask = np.logical_and(mask1, mask2)
         deteuro_mask = np.logical_and(deteuro_mask, mask3)
         return mask[deteuro_mask], p_labels[deteuro_mask]
@@ -1450,35 +1291,27 @@ class T_ghost():
     def extract_deteuro_mask_all(self, baseline, mask, p_labels):
         p = baseline[0]
         q = baseline[1]
-        mask1 = np.logical_not(np.logical_or(p_labels[:, 0] == p, p_labels[:, 1] == q))
-        mask2 = np.logical_not(np.logical_and(p_labels[:, 0] == 0, p_labels[:, 1] == 0))
+        mask1 = np.logical_not(np.logical_or(p_labels[:][0] == p, p_labels[:][1] == q))
+        mask2 = np.logical_not(np.logical_and(p_labels[:][0] == 0, p_labels[:][1] == 0))
         deteuro_mask = np.logical_and(mask1, mask2)
         return mask[deteuro_mask], p_labels[deteuro_mask]
 
     def extract_proto_mask_all(self, baseline, mask, p_labels):
         p = baseline[0]
         q = baseline[1]
-        mask1 = np.logical_or(p_labels[:, 0] == p, p_labels[:, 1] == q)
-        mask2 = np.logical_and(p_labels[:, 0] == 0, p_labels[:, 1] == 0)
+        mask1 = np.logical_or(p_labels[:][0] == p, p_labels[:][1] == q)
+        mask2 = np.logical_and(p_labels[:][0] == 0, p_labels[:][1] == 0)
         proto_mask = np.logical_or(mask1, mask2)
         return mask[proto_mask], p_labels[proto_mask]
 
     def plot_ghost_mask_paper(self, baseline, dec=-74.66 * (np.pi / 180), im_s=4, pickle_file=None):
         mask, p_labels = self.create_mask(baseline, plot_v=False, dec=dec, plot_markers=False)
-        # self.plt_circle_grid(abs(im_s))
-        # plt.title("Baseline: "+str(baseline[0])+str(baseline[1]))
-        # plt.xlabel("$l$ [degrees]")
-        # plt.ylabel("$m$ [degrees]")
-        # plt.axis("image")
-        # plt.xlim([-1*abs(im_s),abs(im_s)])
-        # plt.ylim([-1*abs(im_s),abs(im_s)])
-        # plt.show()
 
         proto_mask, proto_labels = self.extract_proto_mask_all(baseline, mask, p_labels)
         deteuro_mask, deteuro_labels = self.extract_deteuro_mask_all(baseline, mask, p_labels)
-        plt.plot(proto_mask[:, 1] * (180 / np.pi), -1 * proto_mask[:, 2] * (180 / np.pi), "o",
+        plt.plot(proto_mask[:][1] * (180 / np.pi), -1 * proto_mask[:][2] * (180 / np.pi), "o",
                  label="Blue Proto-ghosts", mfc='none', mec="b", ms=7)
-        plt.plot(deteuro_mask[:, 1] * (180 / np.pi), -1 * deteuro_mask[:, 2] * (180 / np.pi), "s",
+        plt.plot(deteuro_mask[:][1] * (180 / np.pi), -1 * deteuro_mask[:][2] * (180 / np.pi), "s",
                  label="Red Deteuro-ghosts", mfc='none', mec="r", ms=7)
         self.plt_circle_grid(abs(im_s))
         plt.legend(loc=8, ncol=2, numpoints=1, prop={"size": 12})
@@ -1492,12 +1325,10 @@ class T_ghost():
         plt.show()
 
         proto_mask, proto_labels = self.extract_proto_mask_phase(baseline, mask, p_labels)
-        # deteuro_mask, deteuro_labels = self.extract_deteuro_mask_all(baseline,mask,p_labels)
-        plt.plot(proto_mask[:, 1] * (180 / np.pi), -1 * proto_mask[:, 2] * (180 / np.pi), "o",
+        plt.plot(proto_mask[:][1] * (180 / np.pi), -1 * proto_mask[:][2] * (180 / np.pi), "o",
                  label="Blue Proto-ghosts", mfc='none', mec="b", ms=7)
-        plt.plot(-1 * proto_mask[:, 1] * (180 / np.pi), proto_mask[:, 2] * (180 / np.pi), "o", label="Red Proto-ghosts",
+        plt.plot(-1 * proto_mask[:][1] * (180 / np.pi), proto_mask[:][2] * (180 / np.pi), "o", label="Red Proto-ghosts",
                  mfc='none', mec="r", ms=7)
-        # plt.plot(deteuro_mask[:,1]*(180/np.pi),-1*deteuro_mask[:,2]*(180/np.pi),"s",label="Deteuro-ghosts",mfc='none',mec="g",ms=7)
         self.plt_circle_grid(abs(im_s))
         plt.legend(loc=8, ncol=2, numpoints=1, prop={"size": 12})
 
@@ -1516,29 +1347,24 @@ class T_ghost():
     def extract_proto_mask_phase(self, baseline, mask, p_labels):
         p = baseline[0]
         q = baseline[1]
-        mask1 = np.logical_or(p_labels[:, 0] == p, p_labels[:, 1] == q)
-        # mask2 = np.logical_not(np.logical_and(p_labels[:,0]==p,p_labels[:,1]==q))
-        # proto_mask = np.logical_and(mask1,mask2)
+        mask1 = np.logical_or(p_labels[:][0] == p, p_labels[:][1] == q)
         proto_mask = mask1
         return mask[proto_mask], p_labels[proto_mask]
 
     def extract_proto_mask(self, baseline, mask, p_labels):
         p = baseline[0]
         q = baseline[1]
-        mask1 = np.logical_or(p_labels[:, 0] == p, p_labels[:, 1] == q)
-        mask2 = np.logical_not(np.logical_and(p_labels[:, 0] == p, p_labels[:, 1] == q))
+        mask1 = np.logical_or(p_labels[:][0] == p, p_labels[:][1] == q)
+        mask2 = np.logical_not(np.logical_and(p_labels[:][0] == p, p_labels[:][1] == q))
         proto_mask = np.logical_and(mask1, mask2)
-        # proto_mask = mask1
         return mask[proto_mask], p_labels[proto_mask]
 
 
 def plot_results(file_name, algo="STEF", type_plot="G", avg_baseline=21, N=7.0, ylim1=[0, 35], ylim2=[0, 0.8]):
-    # self.phi_m = pickle.load(open(file_name,"rb"))
     A_v = np.load(file_name)
     result = np.load(file_name)
     c = ["b", "r", "g"]
     one = np.ones(A_v.size)
-    # print "result = ",result
 
     if (algo == "STEF"):
         l = [r"$\mathbf{0}$", r"$\mathbf{s}_0$", r"-$\mathbf{s}_0$", "Blue Proto-ghost", "Red Deteuro-ghost"]
@@ -1554,21 +1380,13 @@ def plot_results(file_name, algo="STEF", type_plot="G", avg_baseline=21, N=7.0, 
         y_secondary = A_v / (N)
         y_proto = A_v / (2 * N)
         l = [r"$\mathbf{0}$", r"$\mathbf{s}_0$", r"-$\mathbf{s}_0$", "Blue Proto-ghost", "Red Proto-ghost"]
-        # y_anti =
 
     label_size = 15
     mpl.rcParams['xtick.labelsize'] = label_size
     mpl.rcParams['ytick.labelsize'] = label_size
 
-    # T_bright = one*(1./6)*100
-    # T_dim = one*(1./(12*21))*100
-    # plt.plot(A_v,T_bright,"b--",lw=1.5,label="T")
-    # plt.hold('on')
     for k in range(3):
-        # if k < 3:
-        plt.plot(A_v, (result[k, :] / A_v) * 100, c[k], lw=1.5, label=l[k])
-        # else:
-        #  plt.plot(A_v,(result[k,:]/(21*A_v))*100)
+        plt.plot(A_v, (result[k][:] / A_v) * 100, c[k], lw=1.5, label=l[k])
         plt.hold('on')
 
     plt.legend(loc=1, prop={'size': 15})
@@ -1583,18 +1401,12 @@ def plot_results(file_name, algo="STEF", type_plot="G", avg_baseline=21, N=7.0, 
     plt.ylim(ylim1)
     plt.xlabel("$A_2$", fontsize=label_size)
     plt.ylabel("% of $A_2$", fontsize=label_size)
-    # plt.ylim([-5,35])
     plt.show()
 
-    # plt.plot(A_v,T_dim,"b--",lw=1.5,label="T")
     plt.hold('on')
     for k in range(3, 5):
-        # if k < 3:
-        plt.plot(A_v, (result[k, :] / (avg_baseline * A_v)) * 100, c[k - 3], lw=1.5, label=l[k])
-        # else:
-        #  plt.plot(A_v,(result[k,:]/(21*A_v))*100)
+        plt.plot(A_v, (result[k][:] / (avg_baseline * A_v)) * 100, c[k - 3], lw=1.5, label=l[k])
         plt.hold('on')
-    # plt.plot(A_v,((result[3,:]+result[4,:])/(21*A_v))*100,lw=1.5,label="TEST")
     plt.legend(loc=1, prop={'size': 15})
     if algo == "STEF":
         avg_bas_theory = (N ** 2 - N) / 2.
@@ -1623,14 +1435,9 @@ def plot_image(pickle_file, precentage=False, convert_to_degrees=False):
     # print "Image = ",image
     print("Image.max = ", np.amax(image.real) / A_2 * 100)
     print("image.min = ", np.amin(image.real) / A_2 * 100)
-    # print "l_cor = ",l_cor
-    # print "m_cor = ",m_cor
-    # plt.imshow(image.real,extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]])
-    # plt.show()
     image_s = np.load(pickle_file)
     baseline = np.load(pickle_file)
     fig = plt.figure()
-    # cs = plt.imshow((image.real/self.A_2)*100,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]],vmax=8.1,vmin=-27.1)
     if precentage:
         cs = plt.imshow((image.real / A_2) * 100, interpolation="bicubic", cmap="cubehelix",
                         extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
@@ -1651,7 +1458,6 @@ def plot_image(pickle_file, precentage=False, convert_to_degrees=False):
     plt.show()
 
     fig = plt.figure()
-    # cs = plt.imshow((image.real/self.A_2)*100,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]],vmax=8.1,vmin=-27.1)
     if precentage:
         cs = plt.imshow((image.imag / A_2) * 100, interpolation="bicubic", cmap="cubehelix",
                         extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
@@ -1679,17 +1485,13 @@ def plot_image_full(pickle_file):
     m_cor = np.load(pickle_file) * (180 / np.pi)
     image = np.load(pickle_file)
     image_s = np.load(pickle_file)
-    # baseline = np.load(file_name)
     fig = plt.figure()
-    # cs = plt.imshow((image.real/self.A_2)*100,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]],vmax=8.1,vmin=-27.1)
     cs = plt.imshow((image.real / A_2) * 100, interpolation="bicubic", cmap="cubehelix",
                     extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
-    # cs = plt.imshow(image.real,interpolation = "bicubic", cmap = "jet", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]])
     cb = fig.colorbar(cs)
     cb.set_label(r"Flux [% of $A_2$]")
     t.plt_circle_grid(image_s)
     plt.xlabel("$l$ [degrees]")
-    # plt.title("Baseline "+str(baseline[0])+str(baseline[1])+" --- Real")
     plt.title("Real")
     plt.ylabel("$m$ [degrees]")
     plt.xlim([-image_s, image_s])
@@ -1697,15 +1499,12 @@ def plot_image_full(pickle_file):
     plt.show()
 
     fig = plt.figure()
-    # cs = plt.imshow((image.real/self.A_2)*100,interpolation = "bicubic", cmap = "cubehelix", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]],vmax=8.1,vmin=-27.1)
     cs = plt.imshow((image.imag / A_2) * 100, interpolation="bicubic", cmap="cubehelix",
                     extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
-    # cs = plt.imshow(image.real,interpolation = "bicubic", cmap = "jet", extent = [l_cor[0],-1*l_cor[0],m_cor[0],-1*m_cor[0]])
     cb = fig.colorbar(cs)
     cb.set_label(r"Flux [% of $A_2$]")
     t.plt_circle_grid(image_s)
     plt.xlabel("$l$ [degrees]")
-    # plt.title("Baseline "+str(baseline[0])+str(baseline[1])+" --- Imag")
     plt.ylabel("$m$ [degrees]")
     plt.xlim([-image_s, image_s])
     plt.ylim([-image_s, image_s])
@@ -1716,16 +1515,16 @@ def plot_ghost_pat_p(pat1, pat2, pat3, t):
     proto_mask = np.load(pat1)
     im_s = np.load(pat1)
     baseline = np.load(pat1)
-    plt.plot(proto_mask[:, 1] * (180 / np.pi), -1 * proto_mask[:, 2] * (180 / np.pi), "o", mfc='none', mec="b", ms=7)
-    plt.plot(-1 * proto_mask[:, 1] * (180 / np.pi), proto_mask[:, 2] * (180 / np.pi), "o", mfc='none', mec="r", ms=7)
+    plt.plot(proto_mask[:][1] * (180 / np.pi), -1 * proto_mask[:][2] * (180 / np.pi), "o", mfc='none', mec="b", ms=7)
+    plt.plot(-1 * proto_mask[:][1] * (180 / np.pi), proto_mask[:][2] * (180 / np.pi), "o", mfc='none', mec="r", ms=7)
     proto_mask = np.load(pat2)
     im_s = np.load(pat2)
-    plt.plot(proto_mask[:, 1] * (180 / np.pi), -1 * proto_mask[:, 2] * (180 / np.pi), "^", mfc='none', mec="b", ms=7)
-    plt.plot(-1 * proto_mask[:, 1] * (180 / np.pi), proto_mask[:, 2] * (180 / np.pi), "^", mfc='none', mec="r", ms=7)
+    plt.plot(proto_mask[:][1] * (180 / np.pi), -1 * proto_mask[:][2] * (180 / np.pi), "^", mfc='none', mec="b", ms=7)
+    plt.plot(-1 * proto_mask[:][1] * (180 / np.pi), proto_mask[:][2] * (180 / np.pi), "^", mfc='none', mec="r", ms=7)
     proto_mask = np.load(pat3)
     im_s = np.load(pat3)
-    plt.plot(proto_mask[:, 1] * (180 / np.pi), -1 * proto_mask[:, 2] * (180 / np.pi), "<", mfc='none', mec="b", ms=7)
-    plt.plot(-1 * proto_mask[:, 1] * (180 / np.pi), proto_mask[:, 2] * (180 / np.pi), "<", mfc='none', mec="r", ms=7)
+    plt.plot(proto_mask[:][1] * (180 / np.pi), -1 * proto_mask[:][2] * (180 / np.pi), "<", mfc='none', mec="b", ms=7)
+    plt.plot(-1 * proto_mask[:][1] * (180 / np.pi), proto_mask[:][2] * (180 / np.pi), "<", mfc='none', mec="r", ms=7)
     t.plt_circle_grid(im_s)
     plt.axis("image")
     plt.xlim([-im_s, im_s])
@@ -1745,7 +1544,6 @@ def progress_bar(count, total):
 
     percents = round(100.0 * count / float(total), 1)
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
-    # print('[%s] %s%s iteration %s\r' % (bar, percents, '%', count))
 
     sys.stdout.write('[%s] %s%s iteration %s\r' % (bar, percents, '%', count))
     sys.stdout.flush()
@@ -1776,7 +1574,7 @@ def experiment2():
     point_sources_true = np.array(
         [(1, 0, 0, args.sigma * np.pi / 180),
          (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])
-    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
+    point_sources_model = np.array([(1, 0, 0)])
     t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
     if args.pickle_file is not None:
         pickle = "output/" + args.pickle_file
@@ -1795,7 +1593,7 @@ def experiment3():
     point_sources_true = np.array(
         [(1, 0, 0),
          (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi / 180)])
-    point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
+    point_sources_model = np.array([(1, 0, 0)])
     t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
     if args.pickle_file is not None:
         pickle = "output/" + args.pickle_file
@@ -1878,13 +1676,18 @@ if __name__ == "__main__":
         experiment4()
     else:
         ant_list = "all"
+        # Point sources with no gaussian added
         point_sources_true = np.array(
-            [(1, 0, 0, args.sigma * np.pi / 180),
-             (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, args.sigma * np.pi / 180)])
-        point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180)])
+            [(1, 0, 0),
+             (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])
+        point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180), (0.5, 0, (1 * np.pi) / 180, (0 * np.pi), args.sigma * np.pi / 180)])
         t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
+        if args.pickle_file is not None:
+            pickle = "output/" + args.pickle_file
+        else:
+            pickle = None
         image, l_v, m_v = t.sky_pq_2D_LM(args.baseline, 150, args.radius, 2, sigma=args.sigma, type_w=args.type,
                                          plot=True,
                                          mask=args.mask,
-                                         algo=args.algo, no_auto=True, pickle_file="output/" + args.pickle_file,
+                                         algo=args.algo, no_auto=True, pickle_file=pickle,
                                          save_fig=args.dont_save)
