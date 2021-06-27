@@ -371,7 +371,7 @@ class T_ghost():
             p_new = np.delete(p_new, d_list, axis=1)
             q_new = np.delete(q, d_list, axis=0)
             q_new = np.delete(q_new, d_list, axis=1)
-
+            
             phi_new = np.delete(self.phi_m, d_list, axis=0)
             phi_new = np.delete(phi_new, d_list, axis=1)
 
@@ -966,6 +966,7 @@ class T_ghost():
         image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
         image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
 
+        # Flip x and y
         image = image[::-1, ::-1]
 
         if plot:
@@ -1676,11 +1677,10 @@ if __name__ == "__main__":
         experiment4()
     else:
         ant_list = "all"
-        # Point sources with no gaussian added
         point_sources_true = np.array(
-            [(1, 0, 0),
-             (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180)])
-        point_sources_model = np.array([(1, 0, 0, args.sigma * np.pi / 180), (0.5, 0, (1 * np.pi) / 180, (0 * np.pi), args.sigma * np.pi / 180)])
+            [(1, 0, 0, (args.sigma * np.pi) / 180),
+             (0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, (args.sigma * np.pi) / 180)])
+        point_sources_model = np.array([(1, 0, 0, (args.sigma * np.pi) / 180)])
         t = T_ghost(point_sources_true, point_sources_model, ant_list, "KAT7")
         if args.pickle_file is not None:
             pickle = "output/" + args.pickle_file
