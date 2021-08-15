@@ -8,13 +8,13 @@ import scipy
 
 def antenna_layout():
     layout = np.array([[0, 0, 0],
-                       [50, 0, 0],
-                       [-50, 0, 0]])
+                       [1, 0, 0],
+                       [-1, 0, 0]])
     plt.scatter(layout[:, 0], layout[:, 1])
     plt.xlabel('E-W [m]')
     plt.ylabel('N-S [m]')
     plt.title('Array Layout')
-    plt.show()
+    plt.savefig("images/Antenna_Layout")
     return layout
 
 
@@ -140,6 +140,7 @@ def visibilities(true_sources, model_sources, radius, baseline, resolution, s):
     temp = np.ones(phi_m.shape, dtype=complex)
 
     for i in range(u_dim1):
+
         progress_bar(i, u_dim1)
         for j in range(u_dim2):
             if u_dim2 != 1:
@@ -158,14 +159,12 @@ def visibilities(true_sources, model_sources, radius, baseline, resolution, s):
 
             R = np.zeros(u_t_m.shape)
 
-            def Gauss(sigma, uu, vv): return (2 * np.pi * sigma ** 2) * np.exp(
-                -2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
-
             for k in range(len(true_sources)):
                 R = R + true_sources[k][0] * np.exp(-2 * 1j * np.pi * (
                     u_t_m * true_sources[k][1] + v_t_m * true_sources[k][2]))
                 R *= Gauss(true_sources[k][3], u_t_m, v_t_m) if len(
                     true_sources[k]) > 3 else 1
+            # print(R)
 
             M = np.zeros(u_t_m.shape)
             for k in range(len(model_sources)):
@@ -183,7 +182,14 @@ def visibilities(true_sources, model_sources, radius, baseline, resolution, s):
                 V_R_pq[i] = R[baseline[0], baseline[1]]
                 V_G_pq[i] = G[baseline[0], baseline[1]]
 
-        return u, v, V_G_pq, V_R_pq, phi, l_cor, m_cor
+    return u, v, V_G_pq, V_R_pq, phi, l_cor, m_cor
+
+
+def Gauss(sigma, uu, vv):
+    # print(np.exp(
+    #     -2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2)))
+    return (2 * np.pi * sigma ** 2) * np.exp(
+        -2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
 
 
 def plt_circle_grid(grid_m):
@@ -224,7 +230,7 @@ def plot_image(image, l_cor, m_cor, radius, baseline, A_2):
     plt.ylabel("$m$ [degrees]")
     plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
 
-    plt.savefig("images\Figure_R_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
+    plt.savefig("images/Figure_R_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
                 bbox_inches="tight")
     plt.clf()
 
@@ -250,7 +256,7 @@ def plot_image(image, l_cor, m_cor, radius, baseline, A_2):
     plt.xlabel("$l$ [degrees]")
     plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Imag")
     plt.ylabel("$m$ [degrees]")
-    plt.savefig("images\Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
+    plt.savefig("images/Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
                 bbox_inches="tight")
     plt.clf()
 
@@ -264,25 +270,43 @@ def progress_bar(count, total):
 
     percents = round(100.0 * count / float(total), 1)
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
-
     sys.stdout.write('[%s] %s%s iteration %s\r' % (bar, percents, '%', count))
     sys.stdout.flush()
 
 
+def vis_function(vis_function, V_G_pq, V_G_qp, V_R_pq):
+    if vis_function == "R":
+        vis = V_R_pq
+    elif vis_function == "GT-1":
+        vis = V_G_pq ** (-1) - 1
+    return vis
+
+
 if __name__ == "__main__":
-    radius = 3
+    radius = 2
     baseline = [1, 2]
     resolution = 150
     sigma = 0.05
     s = 2
+    vis_type = "R"
+    add_gaussian = True
 
-    true_sources = np.array([[0, 0, 0], [0, 1, 2]])
-    model_sources = np.array([[0, 0, 0]])
+    true_sources = np.array([])
+    if add_gaussian:
+        true_sources = np.array(
+            [[1, 0, 0, (sigma * np.pi) / 180], [0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, (sigma * np.pi) / 180]])
+    else:
+        true_sources = np.array(
+            [[1, 0, 0], [0.2, (1 * np.pi) / 180, (0 * np.pi) / 180]])
+
+    model_sources = np.array([[1, 0, 0]])
     layout = antenna_layout()
     u, v, V_G_pq, V_R_pq, phi, l_cor, m_cor = visibilities(
-        model_sources, true_sources, radius, baseline, resolution, s)
+        true_sources, model_sources, radius, baseline, resolution, s)
+    V_G_qp = 0
     # vis = self.vis_function(type_w, avg_v, V_G_pq, V_G_qp, V_R_pq, take_conj1)
-    vis = V_R_pq
+
+    vis = vis_function(vis_type, V_G_pq, V_G_qp, V_R_pq)
     # V_G_qp = 0
     # vis = (V_G_pq ** (-1) + V_G_qp ** (-1)) / 2
     N = l_cor.shape[0]
@@ -290,6 +314,7 @@ if __name__ == "__main__":
 
     image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
     image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
+    image = image[:, ::-1]
 
     A_2 = true_sources[1][0]
     plot_image(image, l_cor, m_cor, radius, baseline, A_2)
