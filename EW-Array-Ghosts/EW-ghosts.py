@@ -18,36 +18,6 @@ def antenna_layout():
     return layout
 
 
-# def create_G_stef(N, R, M, temp, imax, tau):
-#     '''This function finds argmin G ||R-GMG^H|| using StEFCal.
-#      R is your observed visibilities matrx.
-#      M is your predicted visibilities.
-#      imax maximum amount of iterations.
-#      tau stopping criteria.
-#      g the antenna gains.
-#      G = gg^H.'''
-#     g_temp = np.ones((N,), dtype=complex)
-#     for k in range(imax):
-#         g_old = np.copy(g_temp)
-#         for p in range(N):
-#             z = g_old * M[:][p]
-#             g_temp[p] = np.sum(np.conj(R[:, p]) * z) / (np.sum(np.conj(z) * z))
-
-#         if (k % 2 == 0):
-#             if (np.sqrt(np.sum(np.absolute(g_temp - g_old) ** 2)) / np.sqrt(
-#                     np.sum(np.absolute(g_temp) ** 2)) <= tau):
-#                 break
-#             else:
-#                 g_temp = (g_temp + g_old) / 2
-
-#     G_m = np.dot(np.diag(g_temp), temp)
-#     G_m = np.dot(G_m, np.diag(g_temp.conj()))
-
-#     g = g_temp
-#     G = G_m
-
-#     return g, G
-
 def create_G_stef(R, M, temp, imax, tau):
     N = R.shape[0]
     g_temp = np.ones((N,), dtype=complex)
@@ -203,7 +173,7 @@ def plt_circle_grid(grid_m):
         plt.plot(rad[k] * x_c, rad[k] * y_c, "k", ls=":", lw=0.5)
 
 
-def plot_image(image, l_cor, m_cor, radius, baseline, A_2):
+def plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type):
     l_cor = l_cor * (180 / np.pi)
     m_cor = m_cor * (180 / np.pi)
 
@@ -230,7 +200,7 @@ def plot_image(image, l_cor, m_cor, radius, baseline, A_2):
     plt.ylabel("$m$ [degrees]")
     plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
 
-    plt.savefig("images/Figure_R_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
+    plt.savefig("images/Figure_R_pq" + str(baseline[0]) + str(baseline[1]) + " " + vis_type + ".png", format="png",
                 bbox_inches="tight")
     plt.clf()
 
@@ -256,7 +226,7 @@ def plot_image(image, l_cor, m_cor, radius, baseline, A_2):
     plt.xlabel("$l$ [degrees]")
     plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Imag")
     plt.ylabel("$m$ [degrees]")
-    plt.savefig("images/Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + ".png", format="png",
+    plt.savefig("images/Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + " " + vis_type + ".png", format="png",
                 bbox_inches="tight")
     plt.clf()
 
@@ -277,6 +247,8 @@ def progress_bar(count, total):
 def vis_function(vis_function, V_G_pq, V_G_qp, V_R_pq):
     if vis_function == "R":
         vis = V_R_pq
+    elif vis_function == "GT":
+        vis = V_G_pq ** (-1)
     elif vis_function == "GT-1":
         vis = V_G_pq ** (-1) - 1
     return vis
@@ -286,10 +258,11 @@ if __name__ == "__main__":
     radius = 2
     baseline = [1, 2]
     resolution = 150
-    sigma = 0.05
+    sigma = 0.5
     s = 2
-    vis_type = "R"
+    vis_type = "GT-1"  # R or GT
     add_gaussian = True
+    add_model_gaussian = False
 
     true_sources = np.array([])
     if add_gaussian:
@@ -299,16 +272,20 @@ if __name__ == "__main__":
         true_sources = np.array(
             [[1, 0, 0], [0.2, (1 * np.pi) / 180, (0 * np.pi) / 180]])
 
-    model_sources = np.array([[1, 0, 0]])
+    model_sources = np.array([])
+    if add_model_gaussian:
+        model_sources = np.array([[1, 0, 0, (sigma * np.pi) / 180]])
+    else:
+        model_sources = np.array([[1, 0, 0]])
     layout = antenna_layout()
     u, v, V_G_pq, V_R_pq, phi, l_cor, m_cor = visibilities(
         true_sources, model_sources, radius, baseline, resolution, s)
     V_G_qp = 0
-    # vis = self.vis_function(type_w, avg_v, V_G_pq, V_G_qp, V_R_pq, take_conj1)
 
+
+    # R Image
+    vis_type = "R"
     vis = vis_function(vis_type, V_G_pq, V_G_qp, V_R_pq)
-    # V_G_qp = 0
-    # vis = (V_G_pq ** (-1) + V_G_qp ** (-1)) / 2
     N = l_cor.shape[0]
     image = np.fft.fft2(vis) / N ** 2
 
@@ -317,4 +294,31 @@ if __name__ == "__main__":
     image = image[:, ::-1]
 
     A_2 = true_sources[1][0]
-    plot_image(image, l_cor, m_cor, radius, baseline, A_2)
+    plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type)
+
+
+    # GT-1 Image
+    vis_type = "GT-1"
+    vis = vis_function(vis_type, V_G_pq, V_G_qp, V_R_pq)
+    N = l_cor.shape[0]
+    image = np.fft.fft2(vis) / N ** 2
+
+    image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
+    image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
+    image = image[:, ::-1]
+
+    A_2 = true_sources[1][0]
+    plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type)
+
+    # GT Image
+    vis_type = "GT"
+    vis = vis_function(vis_type, V_G_pq, V_G_qp, V_R_pq)
+    N = l_cor.shape[0]
+    image = np.fft.fft2(vis) / N ** 2
+
+    image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
+    image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
+    image = image[:, ::-1]
+
+    A_2 = true_sources[1][0]
+    plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type)
