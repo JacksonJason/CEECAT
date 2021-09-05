@@ -43,48 +43,18 @@ def create_G_stef(R, M, temp, imax, tau):
     return g, G
 
 
-def get_B(b_ENU, L):
-    """
-    Converts the xyz form of the baseline into the coordinate system XYZ
-
-    :param b_ENU: The baseline to convert
-    :type b_ENU: float array
-
-    :param L: The latitude of the interferometer
-    :type L: float
-
-    :returns: The baseline in XYZ
-    """
-    D = math.sqrt(np.sum((b_ENU)**2))
-    A = np.arctan2(b_ENU[0], b_ENU[1])
-    E = np.arcsin(b_ENU[2]/D)
-    B = np.array([D * (math.cos(L)*math.sin(E) - math.sin(L) * math.cos(E)*math.cos(A)),
-                  D * (math.cos(E)*math.sin(A)),
-                  D * (math.sin(L)*math.sin(E) + math.cos(L) * math.cos(E)*math.cos(A))])
-    return B
-
-
-def get_lambda(f):
-    """
-    Gets the wavelength for calculations
-
-    :param f: The frequency of the interferometer
-    :type f: float
-
-    :returns: Lambda, wavelength
-    """
-    c = scipy.constants.c
-    lam = c/f
-    return lam
-
-
 def visibilities(true_sources, model_sources, radius, baseline, resolution, s):
+    Phi = np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]])
+
+    temp = np.ones(Phi.shape, dtype=complex)
+    s_old = s
+
+    # FFT SCALING
+    ######################################################
     delta_u = 1 / (2 * s * radius * (np.pi / 180))
     delta_v = delta_u
-
     delta_l = resolution * (1.0 / 3600.0) * (np.pi / 180.0)
     delta_m = delta_l
-
     N = int(np.ceil(1 / (delta_l * delta_u))) + 1
 
     if (N % 2) == 0:
@@ -92,74 +62,88 @@ def visibilities(true_sources, model_sources, radius, baseline, resolution, s):
 
     delta_l_new = 1 / ((N - 1) * delta_u)
     delta_m_new = delta_l_new
-
     u = np.linspace(-(N - 1) / 2 * delta_u, (N - 1) / 2 * delta_u, N)
     v = np.linspace(-(N - 1) / 2 * delta_v, (N - 1) / 2 * delta_v, N)
     l_cor = np.linspace(-1 / (2 * delta_u), 1 / (2 * delta_u), N)
     m_cor = np.linspace(-1 / (2 * delta_v), 1 / (2 * delta_v), N)
     uu, vv = np.meshgrid(u, v)
-    u_dim1 = uu.shape[0]
-    u_dim2 = uu.shape[1]
+    u_dim = uu.shape[0]
+    v_dim = uu.shape[1]
+    # delta_u = 1 / (2 * s * radius * (np.pi / 180))
+    # delta_v = delta_u
 
-    phi_m = np.array([(0, 3, 5), (-3, 0, 2), (-5, -2, 0)])
-    phi = phi_m[baseline[0], baseline[1]]
-    dec = np.pi / 2.0
+    # delta_l = resolution * (1.0 / 3600.0) * (np.pi / 180.0)
+    # delta_m = delta_l
 
-    V_R_pq = np.zeros(uu.shape, dtype=complex)
-    V_G_pq = np.zeros(uu.shape, dtype=complex)
-    temp = np.ones(phi_m.shape, dtype=complex)
+    # N = int(np.ceil(1 / (delta_l * delta_u))) + 1
 
-    for i in range(u_dim1):
+    # if (N % 2) == 0:
+    #     N = N + 1
 
-        progress_bar(i, u_dim1)
-        for j in range(u_dim2):
-            if u_dim2 != 1:
-                u_t = uu[i][j]
-                v_t = vv[i][j]
-            else:
-                u_t = uu[i]
-                v_t = vv[i]
+    # delta_l_new = 1 / ((N - 1) * delta_u)
+    # delta_m_new = delta_l_new
+
+    # u = np.linspace(-(N - 1) / 2 * delta_u, (N - 1) / 2 * delta_u, N)
+    # v = np.linspace(-(N - 1) / 2 * delta_v, (N - 1) / 2 * delta_v, N)
+    # l_cor = np.linspace(-1 / (2 * delta_u), 1 / (2 * delta_u), N)
+    # m_cor = np.linspace(-1 / (2 * delta_v), 1 / (2 * delta_v), N)
+    # uu, vv = np.meshgrid(u, v)
+    # u_dim1 = uu.shape[0]
+    # u_dim2 = uu.shape[1]
+
+    # phi = Phi[baseline[0], baseline[1]]
+    # dec = np.pi / 2.0
+
+    r_pq = np.zeros(uu.shape, dtype=complex)
+    g_pq = np.zeros(uu.shape, dtype=complex)
+    # r_pq = np.zeros((u_dim, v_dim), dtype=complex)
+    # g_pq = np.zeros((u_dim, v_dim), dtype=complex)
+    m_pq = np.zeros((u_dim, v_dim), dtype=complex)
+    temp = np.ones(Phi.shape, dtype=complex)
+
+    for i in range(u_dim):
+        progress_bar(i, u_dim)
+        for j in range(v_dim):
+            u_t = u[i]
+            v_t = v[i]
 
             # SCALING
-            u_t = u_t / phi
-            v_t = v_t / (np.sin(dec) * phi)
+            # u_t = u_t / phi
+            # v_t = v_t / (np.sin(dec) * phi)
 
-            u_t_m = phi_m * u_t
-            v_t_m = phi_m * np.sin(dec) * v_t
+            # u_t_m = Phi * u_t
+            # v_t_m = Phi * np.sin(dec) * v_t
 
-            R = np.zeros(u_t_m.shape)
+            u_m = (Phi*u_t)/(1.0*Phi[baseline[0], baseline[1]])
+            v_m = (Phi*v_t)/(1.0*Phi[baseline[0], baseline[1]])
+
+            R = np.zeros(u_m.shape, dtype=complex)
 
             for k in range(len(true_sources)):
-                R = R + true_sources[k][0] * np.exp(-2 * 1j * np.pi * (
-                    u_t_m * true_sources[k][1] + v_t_m * true_sources[k][2]))
-                R *= Gauss(true_sources[k][3], u_t_m, v_t_m) if len(
-                    true_sources[k]) > 3 else 1
+                source = true_sources[k]
+                R = R + source[0] * np.exp(-2 * 1j * np.pi * (u_m * source[1] + v_m * source[2]))
+                R *= Gauss(source[3], u_m, v_m) if len(source) > 3 else 1
             # print(R)
 
-            M = np.zeros(u_t_m.shape)
+            M = np.zeros(u_m.shape, dtype=complex)
             for k in range(len(model_sources)):
-                M = M + model_sources[k][0] * np.exp(-2 * 1j * np.pi * (
-                    u_t_m * model_sources[k][1] + v_t_m * model_sources[k][2]))
-                M *= Gauss(model_sources[k][3], u_t_m, v_t_m) if len(
-                    model_sources[k]) > 3 else 1
+                source = model_sources[k]
+                M = M + source[0] * np.exp(-2 * 1j * np.pi * (u_m * source[1] + v_m * source[2]))
+                M *= Gauss(source[3], u_m, v_m) if len(source) > 3 else 1
 
             g_stef, G = create_G_stef(R, M, temp, 200, 1e-9)
 
-            if u_dim2 != 1:
-                V_R_pq[i][j] = R[baseline[0], baseline[1]]
-                V_G_pq[i][j] = G[baseline[0], baseline[1]]
-            else:
-                V_R_pq[i] = R[baseline[0], baseline[1]]
-                V_G_pq[i] = G[baseline[0], baseline[1]]
+            r_pq[j, i] = R[baseline[0], baseline[1]]
+            m_pq[j, i] = M[baseline[0], baseline[1]]
+            g_pq[j, i] = G[baseline[0], baseline[1]]
 
-    return u, v, V_G_pq, V_R_pq, phi, l_cor, m_cor
+    return u, v, g_pq, r_pq, delta_u, delta_v
 
 
 def Gauss(sigma, uu, vv):
     # print(np.exp(
     #     -2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2)))
-    return (2 * np.pi * sigma ** 2) * np.exp(
-        -2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
+    return (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
 
 
 def plt_circle_grid(grid_m):
@@ -173,28 +157,16 @@ def plt_circle_grid(grid_m):
         plt.plot(rad[k] * x_c, rad[k] * y_c, "k", ls=":", lw=0.5)
 
 
-def plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type):
-    l_cor = l_cor * (180 / np.pi)
-    m_cor = m_cor * (180 / np.pi)
-
+def plot_image(image, radius, baseline, A_2, vis_type, s):
     fig = plt.figure()
-    cs = plt.imshow((image.real / A_2) * 100, interpolation="bicubic", cmap="cubehelix",
-                    extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
+    cs = plt.imshow(image.real, interpolation="bicubic", cmap="cubehelix", extent=[-s * radius, s * radius, -s * radius, s * radius])
+
     cb = fig.colorbar(cs)
     cb.set_label(r"Flux [% of $A_2$]")
     plt_circle_grid(radius)
-    # if label_v:
-    #     self.plot_source_labels_pq(baseline, im=image_s, plot_x=False)
 
-    print("amax_real = ", np.amax((image.real / A_2) * 100))
-    print("amin_real = ", np.amin((image.real / A_2) * 100))
-    # print "amax = ",np.amax(np.absolute(image))
-
-    plt.xlim([-radius, radius])
-    plt.ylim([-radius, radius])
-
-    # if mask:
-    #     p = self.create_mask(baseline, plot_v=True, dec=dec)
+    # plt.xlim([-radius, radius])
+    # plt.ylim([-radius, radius])
 
     plt.xlabel("$l$ [degrees]")
     plt.ylabel("$m$ [degrees]")
@@ -204,31 +176,23 @@ def plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type):
                 bbox_inches="tight")
     plt.clf()
 
-    fig = plt.figure()
-    cs = plt.imshow(-1 * (image.imag / A_2) * 100, interpolation="bicubic", cmap="cubehelix",
-                    extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
-    cb = fig.colorbar(cs)
-    cb.set_label(r"Flux [% of $A_2$]")
+    # fig = plt.figure()
+    # cs = plt.imshow(-1 * (image.imag / A_2) * 100, interpolation="bicubic", cmap="cubehelix",
+    #                 extent=[l_cor[0], -1 * l_cor[0], m_cor[0], -1 * m_cor[0]])
+    # cb = fig.colorbar(cs)
+    # cb.set_label(r"Flux [% of $A_2$]")
 
-    print("amax_imag = ", np.amax((image.imag / A_2) * 100))
-    print("amin_imag = ", np.amin((image.imag / A_2) * 100))
+    # plt_circle_grid(radius)
 
-    plt_circle_grid(radius)
-    # if label_v:
-    #     self.plot_source_labels_pq(baseline, im=radius, plot_x=False)
+    # # plt.xlim([-radius, radius])
+    # # plt.ylim([-radius, radius])
 
-    plt.xlim([-radius, radius])
-    plt.ylim([-radius, radius])
-
-    # if mask:
-    #     self.create_mask(baseline, plot_v=True, dec=dec)
-
-    plt.xlabel("$l$ [degrees]")
-    plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Imag")
-    plt.ylabel("$m$ [degrees]")
-    plt.savefig("images/Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + " " + vis_type + ".png", format="png",
-                bbox_inches="tight")
-    plt.clf()
+    # plt.xlabel("$l$ [degrees]")
+    # plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Imag")
+    # plt.ylabel("$m$ [degrees]")
+    # plt.savefig("images/Figure_I_pq" + str(baseline[0]) + str(baseline[1]) + " " + vis_type + ".png", format="png",
+    #             bbox_inches="tight")
+    # plt.clf()
 
 
 def progress_bar(count, total):
@@ -244,22 +208,22 @@ def progress_bar(count, total):
     sys.stdout.flush()
 
 
-def vis_function(vis_function, V_G_pq, V_G_qp, V_R_pq):
+def vis_function(vis_function, g_pq, g_qp, r_pq):
     if vis_function == "R":
-        vis = V_R_pq
+        vis = r_pq
     elif vis_function == "GT":
-        vis = V_G_pq ** (-1)
+        vis = g_pq ** (-1)
     elif vis_function == "GT-1":
-        vis = V_G_pq ** (-1) - 1
+        vis = g_pq ** (-1) - 1
     return vis
 
 
 if __name__ == "__main__":
-    radius = 2
+    radius = 3
     baseline = [1, 2]
-    resolution = 150
+    resolution = 100
     sigma = 0.5
-    s = 2
+    s = 1
     vis_type = "GT-1"  # R or GT
     add_gaussian = True
     add_model_gaussian = False
@@ -267,7 +231,7 @@ if __name__ == "__main__":
     true_sources = np.array([])
     if add_gaussian:
         true_sources = np.array(
-            [[1, 0, 0, (sigma * np.pi) / 180], [0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, (sigma * np.pi) / 180]])
+            [[1, 0, 0, (0.1 * np.pi) / 180], [0.2, (1 * np.pi) / 180, (0 * np.pi) / 180, (0.2 * np.pi) / 180]])
     else:
         true_sources = np.array(
             [[1, 0, 0], [0.2, (1 * np.pi) / 180, (0 * np.pi) / 180]])
@@ -277,48 +241,62 @@ if __name__ == "__main__":
         model_sources = np.array([[1, 0, 0, (sigma * np.pi) / 180]])
     else:
         model_sources = np.array([[1, 0, 0]])
-    layout = antenna_layout()
-    u, v, V_G_pq, V_R_pq, phi, l_cor, m_cor = visibilities(
+    antenna_layout()
+    u, v, g_pq, r_pq, delta_u, delta_v = visibilities(
         true_sources, model_sources, radius, baseline, resolution, s)
-    V_G_qp = 0
-
+    g_qp = 0
 
     # R Image
     vis_type = "R"
-    vis = vis_function(vis_type, V_G_pq, V_G_qp, V_R_pq)
-    N = l_cor.shape[0]
-    image = np.fft.fft2(vis) / N ** 2
+    vis = vis_function(vis_type, g_pq, g_qp, r_pq)
+    # N = l_cor.shape[0]
 
-    image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
-    image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
-    image = image[:, ::-1]
+
+    # zz = g_pq
+    # zz = np.roll(zz, -int(zz.shape[0]/2), axis=0)
+    # zz = np.roll(zz, -int(zz.shape[0]/2), axis=1)
+
+    # zz_f = np.fft.fft2(zz) * (delta_u*delta_v)
+    # zz_f = np.roll(zz_f, -int(zz.shape[0]/2), axis=0)
+    # zz_f = np.roll(zz_f, -int(zz.shape[0]/2), axis=1)
+
+    image = vis[:, ::-1]
+    image = np.roll(image, -int(image.shape[0] / 2), axis=0)
+    image = np.roll(image, -int(image.shape[0] / 2), axis=1)
+
+    image_f = np.fft.fft2(vis) * (delta_u*delta_v)
+    image_f = np.roll(image, -int(image.shape[0] / 2), axis=0)
+    image_f = np.roll(image, -int(image.shape[0] / 2), axis=1)
 
     A_2 = true_sources[1][0]
-    plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type)
-
+    plot_image(image_f, radius, baseline, A_2, vis_type, s)
 
     # GT-1 Image
     vis_type = "GT-1"
-    vis = vis_function(vis_type, V_G_pq, V_G_qp, V_R_pq)
-    N = l_cor.shape[0]
-    image = np.fft.fft2(vis) / N ** 2
+    vis = vis_function(vis_type, g_pq, g_qp, r_pq)
 
-    image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
-    image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
-    image = image[:, ::-1]
+    image = vis[:, ::-1]
+    image = np.roll(image, -int(image.shape[0] / 2), axis=0)
+    image = np.roll(image, -int(image.shape[0] / 2), axis=1)
+
+    image_f = np.fft.fft2(vis) * (delta_u*delta_v)
+    image_f = np.roll(image, -int(image.shape[0] / 2), axis=0)
+    image_f = np.roll(image, -int(image.shape[0] / 2), axis=1)
 
     A_2 = true_sources[1][0]
-    plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type)
+    plot_image(image, radius, baseline, A_2, vis_type, s)
 
     # GT Image
     vis_type = "GT"
-    vis = vis_function(vis_type, V_G_pq, V_G_qp, V_R_pq)
-    N = l_cor.shape[0]
-    image = np.fft.fft2(vis) / N ** 2
+    vis = vis_function(vis_type, g_pq, g_qp, r_pq)
+    
+    image = vis[:, ::-1]
+    image = np.roll(image, -int(image.shape[0] / 2), axis=0)
+    image = np.roll(image, -int(image.shape[0] / 2), axis=1)
 
-    image = np.roll(image, int(1 * (N - 1) / 2), axis=0)
-    image = np.roll(image, int(1 * (N - 1) / 2), axis=1)
-    image = image[:, ::-1]
+    image_f = np.fft.fft2(vis) * (delta_u*delta_v)
+    image_f = np.roll(image, -int(image.shape[0] / 2), axis=0)
+    image_f = np.roll(image, -int(image.shape[0] / 2), axis=1)
 
     A_2 = true_sources[1][0]
-    plot_image(image, l_cor, m_cor, radius, baseline, A_2, vis_type)
+    plot_image(image, radius, baseline, A_2, vis_type, s)
