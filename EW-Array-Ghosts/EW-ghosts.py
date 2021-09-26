@@ -1,5 +1,5 @@
 import numpy as np
-import pylab as plt
+# import pylab as plt
 import sys
 
 import matplotlib.pyplot as plt
@@ -217,6 +217,7 @@ if __name__ == "__main__":
 
     if (args.experiment == "1.1"):
         # Experiment 1.1
+        print('Experiment 1.1')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -230,6 +231,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "1.2"):
         # Experiment 1.2
+        print('Experiment 1.2')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -243,6 +245,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "1.5"):
         # Experiment 1.5
+        print('Experiment 1.5')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -256,6 +259,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "1.6"):
         # Experiment 1.6
+        print('Experiment 1.6')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -269,6 +273,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "1.7"):
         # Experiment 1.7
+        print('Experiment 1.7')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -282,6 +287,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "2.1"):
         # Experiment 2.1
+        print('Experiment 2.1')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
@@ -295,6 +301,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "2.2"):
         # Experiment 2.2
+        print('Experiment 2.2')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
@@ -308,6 +315,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "2.4"):
         # Experiment 2.4
+        print('Experiment 2.4')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
@@ -321,6 +329,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "2.5"):
         # Experiment 2.5
+        print('Experiment 2.5')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
@@ -334,6 +343,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "2.7"):
         # Experiment 2.7
+        print('Experiment 2.7')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
@@ -347,6 +357,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "3.1"):
         # Experiment 3.1
+        print('Experiment 3.1')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -360,6 +371,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "3.2"):
         # Experiment 3.2
+        print('Experiment 3.2')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -373,6 +385,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "3.4"):
         # Experiment 3.4
+        print('Experiment 3.4')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -386,6 +399,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "3.6"):
         # Experiment 3.6
+        print('Experiment 3.6')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -399,6 +413,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "3.7"):
         # Experiment 3.7
+        print('Experiment 3.7')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
@@ -412,6 +427,7 @@ if __name__ == "__main__":
                                  kernel=True)
     elif (args.experiment == "4.2"):
         # Experiment 4.2
+        print('Experiment 4.2')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0]]),
@@ -423,5 +439,17 @@ if __name__ == "__main__":
                                  s=1,
                                  resolution=100,
                                  kernel=True)
-
+    else:
+        print('Custom Experiment')
+        t.extrapolation_function(baseline=baseline,
+                             true_sky_model=np.array(
+                                 [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0]]),
+                             cal_sky_model=np.array(
+                                 [[1*np.pi/180.0, 0, 0]]),
+                             Phi=np.array(
+                                 [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
+                             image_s=3,
+                             s=1,
+                             resolution=100,
+                             kernel=True)
     print()
