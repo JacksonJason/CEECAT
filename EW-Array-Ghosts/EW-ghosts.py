@@ -59,7 +59,6 @@ class T_ghost():
             plt.plot(rad[k] * x_c, rad[k] * y_c, "k", ls=":", lw=0.5)
 
     def plot_image(self, type_plot, kernel, g_pq, r_pq, delta_u, delta_v, s_old, image_s, uu, vv, baseline):
-
         sigma = 0.05*(np.pi/180)
         g_kernal = 2*np.pi*sigma**2*np.exp(-2*np.pi**2*sigma**2*(uu**2+vv**2))
         if type_plot == "GT-1":
@@ -147,24 +146,25 @@ class T_ghost():
                 for k in range(len(true_sky_model)):
                     s = true_sky_model[k]
                     if len(s) <= 3:
-                        R += s[0]*np.exp(-2*np.pi*1j*(u_m*s[1])+v_m*s[2])
+                        R += s[0]*np.exp(-2*np.pi*1j*(u_m*(s[1]
+                                         * np.pi/180.0))+v_m*(s[2]*np.pi/180.0))
                     else:
-                        sigma = s[3]
+                        sigma = s[3]*np.pi/180.0
                         g_kernal = 2*np.pi*sigma**2 * \
                             np.exp(-2*np.pi**2*sigma**2*(u_m**2+v_m**2))
                         R += s[0]*np.exp(-2*np.pi*1j *
-                                         (u_m*s[1]+v_m*s[2]))*g_kernal
+                                         (u_m*(s[1]*np.pi/180.0)+v_m*(s[2]*np.pi/180.0)))*g_kernal
                 for k in range(len(cal_sky_model)):
                     s = cal_sky_model[k]
                     if len(s) <= 3:
                         M += s[0]*np.exp(-2*np.pi*1j*(u_m*(s[1]
                                          * np.pi/180.0)+v_m*(s[2]*np.pi/180.0)))
                     else:
-                        sigma = s[3]
+                        sigma = s[3]*np.pi/180.0
                         g_kernal = 2*np.pi*sigma**2 * \
                             np.exp(-2*np.pi**2*sigma**2*(u_m**2+v_m**2))
                         M += s[0]*np.exp(-2*np.pi*1j *
-                                         (u_m*s[1]+v_m*s[2]))*g_kernal
+                                         (u_m*(s[1]*np.pi/180.0)+v_m*(s[2]*np.pi/180.0)))*g_kernal
                 g_stef, G = self.create_G_stef(
                     R, M, 200, 1e-9, temp, no_auto=False)
 
@@ -210,246 +210,243 @@ if __name__ == "__main__":
     t = T_ghost()
 
     baseline = np.array(args.baseline)
+    phi = np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]])
+    image_s = 1
+    s = 1
+    resolution = 100
 
     # point source case GT-1
-    # t.extrapolation_function(baseline=baseline, true_sky_model=np.array([[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]), cal_sky_model=np.array(
-    #     [[1*np.pi/180.0, 0, 0]]), Phi=np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]), image_s=3, s=1, resolution=100, kernel=True)
+    # t.extrapolation_function(baseline=baseline, true_sky_model=np.array([[1, 0, 0], [0.2, 1, 0]]), cal_sky_model=np.array(
+    #     [[1, 0, 0]]), Phi=np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]), image_s=image_s, s=s, resolution=resolution, kernel=True)
 
     if (args.experiment == "1.1"):
         # Experiment 1.1
         print('Experiment 1.1')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0], [0.2, 1, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "1.2"):
         # Experiment 1.2
         print('Experiment 1.2')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "1.5"):
         # Experiment 1.5
         print('Experiment 1.5')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0], [0.2, 1, 0, 0.2]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "1.6"):
         # Experiment 1.6
         print('Experiment 1.6')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "1.7"):
         # Experiment 1.7
         print('Experiment 1.7')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0, 0.1]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "2.1"):
         # Experiment 2.1
         print('Experiment 2.1')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0], [0.2, 1, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "2.2"):
         # Experiment 2.2
         print('Experiment 2.2')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "2.4"):
         # Experiment 2.4
         print('Experiment 2.4')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.2*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0, 0.2], [0.2, 1, 0, 0.2]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "2.5"):
         # Experiment 2.5
         print('Experiment 2.5')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0], [0.2, 1, 0, 0.2]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "2.7"):
         # Experiment 2.7
         print('Experiment 2.7')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0, 0.1]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "3.1"):
         # Experiment 3.1
         print('Experiment 3.1')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0], [0.2, 1, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "3.2"):
         # Experiment 3.2
         print('Experiment 3.2')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "3.4"):
         # Experiment 3.4
         print('Experiment 3.4')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.2*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0, 0.2], [0.2, 1, 0, 0.2]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "3.6"):
         # Experiment 3.6
         print('Experiment 3.6')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0, 0.1], [0.2, 1, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "3.7"):
         # Experiment 3.7
         print('Experiment 3.7')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0], [0.2*np.pi/180.0, 1*np.pi/180.0, 0, 0.2*np.pi/180.0]]),
+                                     [[1, 0, 0], [0.2, 1, 0, 0.2]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0, 0.1]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     elif (args.experiment == "4.2"):
         # Experiment 4.2
         print('Experiment 4.2')
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0]]),
+                                     [[1, 0, 0, 0.1]]),
                                  cal_sky_model=np.array(
-                                     [[1*np.pi/180.0, 0, 0]]),
-                                 Phi=np.array(
-                                     [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                                 image_s=3,
-                                 s=1,
-                                 resolution=100,
-                                 kernel=True)
+                                     [[1, 0, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
     else:
         print('Custom Experiment')
+        # t.extrapolation_function(baseline=baseline,
+        #                          true_sky_model=np.array(
+        #                              [[1, 0, 0, 0.1]]),
+        #                          cal_sky_model=np.array(
+        #                              [[1, 0, 0]]),
+        #                          Phi=phi,
+        #                          image_s=image_s,
+        #                          s=s,
+        #                          resolution=resolution,
+        #                          kernel=False)
         t.extrapolation_function(baseline=baseline,
-                             true_sky_model=np.array(
-                                 [[1*np.pi/180.0, 0, 0, 0.1*np.pi/180.0]]),
-                             cal_sky_model=np.array(
-                                 [[1*np.pi/180.0, 0, 0]]),
-                             Phi=np.array(
-                                 [[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]),
-                             image_s=3,
-                             s=1,
-                             resolution=100,
-                             kernel=True)
+                                 true_sky_model=np.array([[1, 0, 0],
+                                                          [0.2, 1, 0]]),
+                                 cal_sky_model=np.array(
+                                     [[1, 0, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=True)
     print()
