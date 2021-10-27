@@ -102,8 +102,8 @@ class T_ghost:
         elif type_plot == "GTR":
             vis = (g_pq) ** (-1) * r_pq
 
-        if kernel:
-            vis = vis * g_kernal
+        # if kernel:
+        #     vis = vis * g_kernal
         vis = vis[:, ::-1]
 
         # IMAGING QUICKLY
@@ -115,19 +115,40 @@ class T_ghost:
         zz_f = np.roll(zz_f, -int(zz.shape[0] / 2), axis=0)
         zz_f = np.roll(zz_f, -int(zz.shape[0] / 2), axis=1)
 
-        # Plot along the horizontal of the G and GT images, for the point source cases too, comment out the extent and use zz_final
-        # N = len(zz_f) / 2
-        # N1 = N % 2 != 0
-        # inc = 0
-        # size = 1
-        # if N1:
-        #     size = 2
+        # Plot along the horizontal of the G and GT images m and R, for the point source cases too, comment out the extent and use zz_final
+        N = len(zz_f) / 2
+        N1 = N % 2 != 0
+        inc = 0
+        size = 1
+        if N1:
+            size = 2
 
-        # zz_final = np.empty((size, len(zz)), complex)
-        # for i in range(len(zz_f)):
-        #     if i == int(N) or (N1 and i == int(N) + 1):
-        #         zz_final[inc] = zz_f[i]
-        #         inc += 1
+        zz_final = np.empty((size, len(zz)), complex)
+        for i in range(len(zz_f)):
+            if i == int(N) or (N1 and i == int(N) + 1):
+                zz_final[inc] = zz_f[i]
+                inc += 1
+
+        average = []
+        if zz_final.shape[0] == 2:
+            average = (zz_final[0] + zz_final[1]) / 2
+        else:
+            average = zz_final[0]
+
+        # print(type_plot)
+        # print(zz_final[0])
+        # print(zz_final[1])
+        # print(zz_final[0] + zz_final[1])
+        # print(average)
+        # print(zz_final.shape[0])
+
+        x_val = np.linspace(-s_old * image_s, s_old * image_s, len(average))
+
+        save = np.array([average, x_val])
+        if kernel:
+            np.save("data/" + type_plot + "_point", save)
+        else:
+            np.save("data/" + type_plot + "_gauss", save)
 
         # print(type_plot, zz_final)
 
@@ -159,6 +180,8 @@ class T_ghost:
             format="png",
             bbox_inches="tight",
         )
+        plt.clf()
+        plt.cla()
 
     """
     resolution --- resolution in image domain in arcseconds
@@ -421,7 +444,7 @@ if __name__ == "__main__":
 
     baseline = np.array(args.baseline)
     phi = np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]])
-    image_s = 1
+    image_s = 5
     s = 1
     resolution = 100
 
