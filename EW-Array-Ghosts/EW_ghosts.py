@@ -1,6 +1,5 @@
 import numpy as np
-
-# import pylab as plt
+import EW_theoretical_derivation
 import sys
 
 import matplotlib.pyplot as plt
@@ -35,7 +34,8 @@ class T_ghost:
             g_old = np.copy(g_temp)
             for p in range(N):
                 z = g_old * M[:, p]
-                g_temp[p] = np.sum(np.conj(R[:, p]) * z) / (np.sum(np.conj(z) * z))
+                g_temp[p] = np.sum(np.conj(R[:, p]) * z) / \
+                    (np.sum(np.conj(z) * z))
 
             if k % 2 == 0:
                 if (
@@ -89,14 +89,18 @@ class T_ghost:
         )
         if type_plot == "GT-1":
             vis = (g_pq) ** (-1) - 1
-        if type_plot == "GT":
+        elif type_plot == "GT":
+            vis = (g_pq) ** (-1)
+        elif type_plot == "GT_theory":
             vis = (g_pq) ** (-1)
         elif type_plot == "R":
             vis = r_pq
         elif type_plot == "M":
             vis = m_pq
         elif type_plot == "G":
-            vis = m_pq
+            vis = g_pq
+        elif type_plot == "G_theory":
+            vis = g_pq
         elif type_plot == "GTR-R":
             vis = (g_pq) ** (-1) * r_pq - r_pq
         elif type_plot == "GTR":
@@ -168,7 +172,8 @@ class T_ghost:
 
         plt.xlabel("$l$ [degrees]")
         plt.ylabel("$m$ [degrees]")
-        plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
+        plt.title("Baseline " +
+                  str(baseline[0]) + str(baseline[1]) + " --- Real")
 
         plt.savefig(
             "images/Figure_Real_pq"
@@ -227,6 +232,7 @@ class T_ghost:
         #######################################################
         r_pq = np.zeros((u_dim, v_dim), dtype=complex)
         g_pq = np.zeros((u_dim, v_dim), dtype=complex)
+        g_pq_t = np.zeros((u_dim, v_dim), dtype=complex)
         m_pq = np.zeros((u_dim, v_dim), dtype=complex)
 
         R = np.zeros(Phi.shape, dtype=complex)
@@ -255,7 +261,8 @@ class T_ghost:
                             * np.pi
                             * sigma ** 2
                             * np.exp(
-                                -2 * np.pi ** 2 * sigma ** 2 * (u_m ** 2 + v_m ** 2)
+                                -2 * np.pi ** 2 * sigma ** 2 *
+                                (u_m ** 2 + v_m ** 2)
                             )
                         )
                         R += (
@@ -271,6 +278,7 @@ class T_ghost:
                             )
                             * g_kernal
                         )
+
                 for k in range(len(cal_sky_model)):
                     s = cal_sky_model[k]
                     if len(s) <= 3:
@@ -290,7 +298,8 @@ class T_ghost:
                             * np.pi
                             * sigma ** 2
                             * np.exp(
-                                -2 * np.pi ** 2 * sigma ** 2 * (u_m ** 2 + v_m ** 2)
+                                -2 * np.pi ** 2 * sigma ** 2 *
+                                (u_m ** 2 + v_m ** 2)
                             )
                         )
                         M += (
@@ -306,11 +315,16 @@ class T_ghost:
                             )
                             * g_kernal
                         )
-                g_stef, G = self.create_G_stef(R, M, 200, 1e-9, temp, no_auto=False)
+                g_stef, G = self.create_G_stef(
+                    R, M, 200, 1e-9, temp, no_auto=False)
+
+                # only works with 1 source
+                # g_pq_t[j, i] = EW_theoretical_derivation.derive_from_theory(true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], u_m, v_m)[baseline[0], baseline[1]]
 
                 r_pq[j, i] = R[baseline[0], baseline[1]]
                 m_pq[j, i] = M[baseline[0], baseline[1]]
                 g_pq[j, i] = G[baseline[0], baseline[1]]
+
         self.plot_image(
             "GT-1",
             kernel,
@@ -410,6 +424,36 @@ class T_ghost:
             baseline,
         )
 
+        if (g_pq_t):
+            self.plot_image(
+                "G_theory",
+                kernel,
+                g_pq_t,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+            )
+            self.plot_image(
+                "GT_theory",
+                kernel,
+                g_pq_t,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+            )
+
 
 def progress_bar(count, total):
     """
@@ -444,7 +488,7 @@ if __name__ == "__main__":
 
     baseline = np.array(args.baseline)
     phi = np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]])
-    image_s = 5
+    image_s = 3
     s = 1
     resolution = 100
 
@@ -662,24 +706,24 @@ if __name__ == "__main__":
         )
     else:
         print("Custom Experiment")
-        # t.extrapolation_function(baseline=baseline,
-        #                          true_sky_model=np.array(
-        #                              [[1, 0, 0, 0.1]]),
-        #                          cal_sky_model=np.array(
-        #                              [[1, 0, 0]]),
-        #                          Phi=phi,
-        #                          image_s=image_s,
-        #                          s=s,
-        #                          resolution=resolution,
-        #                          kernel=False)
-        t.extrapolation_function(
-            baseline=baseline,
-            true_sky_model=np.array([[1, 0, 0]]),
-            cal_sky_model=np.array([[0.5, 0, 0]]),
-            Phi=phi,
-            image_s=image_s,
-            s=s,
-            resolution=resolution,
-            kernel=True,
-        )
+        t.extrapolation_function(baseline=baseline,
+                                 true_sky_model=np.array(
+                                     [[1, 0, 0, 0.1]]),
+                                 cal_sky_model=np.array(
+                                     [[1, 0, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=False)
+        # t.extrapolation_function(
+        #     baseline=baseline,
+        #     true_sky_model=np.array([[1, 0, 0]]),
+        #     cal_sky_model=np.array([[0.5, 0, 0]]),
+        #     Phi=phi,
+        #     image_s=image_s,
+        #     s=s,
+        #     resolution=resolution,
+        #     kernel=True,
+        # )
     print()
