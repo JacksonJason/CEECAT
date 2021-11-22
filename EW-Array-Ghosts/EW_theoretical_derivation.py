@@ -37,7 +37,7 @@ def derive_from_theory(sigma, N, phi, p, q, amplitude, u, v):
 				a_pq_rs = A * ((phi[p][q] ** 2) / (phi[r][s] ** 2)) * d_pq_rs
 				sigma_2_pq_rs = (phi[p][q] ** 2) / (phi[r][s] ** 2) * sigma ** 2
 
-				g_pq += a_pq_rs * 2 * np.pi * sigma_2_pq_rs * np.exp(-2 * np.pi ** 2 * sigma_2_pq_rs) * (u * v) * np.array(u * v).T
+				g_pq += a_pq_rs * 2 * np.pi * sigma_2_pq_rs * np.exp(-2 * np.pi ** 2 * sigma_2_pq_rs) * (u ** 2 + v ** 2)
 
 	return g_pq
 
