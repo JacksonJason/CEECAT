@@ -319,7 +319,8 @@ class T_ghost:
                     R, M, 200, 1e-9, temp, no_auto=False)
 
                 # only works with 1 source
-                # g_pq_t[j, i] = EW_theoretical_derivation.derive_from_theory(true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], u_m, v_m)[baseline[0], baseline[1]]
+                if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
+                    g_pq_t[j, i] = EW_theoretical_derivation.derive_from_theory(true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], u_m, v_m)[baseline[0], baseline[1]]
 
                 r_pq[j, i] = R[baseline[0], baseline[1]]
                 m_pq[j, i] = M[baseline[0], baseline[1]]
@@ -424,7 +425,7 @@ class T_ghost:
             baseline,
         )
 
-        if (g_pq_t):
+        if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
             self.plot_image(
                 "G_theory",
                 kernel,
@@ -488,7 +489,7 @@ if __name__ == "__main__":
 
     baseline = np.array(args.baseline)
     phi = np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]])
-    image_s = 3
+    image_s = 1
     s = 1
     resolution = 100
 
@@ -706,6 +707,20 @@ if __name__ == "__main__":
         )
     else:
         print("Custom Experiment")
+        print("Point Source")
+
+        t.extrapolation_function(baseline=baseline,
+                                 true_sky_model=np.array(
+                                     [[1, 0, 0]]),
+                                 cal_sky_model=np.array(
+                                     [[1, 0, 0]]),
+                                 Phi=phi,
+                                 image_s=image_s,
+                                 s=s,
+                                 resolution=resolution,
+                                 kernel=True)
+        print()
+        print("Gaussian")
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
                                      [[1, 0, 0, 0.1]]),
@@ -716,14 +731,5 @@ if __name__ == "__main__":
                                  s=s,
                                  resolution=resolution,
                                  kernel=False)
-        # t.extrapolation_function(
-        #     baseline=baseline,
-        #     true_sky_model=np.array([[1, 0, 0]]),
-        #     cal_sky_model=np.array([[0.5, 0, 0]]),
-        #     Phi=phi,
-        #     image_s=image_s,
-        #     s=s,
-        #     resolution=resolution,
-        #     kernel=True,
-        # )
+        
     print()

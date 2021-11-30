@@ -16,7 +16,7 @@ def plot_and_save(gauss, point, label):
     plt.cla()
 
 def plot_and_save_triple(gauss, point, theory, label):
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 2)
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
     fig.suptitle(label)
     ax1.plot(gauss[1], gauss[0])
     ax1.set_title("Gaussian")
@@ -48,9 +48,9 @@ plot_and_save(R_gauss, R_point, "R")
 
 
 import os.path
-if os.path.isfile('data\G_theory.np') and os.path.isfile("data\GT_theory.np"):
-    G_theory = np.load("data\G_theory.npy")
-    GT_theory = np.load("data\GT_theory.npy")
+if os.path.isfile('data\G_theory_gauss.npy') and os.path.isfile("data\GT_theory_gauss.npy"):
+    G_theory = np.load("data\G_theory_gauss.npy")
+    GT_theory = np.load("data\GT_theory_gauss.npy")
     plot_and_save_triple(G_gauss, G_point, G_theory, "G_theory")
-    plot_and_save(GT_gauss, GT_point, GT_theory, "GT_theory")
+    plot_and_save_triple(GT_gauss, GT_point, GT_theory, "GT_theory")
 
