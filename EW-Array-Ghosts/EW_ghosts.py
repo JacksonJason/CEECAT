@@ -106,16 +106,10 @@ class T_ghost:
         elif type_plot == "GTR":
             vis = (g_pq) ** (-1) * r_pq
 
-        average_vis = []
-        if vis.shape[0] == 2:
-            average_vis = (vis[0] + vis[1]) / 2
-        else:
-            average_vis = vis[0]
-
         x_val = np.linspace(-s_old * image_s, s_old *
-                            image_s, len(average_vis))
+                            image_s, len(vis))
 
-        save = np.array([average_vis, x_val])
+        save = np.array([vis.real[int(np.round(g_pq.shape[0]/2)), :], x_val])
         if kernel:
             np.save("data/" + type_plot + "_vis_point", save)
         else:
@@ -258,78 +252,33 @@ class T_ghost:
                 for k in range(len(true_sky_model)):
                     s = true_sky_model[k]
                     if len(s) <= 3:
-                        R += s[0] * np.exp(
-                            -2 * np.pi * 1j * (u_m * (s[1] * np.pi / 180.0))
-                            + v_m * (s[2] * np.pi / 180.0)
-                        )
+                        s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
+                                         180.0) + v_m * (s[2] * np.pi / 180.0)))
                     else:
-                        sigma = s[3] * np.pi / 180.0
-                        g_kernal = (
-                            2
-                            * np.pi
-                            * sigma ** 2
-                            * np.exp(
-                                -2 * np.pi ** 2 * sigma ** 2 *
-                                (u_m ** 2 + v_m ** 2)
-                            )
-                        )
-                        R += (
-                            s[0]
-                            * np.exp(
-                                -2
-                                * np.pi
-                                * 1j
-                                * (
-                                    u_m * (s[1] * np.pi / 180.0)
-                                    + v_m * (s[2] * np.pi / 180.0)
-                                )
-                            )
-                            * g_kernal
-                        )
+                        sigma = s[3] * (np.pi / 180)
+                        g_kernal = 2 * np.pi * sigma ** 2 * \
+                            np.exp(-2 * np.pi ** 2 * sigma ** 2 * (u_m ** 2 + v_m ** 2))
+                        R += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
+                                         180.0) + v_m * (s[2] * np.pi / 180.0))) * g_kernal
 
                 for k in range(len(cal_sky_model)):
                     s = cal_sky_model[k]
                     if len(s) <= 3:
-                        M += s[0] * np.exp(
-                            -2
-                            * np.pi
-                            * 1j
-                            * (
-                                u_m * (s[1] * np.pi / 180.0)
-                                + v_m * (s[2] * np.pi / 180.0)
-                            )
-                        )
+                        M += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1]
+                                         * np.pi/180.0) + v_m * (s[2] * np.pi / 180.0)))
                     else:
-                        sigma = s[3] * np.pi / 180.0
-                        g_kernal = (
-                            2
-                            * np.pi
-                            * sigma ** 2
-                            * np.exp(
-                                -2 * np.pi ** 2 * sigma ** 2 *
-                                (u_m ** 2 + v_m ** 2)
-                            )
-                        )
-                        M += (
-                            s[0]
-                            * np.exp(
-                                -2
-                                * np.pi
-                                * 1j
-                                * (
-                                    u_m * (s[1] * np.pi / 180.0)
-                                    + v_m * (s[2] * np.pi / 180.0)
-                                )
-                            )
-                            * g_kernal
-                        )
+                        sigma = s[3] * (np.pi / 180)
+                        g_kernal = 2 * np.pi * sigma ** 2 * \
+                            np.exp(-2 * np.pi ** 2 * sigma ** 2 *(u_m ** 2 + v_m ** 2))
+                        M += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
+                                         180.0) + v_m * (s[2] * np.pi / 180.0))) * g_kernal
                 g_stef, G = self.create_G_stef(
                     R, M, 200, 1e-9, temp, no_auto=False)
 
                 # only works with 1 source
                 if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
-                    g_pq_t[j, i] = EW_theoretical_derivation.derive_from_theory(
-                        true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], u_m, v_m)[baseline[0], baseline[1]]
+                    g_pq_t[i, j] = EW_theoretical_derivation.derive_from_theory(
+                        true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], ut, vt)
 
                 r_pq[j, i] = R[baseline[0], baseline[1]]
                 m_pq[j, i] = M[baseline[0], baseline[1]]
@@ -435,7 +384,6 @@ class T_ghost:
         )
 
         if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
-            print("Using Theory Model")
             self.plot_image(
                 "G_theory",
                 kernel,
@@ -707,7 +655,7 @@ if __name__ == "__main__":
         print("Experiment 4.2")
         t.extrapolation_function(
             baseline=baseline,
-            true_sky_model=np.array([[1, 0, 0, 0.1]]),
+            true_sky_model=np.array([[1, 0, 0, 0.5]]),
             cal_sky_model=np.array([[1, 0, 0]]),
             Phi=phi,
             image_s=image_s,
@@ -733,7 +681,7 @@ if __name__ == "__main__":
         print("Gaussian")
         t.extrapolation_function(baseline=baseline,
                                  true_sky_model=np.array(
-                                     [[1, 0, 0, 0.1]]),
+                                     [[1, 0, 0, 0.5]]),
                                  cal_sky_model=np.array(
                                      [[1, 0, 0]]),
                                  Phi=phi,

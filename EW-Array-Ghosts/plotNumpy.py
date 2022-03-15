@@ -15,6 +15,17 @@ def plot_and_save(gauss, point, label, label1="Gaussian", label2="Point"):
     plt.clf()
     plt.cla()
 
+def plot_and_save_same_graph(gauss, point, label):
+    gauss = gauss[0]
+    point = point[0]
+    plt.plot(gauss/np.max(gauss), "r")
+    plt.plot(point/np.max(point), "b")
+
+    plt.savefig("vs_graphs/" + label + ".png")
+
+    plt.clf()
+    plt.cla()
+
 def plot_and_save_triple(gauss, point, theory, label, label1="Gaussian", label2="Point", label3="Theory"):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
     fig.suptitle(label)
@@ -61,4 +72,8 @@ if os.path.isfile('data\G_theory_vis_gauss.npy') and os.path.isfile("data\GT_the
     GT_gauss = np.load("data\GT_vis_gauss.npy")
     plot_and_save(G_gauss, G_theory, "G_vis_theory", "Gaussian", "Theory")
     plot_and_save(GT_gauss, GT_theory, "GT_vis_theory", "Gaussian", "Theory")
+
+    plot_and_save_same_graph(G_gauss, G_theory, "G_vis_theory_same")
+    plot_and_save_same_graph(GT_gauss, GT_theory, "GT_vis_theory_same")
+
 
