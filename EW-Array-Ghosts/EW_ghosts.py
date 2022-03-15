@@ -106,6 +106,21 @@ class T_ghost:
         elif type_plot == "GTR":
             vis = (g_pq) ** (-1) * r_pq
 
+        average_vis = []
+        if vis.shape[0] == 2:
+            average_vis = (vis[0] + vis[1]) / 2
+        else:
+            average_vis = vis[0]
+
+        x_val = np.linspace(-s_old * image_s, s_old *
+                            image_s, len(average_vis))
+
+        save = np.array([average_vis, x_val])
+        if kernel:
+            np.save("data/" + type_plot + "_vis_point", save)
+        else:
+            np.save("data/" + type_plot + "_vis_gauss", save)
+
         # if kernel:
         #     vis = vis * g_kernal
         vis = vis[:, ::-1]
@@ -138,13 +153,6 @@ class T_ghost:
             average = (zz_final[0] + zz_final[1]) / 2
         else:
             average = zz_final[0]
-
-        # print(type_plot)
-        # print(zz_final[0])
-        # print(zz_final[1])
-        # print(zz_final[0] + zz_final[1])
-        # print(average)
-        # print(zz_final.shape[0])
 
         x_val = np.linspace(-s_old * image_s, s_old * image_s, len(average))
 
@@ -320,7 +328,8 @@ class T_ghost:
 
                 # only works with 1 source
                 if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
-                    g_pq_t[j, i] = EW_theoretical_derivation.derive_from_theory(true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], u_m, v_m)[baseline[0], baseline[1]]
+                    g_pq_t[j, i] = EW_theoretical_derivation.derive_from_theory(
+                        true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], u_m, v_m)[baseline[0], baseline[1]]
 
                 r_pq[j, i] = R[baseline[0], baseline[1]]
                 m_pq[j, i] = M[baseline[0], baseline[1]]
@@ -426,6 +435,7 @@ class T_ghost:
         )
 
         if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
+            print("Using Theory Model")
             self.plot_image(
                 "G_theory",
                 kernel,
@@ -489,7 +499,7 @@ if __name__ == "__main__":
 
     baseline = np.array(args.baseline)
     phi = np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]])
-    image_s = 1
+    image_s = 3
     s = 1
     resolution = 100
 
@@ -698,7 +708,7 @@ if __name__ == "__main__":
         t.extrapolation_function(
             baseline=baseline,
             true_sky_model=np.array([[1, 0, 0, 0.1]]),
-            cal_sky_model=np.array([[0.5, 0, 0]]),
+            cal_sky_model=np.array([[1, 0, 0]]),
             Phi=phi,
             image_s=image_s,
             s=s,
@@ -731,5 +741,5 @@ if __name__ == "__main__":
                                  s=s,
                                  resolution=resolution,
                                  kernel=False)
-        
+
     print()

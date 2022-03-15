@@ -24,7 +24,7 @@ def derive_from_theory(sigma, N, phi, p, q, amplitude, u, v):
 	A = amplitude
 	B = 2 * (sigma ** 2) * np.pi
 
-	c_pq_0 = 1 / 2 + (A * B) / N
+	c_pq_0 = (A * B) / N
 	a_pq_0 = c_pq_0
 
 	g_pq = a_pq_0

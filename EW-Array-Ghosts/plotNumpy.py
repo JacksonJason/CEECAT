@@ -2,28 +2,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_and_save(gauss, point, label):
+def plot_and_save(gauss, point, label, label1="Gaussian", label2="Point"):
     fig, (ax1, ax2) = plt.subplots(1, 2)
     fig.suptitle(label)
     ax1.plot(gauss[1], gauss[0])
-    ax1.set_title("Gaussian")
+    ax1.set_title(label1)
     ax2.plot(point[1], point[0])
-    ax2.set_title("Point")
+    ax2.set_title(label2)
 
     plt.savefig("vs_graphs/" + label + ".png")
 
     plt.clf()
     plt.cla()
 
-def plot_and_save_triple(gauss, point, theory, label):
+def plot_and_save_triple(gauss, point, theory, label, label1="Gaussian", label2="Point", label3="Theory"):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
     fig.suptitle(label)
     ax1.plot(gauss[1], gauss[0])
-    ax1.set_title("Gaussian")
+    ax1.set_title(label1)
     ax2.plot(point[1], point[0])
-    ax2.set_title("Point")
+    ax2.set_title(label2)
     ax3.plot(theory[1], theory[0])
-    ax3.set_title("Theory")
+    ax3.set_title(label3)
     
     plt.savefig("vs_graphs/" + label + ".png")
 
@@ -53,4 +53,12 @@ if os.path.isfile('data\G_theory_gauss.npy') and os.path.isfile("data\GT_theory_
     GT_theory = np.load("data\GT_theory_gauss.npy")
     plot_and_save_triple(G_gauss, G_point, G_theory, "G_theory")
     plot_and_save_triple(GT_gauss, GT_point, GT_theory, "GT_theory")
+
+if os.path.isfile('data\G_theory_vis_gauss.npy') and os.path.isfile("data\GT_theory_vis_gauss.npy"):
+    G_theory = np.load("data\G_theory_vis_gauss.npy")
+    GT_theory = np.load("data\GT_theory_vis_gauss.npy")
+    G_gauss = np.load("data\G_vis_gauss.npy")
+    GT_gauss = np.load("data\GT_vis_gauss.npy")
+    plot_and_save(G_gauss, G_theory, "G_vis_theory", "Gaussian", "Theory")
+    plot_and_save(GT_gauss, GT_theory, "GT_vis_theory", "Gaussian", "Theory")
 
