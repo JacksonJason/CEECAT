@@ -169,7 +169,7 @@ class T_ghost():
             theta_new = np.delete(self.theta_m, d_list, axis=0)
             theta_new = np.delete(theta_new, d_list, axis=1)
 
-        if u <> None:
+        if u != None:
             u_dim1 = len(u)
             u_dim2 = 1
             uu = u
@@ -204,7 +204,7 @@ class T_ghost():
 
         for i in xrange(u_dim1):
             for j in xrange(u_dim2):
-                if u_dim2 <> 1:
+                if u_dim2 != 1:
                     u_t = uu[i, j]
                     v_t = vv[i, j]
                 else:
@@ -252,7 +252,7 @@ class T_ghost():
                     G = np.dot(np.diag(g), temp)
                     G = np.dot(G, np.diag(g.conj()))
                 if self.antenna == "all":
-                    if u_dim2 <> 1:
+                    if u_dim2 != 1:
                         V_R_pq[i, j] = R[b_list[0], b_list[1]]
                         V_G_pq[i, j] = G[b_list[0], b_list[1]]
                     else:
@@ -262,7 +262,7 @@ class T_ghost():
                     for k in xrange(p_new.shape[0]):
                         for l in xrange(p_new.shape[1]):
                             if (p_new[k, l] == b_list[0]) and (q_new[k, l] == b_list[1]):
-                                if u_dim2 <> 1:
+                                if u_dim2 != 1:
                                     V_R_pq[i, j] = R[k, l]
                                     V_G_pq[i, j] = G[k, l]
                                 else:
@@ -378,7 +378,7 @@ class T_ghost():
 
         delta_u = u[1] - u[0]
         delta_v = v[1] - v[0]
-        if sigma <> None:
+        if sigma != None:
             uu, vv = np.meshgrid(u, v)
             sigma = (np.pi / 180) * sigma
             g_kernal = (2 * np.pi * sigma ** 2) * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
