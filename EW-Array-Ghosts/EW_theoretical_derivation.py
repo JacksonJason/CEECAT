@@ -8,41 +8,44 @@ def get_c_pr_rs(r, s, p, q, A, B, N):
 	i5 = r == s
 
 	if i1: 
-		return ((2 * A * B) / N) - ((A * B) / (N ** 2))
+		return (2 * A * B) / N - (A * B) / (N ** 2)
 	elif i2:
-		return ((A * B) / N) - ((A * B) / (N ** 2))
+		return (A * B) / N - (A * B) / (N ** 2)
 	elif i3:
-		return ((A * B) / N) - ((A * B) / (N ** 2))
+		return (A * B) / N - (A * B) / (N ** 2)
 	elif i4:
 		return -1 * (A * B) / (N ** 2)
 	elif i5:
 		return 0
 
 def derive_from_theory(sigma, N, phi, p, q, amplitude, u, v):
-	antennas = [0, 1, 2]
-	sigma = sigma *(np.pi/180)
+	sigma = sigma * (np.pi / 180)
+	N = phi.shape[0]
 
 	A = amplitude
 	B = 2 * (sigma ** 2) * np.pi
 
-	a_pq_0 = 0
+	# a_pq_0 = 0
 
-	g_pq = a_pq_0
+	g_pq = 0 #a_pq_0
+	g_pq_inv = 0
 
-	for r in antennas:
-		for s in antennas:
+	for r in range(N):
+		for s in range(N):
 			if (r != s):
 				c_pq_rs = get_c_pr_rs(r, s, p, q, A, B, N)
-				a_pq_rs = A * ((phi[p][q] ** 2 * 1.0) / phi[r][s] ** 2) * c_pq_rs
-				sigma_2_pq_rs = ((phi[p][q] ** 2 * 1.0) / phi[r][s] ** 2) * sigma ** 2
+				d_pq_rs = c_pq_rs / (A * B)
+				a_pq_rs = B **(-1) * ((phi[p, q] ** 2 * 1.0) / phi[r, s] ** 2) * c_pq_rs
+				sigma_2_pq_rs = ((phi[r, s] ** 2 * 1.0) / phi[p, q] ** 2) * sigma ** 2
 				g_pq += a_pq_rs * (2 * np.pi * sigma_2_pq_rs) * np.exp(-2 * np.pi ** 2 * sigma_2_pq_rs * (u ** 2 + v ** 2))
+				g_pq_inv -= (A * B) ** (-1) * d_pq_rs * np.exp(-2 * np.pi ** 2 * sigma_2_pq_rs * (u ** 2 + v ** 2))
 				# c_pq_rs = get_c_pr_rs(r, s, p, q, A, B, N)
 				# d_pq_rs = c_pq_rs / (A * B)
 				# a_pq_rs = A * ((phi[p][q] ** 2) / (phi[r][s] ** 2)) * c_pq_rs
 				# sigma_2_pq_rs = ((phi[p][q] ** 2) / (phi[r][s] ** 2)) * sigma ** 2
-	# g_pq += (A * B) / N
-
-	return g_pq
+	g_pq += (A * B * 1.0) / N
+	g_pq_inv += (A  *B) ** (-1) * ((2.0 * N - 1) / (N))
+	return g_pq, g_pq_inv
 
 
 	

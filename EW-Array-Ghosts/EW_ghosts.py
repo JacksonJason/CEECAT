@@ -1,9 +1,11 @@
+from threading import active_count
 import numpy as np
 import EW_theoretical_derivation
 import sys
 
 import matplotlib.pyplot as plt
 import argparse
+import multiprocessing as mp
 
 """
 This class produces the theoretical ghost patterns of a simple two source case. It is based on a very simple EW array layout.
@@ -79,14 +81,15 @@ class T_ghost:
         uu,
         vv,
         baseline,
+        g_kernal
     ):
         sigma = 0.05 * (np.pi / 180)
-        g_kernal = (
-            2
-            * np.pi
-            * sigma ** 2
-            * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
-        )
+        # g_kernal = (
+        #     2
+        #     * np.pi
+        #     * sigma ** 2
+        #     * np.exp(-2 * np.pi ** 2 * sigma ** 2 * (uu ** 2 + vv ** 2))
+        # )
         if type_plot == "GT-1":
             vis = (g_pq) ** (-1) - 1
         elif type_plot == "GT":
@@ -109,14 +112,14 @@ class T_ghost:
         x_val = np.linspace(-s_old * image_s, s_old *
                             image_s, len(vis))
 
-        save = np.array([vis.real[int(np.round(g_pq.shape[0]/2)), :], x_val])
+        save = np.array([vis.real[int(g_pq.shape[0]/2), :], x_val])
         if kernel:
-            np.save("data/" + type_plot + "_vis_point", save)
+            np.save("data/each/" + type_plot + "_vis_point_baseline" + str(baseline[0]) + str(baseline[1]), save)
         else:
-            np.save("data/" + type_plot + "_vis_gauss", save)
+            np.save("data/each/" + type_plot + "_vis_gauss_baseline" + str(baseline[0]) + str(baseline[1]), save)
 
-        # if kernel:
-        #     vis = vis * g_kernal
+        if kernel:
+            vis = vis * g_kernal
         vis = vis[:, ::-1]
 
         # IMAGING QUICKLY
@@ -152,9 +155,9 @@ class T_ghost:
 
         save = np.array([average, x_val])
         if kernel:
-            np.save("data/" + type_plot + "_point", save)
+            np.save("data/each" + type_plot + "_point_baseline" + str(baseline[0]) + str(baseline[1]), save)
         else:
-            np.save("data/" + type_plot + "_gauss", save)
+            np.save("data/each" + type_plot + "_gauss_baseline" + str(baseline[0]) + str(baseline[1]), save)
 
         # print(type_plot, zz_final)
 
@@ -209,6 +212,8 @@ class T_ghost:
         s,
         resolution,
         kernel,
+        b0,
+        f
     ):
         temp = np.ones(Phi.shape, dtype=complex)
         s_old = s
@@ -235,6 +240,7 @@ class T_ghost:
         r_pq = np.zeros((u_dim, v_dim), dtype=complex)
         g_pq = np.zeros((u_dim, v_dim), dtype=complex)
         g_pq_t = np.zeros((u_dim, v_dim), dtype=complex)
+        g_pq_t_inv = np.zeros((u_dim, v_dim), dtype=complex)
         m_pq = np.zeros((u_dim, v_dim), dtype=complex)
 
         R = np.zeros(Phi.shape, dtype=complex)
@@ -252,7 +258,7 @@ class T_ghost:
                 for k in range(len(true_sky_model)):
                     s = true_sky_model[k]
                     if len(s) <= 3:
-                        s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
+                        R += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
                                          180.0) + v_m * (s[2] * np.pi / 180.0)))
                     else:
                         sigma = s[3] * (np.pi / 180)
@@ -277,12 +283,18 @@ class T_ghost:
 
                 # only works with 1 source
                 if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
-                    g_pq_t[i, j] = EW_theoretical_derivation.derive_from_theory(
+                    g_pq_t[i, j], g_pq_t_inv[i, j] = EW_theoretical_derivation.derive_from_theory(
                         true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], ut, vt)
 
                 r_pq[j, i] = R[baseline[0], baseline[1]]
                 m_pq[j, i] = M[baseline[0], baseline[1]]
                 g_pq[j, i] = G[baseline[0], baseline[1]]
+        
+        lam = (1.0*3*10**8) / f
+        b_len = b0 * Phi[baseline[0], baseline[1]]
+        fwhm = 1.02 * lam / (b_len)
+        sigma_kernal = fwhm / (2 * np.sqrt(2 * np.log(2)))
+        g_kernal = 2 * np.pi * sigma_kernal ** 2 * np.exp(-2 * np.pi ** 2 * sigma_kernal ** 2 * (uu ** 2 + vv ** 2))
 
         self.plot_image(
             "GT-1",
@@ -297,6 +309,7 @@ class T_ghost:
             uu,
             vv,
             baseline,
+            g_kernal
         )
         self.plot_image(
             "GT",
@@ -311,6 +324,7 @@ class T_ghost:
             uu,
             vv,
             baseline,
+            g_kernal
         )
         self.plot_image(
             "GTR-R",
@@ -325,6 +339,7 @@ class T_ghost:
             uu,
             vv,
             baseline,
+            g_kernal
         )
         self.plot_image(
             "GTR",
@@ -339,6 +354,7 @@ class T_ghost:
             uu,
             vv,
             baseline,
+            g_kernal
         )
         self.plot_image(
             "R",
@@ -353,6 +369,7 @@ class T_ghost:
             uu,
             vv,
             baseline,
+            g_kernal
         )
         self.plot_image(
             "M",
@@ -367,6 +384,7 @@ class T_ghost:
             uu,
             vv,
             baseline,
+            g_kernal
         )
         self.plot_image(
             "G",
@@ -381,6 +399,7 @@ class T_ghost:
             uu,
             vv,
             baseline,
+            g_kernal
         )
 
         if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
@@ -397,6 +416,7 @@ class T_ghost:
                 uu,
                 vv,
                 baseline,
+                g_kernal
             )
             self.plot_image(
                 "GT_theory",
@@ -411,8 +431,9 @@ class T_ghost:
                 uu,
                 vv,
                 baseline,
+                g_kernal
             )
-
+        return r_pq, m_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_kernal, delta_u, delta_l
 
 def progress_bar(count, total):
     """
@@ -426,6 +447,92 @@ def progress_bar(count, total):
     sys.stdout.write("[%s] %s%s iteration %s\r" % (bar, percents, "%", count))
     sys.stdout.flush()
 
+def every_baseline(phi, b0=36, fr=1.45e9, K1 = 50, K2=100):
+    b0_init = b0 #in m (based on the smallest baseline lenght of WSRT)
+    freq = fr
+    lam = (1.0 * 3 * 10 ** 8) / freq
+    b_len = b0_init * phi[0, -1]
+
+    fwhm = 1.02 * lam / (b_len)#in radians
+    sigma_kernal = (fwhm / (2 * np.sqrt(2 * np.log(2)))) * K1 #in radians (40 for 14 antenna experiment), size of source 40 times the size of telescope resolution
+
+    fwhm2 = 1.02 * lam / (b0_init)#in radians
+    sigma_kernal2 = (fwhm2 / (2 * np.sqrt(2 * np.log(2)))) #in radians
+
+    s_size = sigma_kernal * (180 / np.pi) #in degrees
+    #r = (s_size*3600)/10.0 #in arcseconds
+    r = (sigma_kernal2 * (180 / np.pi) * 3600) / K2 #in arcseconds
+    siz = sigma_kernal2 * 3 * (180 / np.pi)
+
+    #print("beginning size")
+    #print(s_size)
+    sigma = s_size * (np.pi / 180)#in radians
+    B1 = 2 * sigma ** 2 * np.pi
+    
+    mp.freeze_support()
+
+    # active_proccessing = np.array(mp.cpu_count())
+    active_count = 0
+    pool = mp.Pool(mp.cpu_count())
+    m = mp.Manager()
+    procs = m.dict()
+    for k in range(len(phi)):
+        for j in range(len(phi)):
+            if j > k:
+                baseline = [k, j]
+                true_sky_model=np.array([[1.0 / B1, 0, 0, s_size]])
+                cal_sky_model=np.array([[1, 0, 0]])
+
+                # while (mp.)
+                pool.apply_async(process_baseline, args=(k, j, baseline, phi, true_sky_model,cal_sky_model, siz, r, b0, fr, K1, K2, s_size))
+                # pool.apply_async(square, args=(x, procs), callback=on_task_done)
+                # while len(done_tasks) < 10:
+                #     pids = [pid for pid, running in procs.items() if running]
+                #     print('running jobs:', pids)
+                #     time.sleep(1)
+                # active_count += 1
+                # pool.starmap_async(process_baseline, [(k, j, baseline, phi, true_sky_model,cal_sky_model, siz, r, b0, fr, K1, K2, s_size)])
+               
+        print()
+    
+    # pool.close()
+    # pool.join()
+
+def process_baseline(k, j, baseline, phi, true_sky_model,cal_sky_model, siz, r, b0, fr, K1, K2, s_size):
+    print("Baseline " + str(k) + " " + str(j))
+
+    t = T_ghost()
+    
+    r_pq, m_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_b, delta_u, delta_l= t.extrapolation_function(
+        baseline=baseline,
+        true_sky_model=true_sky_model,
+        cal_sky_model=cal_sky_model,
+        Phi=phi,
+        image_s=siz,
+        s=1,
+        resolution=r,
+        kernel=False,
+        b0=b0,
+        f=fr
+    )
+    np.savez("data/baselines/Baseline" + k + j, 
+        r_pq=r_pq, 
+        m_pq=m_pq,
+        g_pq=g_pq,
+        g_pq_t=g_pq_t,
+        g_pq_t_inv=g_pq_t_inv,
+        g_kernal=g_kernal,
+        sigma_b=sigma_b,
+        delta_u=delta_u,
+        delta_l=delta_l,
+        s_size=s_size,
+        siz=siz,
+        r=r,
+        b0=b0,
+        K1=K1,
+        K2=K2,
+        fr=fr,
+        phi=phi)
 
 if __name__ == "__main__":
 
@@ -438,7 +545,7 @@ if __name__ == "__main__":
         help="The baseline to calculate on",
     )
     parser.add_argument(
-        "--experiment", type=str, default="1.1", help="Run a pre-defined experiment"
+        "--experiment", type=str, default="custom", help="Run a pre-defined experiment"
     )
 
     global args
@@ -446,11 +553,24 @@ if __name__ == "__main__":
     t = T_ghost()
 
     baseline = np.array(args.baseline)
-    phi = np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]])
+    phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),
+                    (-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), 
+                    (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), 
+                    (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), 
+                    (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),
+                    (-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), 
+                    (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), 
+                    (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),
+                    (-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75), 
+                    (-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75), 
+                    (-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5), 
+                    (-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9), 
+                    (18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), 
+                    (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75, -9.5, -9, -0.5, 0)])
+
     image_s = 3
     s = 1
     resolution = 100
-
     # point source case GT-1
     # t.extrapolation_function(baseline=baseline, true_sky_model=np.array([[1, 0, 0], [0.2, 1, 0]]), cal_sky_model=np.array(
     #     [[1, 0, 0]]), Phi=np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]), image_s=image_s, s=s, resolution=resolution, kernel=True)
@@ -665,29 +785,19 @@ if __name__ == "__main__":
         )
     else:
         print("Custom Experiment")
-        print("Point Source")
+        # print("Point Source")
 
-        t.extrapolation_function(baseline=baseline,
-                                 true_sky_model=np.array(
-                                     [[1, 0, 0]]),
-                                 cal_sky_model=np.array(
-                                     [[1, 0, 0]]),
-                                 Phi=phi,
-                                 image_s=image_s,
-                                 s=s,
-                                 resolution=resolution,
-                                 kernel=True)
+        # t.extrapolation_function(baseline=baseline,
+        #                          true_sky_model=np.array(
+        #                              [[1, 0, 0]]),
+        #                          cal_sky_model=np.array(
+        #                              [[1, 0, 0]]),
+        #                          Phi=phi,
+        #                          image_s=image_s,
+        #                          s=s,
+        #                          resolution=resolution,
+        #                          kernel=True)
         print()
-        print("Gaussian")
-        t.extrapolation_function(baseline=baseline,
-                                 true_sky_model=np.array(
-                                     [[1, 0, 0, 0.5]]),
-                                 cal_sky_model=np.array(
-                                     [[1, 0, 0]]),
-                                 Phi=phi,
-                                 image_s=image_s,
-                                 s=s,
-                                 resolution=resolution,
-                                 kernel=False)
+        every_baseline(phi)
 
     print()

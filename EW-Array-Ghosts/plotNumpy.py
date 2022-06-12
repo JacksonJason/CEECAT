@@ -18,8 +18,8 @@ def plot_and_save(gauss, point, label, label1="Gaussian", label2="Point"):
 def plot_and_save_same_graph(gauss, point, label):
     gauss = gauss[0]
     point = point[0]
-    plt.plot(gauss/np.max(gauss), "r")
-    plt.plot(point/np.max(point), "b")
+    plt.plot(gauss, "b")
+    plt.plot(point, "r")
 
     plt.savefig("vs_graphs/" + label + ".png")
 
