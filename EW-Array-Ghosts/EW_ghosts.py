@@ -1,8 +1,11 @@
-from threading import active_count
+import time
+# from threading import active_count
+import uuid
 import numpy as np
 import EW_theoretical_derivation
 import sys
 
+import signal
 import matplotlib.pyplot as plt
 import argparse
 import multiprocessing as mp
@@ -12,7 +15,7 @@ This class produces the theoretical ghost patterns of a simple two source case. 
 EW-layout: (0)---3---(1)---2---(2)
 
 """
-
+done_tasks = []
 
 class T_ghost:
     """
@@ -469,70 +472,93 @@ def every_baseline(phi, b0=36, fr=1.45e9, K1 = 50, K2=100):
     sigma = s_size * (np.pi / 180)#in radians
     B1 = 2 * sigma ** 2 * np.pi
     
-    mp.freeze_support()
+    # mp.freeze_support()
 
     # active_proccessing = np.array(mp.cpu_count())
-    active_count = 0
+    # active_count = 0
+    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
     pool = mp.Pool(mp.cpu_count())
+    signal.signal(signal.SIGINT, original_sigint_handler)
     m = mp.Manager()
     procs = m.dict()
-    for k in range(len(phi)):
-        for j in range(len(phi)):
-            if j > k:
-                baseline = [k, j]
-                true_sky_model=np.array([[1.0 / B1, 0, 0, s_size]])
-                cal_sky_model=np.array([[1, 0, 0]])
+    try:
+        # input("Hit enter to terminate\n")
+        for k in range(len(phi)):
+            for j in range(len(phi)):
+                while (len(procs) > mp.cpu_count()):
+                    time.sleep(5)
+                # if (procs.ite)
+                # print(str(procs.items()) + " \n")
+                pool.starmap_async(process_baseline, [(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, procs)])
+                # , callback=on_task_done)
+                # pool.close()
+                # pool.join()
+                # print(j)
 
-                # while (mp.)
-                pool.apply_async(process_baseline, args=(k, j, baseline, phi, true_sky_model,cal_sky_model, siz, r, b0, fr, K1, K2, s_size))
-                # pool.apply_async(square, args=(x, procs), callback=on_task_done)
-                # while len(done_tasks) < 10:
-                #     pids = [pid for pid, running in procs.items() if running]
-                #     print('running jobs:', pids)
-                #     time.sleep(1)
-                # active_count += 1
-                # pool.starmap_async(process_baseline, [(k, j, baseline, phi, true_sky_model,cal_sky_model, siz, r, b0, fr, K1, K2, s_size)])
-               
-        print()
-    
-    # pool.close()
-    # pool.join()
+                    
+                    # pool.close()
+                # print(procs.items())
+                # print(done_tasks)
+                # print() + " \n")
+    except KeyboardInterrupt:
+        print("CTRL+C")
+    finally:
+        pool.terminate()
+        pool.join()       
+    # print(j) 
+    print()
 
-def process_baseline(k, j, baseline, phi, true_sky_model,cal_sky_model, siz, r, b0, fr, K1, K2, s_size):
-    print("Baseline " + str(k) + " " + str(j))
+def on_task_done(results):
+    done_tasks.append(results)
 
-    t = T_ghost()
-    
-    r_pq, m_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_b, delta_u, delta_l= t.extrapolation_function(
-        baseline=baseline,
-        true_sky_model=true_sky_model,
-        cal_sky_model=cal_sky_model,
-        Phi=phi,
-        image_s=siz,
-        s=1,
-        resolution=r,
-        kernel=False,
-        b0=b0,
-        f=fr
-    )
-    np.savez("data/baselines/Baseline" + k + j, 
-        r_pq=r_pq, 
-        m_pq=m_pq,
-        g_pq=g_pq,
-        g_pq_t=g_pq_t,
-        g_pq_t_inv=g_pq_t_inv,
-        g_kernal=g_kernal,
-        sigma_b=sigma_b,
-        delta_u=delta_u,
-        delta_l=delta_l,
-        s_size=s_size,
-        siz=siz,
-        r=r,
-        b0=b0,
-        K1=K1,
-        K2=K2,
-        fr=fr,
-        phi=phi)
+def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, procs):
+    # print(j, k)
+    pid = uuid.uuid4().hex
+    procs[pid] = True
+    if j > k:
+        # print(j)
+        baseline = [k, j]
+        true_sky_model=np.array([[1.0 / B1, 0, 0, s_size]])
+        cal_sky_model=np.array([[1, 0, 0]])
+
+        print("Baseline " + str(k) + " " + str(j))
+        sys.stdout.flush()
+
+        t = T_ghost()
+        
+        r_pq, m_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_b, delta_u, delta_l= t.extrapolation_function(
+            baseline=baseline,
+            true_sky_model=true_sky_model,
+            cal_sky_model=cal_sky_model,
+            Phi=phi,
+            image_s=siz,
+            s=1,
+            resolution=r,
+            kernel=False,
+            b0=b0,
+            f=fr
+        )
+        np.savez("data/baselines/Baseline" + k + j, 
+            r_pq=r_pq, 
+            m_pq=m_pq,
+            g_pq=g_pq,
+            g_pq_t=g_pq_t,
+            g_pq_t_inv=g_pq_t_inv,
+            g_kernal=g_kernal,
+            sigma_b=sigma_b,
+            delta_u=delta_u,
+            delta_l=delta_l,
+            s_size=s_size,
+            siz=siz,
+            r=r,
+            b0=b0,
+            K1=K1,
+            K2=K2,
+            fr=fr,
+            phi=phi)
+    procs[pid] = False
+    del procs[pid]
+    return pid
 
 if __name__ == "__main__":
 
