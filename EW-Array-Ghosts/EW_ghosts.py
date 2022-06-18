@@ -262,12 +262,10 @@ class T_ghost:
         str_baseline = str(baseline[0]) + " " + str(baseline[1])
         # int_baseline = int(str(baseline[0]) + str(baseline[1]))
         # print(pid)
-        with tqdm(total=u_dim, desc=str_baseline, position=pid, leave=True) as pbar:
+        with tqdm(total=u_dim, desc=str_baseline, position=pid, leave=False) as pbar:
             for i in range(u_dim):
                 # progress_bar(i, u_dim)
-                print_lock.acquire()
                 pbar.update(1)
-                print_lock.release()
                 for j in range(v_dim):
                     ut = u[i]
                     vt = v[j]
@@ -526,7 +524,6 @@ def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array
     try:
         if (len(shared_array) == mp.cpu_count()):
             pids = [pid for pid, running in shared_array.items() if not running]
-            print(shared_array)
             pid = shared_array.keys().index(pids[0])
         else:
             pid = len(shared_array)
