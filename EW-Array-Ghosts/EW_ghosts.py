@@ -9,6 +9,8 @@ import signal
 import matplotlib.pyplot as plt
 import argparse
 import multiprocessing as mp
+from multiprocessing.managers import SyncManager
+from tqdm import tqdm_gui, tqdm
 
 """
 This class produces the theoretical ghost patterns of a simple two source case. It is based on a very simple EW array layout.
@@ -249,8 +251,10 @@ class T_ghost:
         R = np.zeros(Phi.shape, dtype=complex)
         M = np.zeros(Phi.shape, dtype=complex)
 
+        p_bar = tqdm_gui(total=u_dim)
         for i in range(u_dim):
-            progress_bar(i, u_dim)
+            # progress_bar(i, u_dim)
+            # p_bar.update(1)
             for j in range(v_dim):
                 ut = u[i]
                 vt = v[j]
@@ -292,6 +296,8 @@ class T_ghost:
                 r_pq[j, i] = R[baseline[0], baseline[1]]
                 m_pq[j, i] = M[baseline[0], baseline[1]]
                 g_pq[j, i] = G[baseline[0], baseline[1]]
+        
+        p_bar.close()
         
         lam = (1.0*3*10**8) / f
         b_len = b0 * Phi[baseline[0], baseline[1]]
@@ -478,18 +484,33 @@ def every_baseline(phi, b0=36, fr=1.45e9, K1 = 50, K2=100):
     # active_count = 0
     original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
     pool = mp.Pool(mp.cpu_count())
+    # print(mp.cpu_count())
     signal.signal(signal.SIGINT, original_sigint_handler)
     m = mp.Manager()
-    procs = m.dict()
+    # m.start(mgr_init)
+    shared_array = m.dict()
     try:
         # input("Hit enter to terminate\n")
         for k in range(len(phi)):
             for j in range(len(phi)):
-                while (len(procs) > mp.cpu_count()):
+                while (len(shared_array) > mp.cpu_count()):
                     time.sleep(5)
                 # if (procs.ite)
                 # print(str(procs.items()) + " \n")
-                pool.starmap_async(process_baseline, [(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, procs)])
+                # try:
+                res = pool.starmap_async(process_baseline, [(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array)])
+                # except KeyboardInterrupt:
+                #     print("CTRL+C")
+                    # print(res.get())
+                    # pool.terminate()
+                    # pool.join() 
+                    # sys.exit(0)
+                # finally:
+                    # pool.terminate()
+                    # pool.join() 
+                    # print(res.get())
+                    # sys.exit(0)
+                    
                 # , callback=on_task_done)
                 # pool.close()
                 # pool.join()
@@ -502,62 +523,82 @@ def every_baseline(phi, b0=36, fr=1.45e9, K1 = 50, K2=100):
                 # print() + " \n")
     except KeyboardInterrupt:
         print("CTRL+C")
+    except Exception as e:
+        print(e)
     finally:
+        print(res.get())
         pool.terminate()
-        pool.join()       
+        pool.join()    
+        sys.exit(0)   
+    
     # print(j) 
-    print()
+    # print()
 
-def on_task_done(results):
-    done_tasks.append(results)
+# def mgr_sig_handler(signal, frame):
+#     sys.exit(signal)
 
-def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, procs):
-    # print(j, k)
-    pid = uuid.uuid4().hex
-    procs[pid] = True
-    if j > k:
-        # print(j)
-        baseline = [k, j]
-        true_sky_model=np.array([[1.0 / B1, 0, 0, s_size]])
-        cal_sky_model=np.array([[1, 0, 0]])
+# def mgr_init():
+#     signal.signal(signal.SIGINT, mgr_sig_handler)
+#     # signal.signal(signal.SIGINT, signal.SIG_IGN)
+#     # print("initialized mananger")
 
-        print("Baseline " + str(k) + " " + str(j))
-        sys.stdout.flush()
+def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array):
+    # raise Exception("help")
+    # print("test")
+    # sys.stdout.flush()
 
-        t = T_ghost()
-        
-        r_pq, m_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_b, delta_u, delta_l= t.extrapolation_function(
-            baseline=baseline,
-            true_sky_model=true_sky_model,
-            cal_sky_model=cal_sky_model,
-            Phi=phi,
-            image_s=siz,
-            s=1,
-            resolution=r,
-            kernel=False,
-            b0=b0,
-            f=fr
-        )
-        np.savez("data/baselines/Baseline" + k + j, 
-            r_pq=r_pq, 
-            m_pq=m_pq,
-            g_pq=g_pq,
-            g_pq_t=g_pq_t,
-            g_pq_t_inv=g_pq_t_inv,
-            g_kernal=g_kernal,
-            sigma_b=sigma_b,
-            delta_u=delta_u,
-            delta_l=delta_l,
-            s_size=s_size,
-            siz=siz,
-            r=r,
-            b0=b0,
-            K1=K1,
-            K2=K2,
-            fr=fr,
-            phi=phi)
-    procs[pid] = False
-    del procs[pid]
+    try:
+        pid = uuid.uuid4().hex
+        shared_array[pid] = True
+        if j > k:
+            # print(j, k, j > k)
+            # print(j)
+            baseline = [k, j]
+            true_sky_model=np.array([[1.0 / B1, 0, 0, s_size]])
+            cal_sky_model=np.array([[1, 0, 0]])
+
+            print("Baseline " + str(k) + " " + str(j))
+            sys.stdout.flush()
+
+            t = T_ghost()
+            
+            r_pq, m_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_b, delta_u, delta_l= t.extrapolation_function(
+                baseline=baseline,
+                true_sky_model=true_sky_model,
+                cal_sky_model=cal_sky_model,
+                Phi=phi,
+                image_s=siz,
+                s=1,
+                resolution=r,
+                kernel=False,
+                b0=b0,
+                f=fr
+            )
+            np.savez("data/baselines/Baseline" + k + j, 
+                r_pq=r_pq, 
+                m_pq=m_pq,
+                g_pq=g_pq,
+                g_pq_t=g_pq_t,
+                g_pq_t_inv=g_pq_t_inv,
+                g_kernal=g_kernal,
+                sigma_b=sigma_b,
+                delta_u=delta_u,
+                delta_l=delta_l,
+                s_size=s_size,
+                siz=siz,
+                r=r,
+                b0=b0,
+                K1=K1,
+                K2=K2,
+                fr=fr,
+                phi=phi)
+    except KeyboardInterrupt:
+        # print("Keyboard interrupt in process")
+        sys.exit(0)
+    # finally:
+    #     print("cleaning up thread ", pid)
+    shared_array[pid] = False
+    del shared_array[pid]
     return pid
 
 if __name__ == "__main__":
