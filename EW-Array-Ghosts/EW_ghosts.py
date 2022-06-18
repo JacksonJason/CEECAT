@@ -1,3 +1,4 @@
+from email.mime import base
 import time
 # from threading import active_count
 import uuid
@@ -9,15 +10,19 @@ import signal
 import matplotlib.pyplot as plt
 import argparse
 import multiprocessing as mp
-from multiprocessing.managers import SyncManager
-from tqdm import tqdm_gui, tqdm
+# from multiprocessing.managers import SyncManager
+from tqdm import tqdm
+import random
+
+import warnings
+warnings.filterwarnings("ignore")
 
 """
 This class produces the theoretical ghost patterns of a simple two source case. It is based on a very simple EW array layout.
 EW-layout: (0)---3---(1)---2---(2)
 
 """
-done_tasks = []
+print_lock = mp.Lock()
 
 class T_ghost:
     """
@@ -218,7 +223,8 @@ class T_ghost:
         resolution,
         kernel,
         b0,
-        f
+        f,
+        pid
     ):
         temp = np.ones(Phi.shape, dtype=complex)
         s_old = s
@@ -230,6 +236,7 @@ class T_ghost:
         delta_l = resolution * (1.0 / 3600.0) * (np.pi / 180.0)
         delta_m = delta_l
         N = int(np.ceil(1 / (delta_l * delta_u))) + 1
+        N = 100
 
         if (N % 2) == 0:
             N = N + 1
@@ -251,53 +258,57 @@ class T_ghost:
         R = np.zeros(Phi.shape, dtype=complex)
         M = np.zeros(Phi.shape, dtype=complex)
 
-        p_bar = tqdm_gui(total=u_dim)
-        for i in range(u_dim):
-            # progress_bar(i, u_dim)
-            # p_bar.update(1)
-            for j in range(v_dim):
-                ut = u[i]
-                vt = v[j]
-                u_m = (Phi * ut) / (1.0 * Phi[baseline[0], baseline[1]])
-                v_m = (Phi * vt) / (1.0 * Phi[baseline[0], baseline[1]])
-                R = np.zeros(Phi.shape, dtype=complex)
-                M = np.zeros(Phi.shape, dtype=complex)
-                for k in range(len(true_sky_model)):
-                    s = true_sky_model[k]
-                    if len(s) <= 3:
-                        R += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
-                                         180.0) + v_m * (s[2] * np.pi / 180.0)))
-                    else:
-                        sigma = s[3] * (np.pi / 180)
-                        g_kernal = 2 * np.pi * sigma ** 2 * \
-                            np.exp(-2 * np.pi ** 2 * sigma ** 2 * (u_m ** 2 + v_m ** 2))
-                        R += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
-                                         180.0) + v_m * (s[2] * np.pi / 180.0))) * g_kernal
+        # p_bar = tqdm(total=u_dim)
+        str_baseline = str(baseline[0]) + " " + str(baseline[1])
+        # int_baseline = int(str(baseline[0]) + str(baseline[1]))
+        # print(pid)
+        with tqdm(total=u_dim, desc=str_baseline, position=pid, leave=True) as pbar:
+            for i in range(u_dim):
+                # progress_bar(i, u_dim)
+                print_lock.acquire()
+                pbar.update(1)
+                print_lock.release()
+                for j in range(v_dim):
+                    ut = u[i]
+                    vt = v[j]
+                    u_m = (Phi * ut) / (1.0 * Phi[baseline[0], baseline[1]])
+                    v_m = (Phi * vt) / (1.0 * Phi[baseline[0], baseline[1]])
+                    R = np.zeros(Phi.shape, dtype=complex)
+                    M = np.zeros(Phi.shape, dtype=complex)
+                    for k in range(len(true_sky_model)):
+                        s = true_sky_model[k]
+                        if len(s) <= 3:
+                            R += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
+                                            180.0) + v_m * (s[2] * np.pi / 180.0)))
+                        else:
+                            sigma = s[3] * (np.pi / 180)
+                            g_kernal = 2 * np.pi * sigma ** 2 * \
+                                np.exp(-2 * np.pi ** 2 * sigma ** 2 * (u_m ** 2 + v_m ** 2))
+                            R += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
+                                            180.0) + v_m * (s[2] * np.pi / 180.0))) * g_kernal
 
-                for k in range(len(cal_sky_model)):
-                    s = cal_sky_model[k]
-                    if len(s) <= 3:
-                        M += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1]
-                                         * np.pi/180.0) + v_m * (s[2] * np.pi / 180.0)))
-                    else:
-                        sigma = s[3] * (np.pi / 180)
-                        g_kernal = 2 * np.pi * sigma ** 2 * \
-                            np.exp(-2 * np.pi ** 2 * sigma ** 2 *(u_m ** 2 + v_m ** 2))
-                        M += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
-                                         180.0) + v_m * (s[2] * np.pi / 180.0))) * g_kernal
-                g_stef, G = self.create_G_stef(
-                    R, M, 200, 1e-9, temp, no_auto=False)
+                    for k in range(len(cal_sky_model)):
+                        s = cal_sky_model[k]
+                        if len(s) <= 3:
+                            M += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1]
+                                            * np.pi/180.0) + v_m * (s[2] * np.pi / 180.0)))
+                        else:
+                            sigma = s[3] * (np.pi / 180)
+                            g_kernal = 2 * np.pi * sigma ** 2 * \
+                                np.exp(-2 * np.pi ** 2 * sigma ** 2 *(u_m ** 2 + v_m ** 2))
+                            M += s[0] * np.exp(-2 * np.pi * 1j * (u_m * (s[1] * np.pi /
+                                            180.0) + v_m * (s[2] * np.pi / 180.0))) * g_kernal
+                    g_stef, G = self.create_G_stef(
+                        R, M, 200, 1e-9, temp, no_auto=False)
 
-                # only works with 1 source
-                if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
-                    g_pq_t[i, j], g_pq_t_inv[i, j] = EW_theoretical_derivation.derive_from_theory(
-                        true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], ut, vt)
+                    # only works with 1 source
+                    if len(cal_sky_model) == 1 and len(true_sky_model) == 1 and not kernel:
+                        g_pq_t[i, j], g_pq_t_inv[i, j] = EW_theoretical_derivation.derive_from_theory(
+                            true_sky_model[0][3], N, Phi, baseline[0], baseline[1], true_sky_model[0][0], ut, vt)
 
-                r_pq[j, i] = R[baseline[0], baseline[1]]
-                m_pq[j, i] = M[baseline[0], baseline[1]]
-                g_pq[j, i] = G[baseline[0], baseline[1]]
-        
-        p_bar.close()
+                    r_pq[j, i] = R[baseline[0], baseline[1]]
+                    m_pq[j, i] = M[baseline[0], baseline[1]]
+                    g_pq[j, i] = G[baseline[0], baseline[1]]
         
         lam = (1.0*3*10**8) / f
         b_len = b0 * Phi[baseline[0], baseline[1]]
@@ -473,92 +484,58 @@ def every_baseline(phi, b0=36, fr=1.45e9, K1 = 50, K2=100):
     r = (sigma_kernal2 * (180 / np.pi) * 3600) / K2 #in arcseconds
     siz = sigma_kernal2 * 3 * (180 / np.pi)
 
-    #print("beginning size")
-    #print(s_size)
     sigma = s_size * (np.pi / 180)#in radians
     B1 = 2 * sigma ** 2 * np.pi
     
-    # mp.freeze_support()
+    mp.freeze_support()
 
-    # active_proccessing = np.array(mp.cpu_count())
-    # active_count = 0
     original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    pool = mp.Pool(mp.cpu_count())
-    # print(mp.cpu_count())
+    pool = mp.Pool(mp.cpu_count(), initargs=(mp.RLock(),), initializer=tqdm.set_lock)
     signal.signal(signal.SIGINT, original_sigint_handler)
     m = mp.Manager()
-    # m.start(mgr_init)
     shared_array = m.dict()
     try:
-        # input("Hit enter to terminate\n")
         for k in range(len(phi)):
             for j in range(len(phi)):
-                while (len(shared_array) > mp.cpu_count()):
-                    time.sleep(5)
-                # if (procs.ite)
-                # print(str(procs.items()) + " \n")
-                # try:
+                # while (len(shared_array) > mp.cpu_count()):
+                #     time.sleep(5)
                 res = pool.starmap_async(process_baseline, [(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array)])
-                # except KeyboardInterrupt:
-                #     print("CTRL+C")
-                    # print(res.get())
-                    # pool.terminate()
-                    # pool.join() 
-                    # sys.exit(0)
-                # finally:
-                    # pool.terminate()
-                    # pool.join() 
-                    # print(res.get())
-                    # sys.exit(0)
-                    
-                # , callback=on_task_done)
-                # pool.close()
-                # pool.join()
-                # print(j)
-
-                    
-                    # pool.close()
-                # print(procs.items())
-                # print(done_tasks)
-                # print() + " \n")
+               
     except KeyboardInterrupt:
         print("CTRL+C")
     except Exception as e:
         print(e)
     finally:
-        print(res.get())
-        pool.terminate()
-        pool.join()    
-        sys.exit(0)   
-    
-    # print(j) 
-    # print()
+        if (not res.get()[0]):
+            print(res.get())
 
-# def mgr_sig_handler(signal, frame):
-#     sys.exit(signal)
+    while True:
+        time.sleep(5)
+        pids = [pid for pid, running in shared_array.items() if running]
+        # print('running jobs:', shared_array, len(pids))
+        
+        if (len(pids) == 0):
+            print("Program finished")
+            pool.terminate()
+            pool.join()
+            # sys.exit(0)
+            break
 
-# def mgr_init():
-#     signal.signal(signal.SIGINT, mgr_sig_handler)
-#     # signal.signal(signal.SIGINT, signal.SIG_IGN)
-#     # print("initialized mananger")
 
 def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array):
-    # raise Exception("help")
-    # print("test")
-    # sys.stdout.flush()
-
     try:
-        pid = uuid.uuid4().hex
+        if (len(shared_array) == mp.cpu_count()):
+            pids = [pid for pid, running in shared_array.items() if not running]
+            print(shared_array)
+            pid = shared_array.keys().index(pids[0])
+        else:
+            pid = len(shared_array)
+        # pid = uuid.uuid4().hex
         shared_array[pid] = True
         if j > k:
-            # print(j, k, j > k)
-            # print(j)
             baseline = [k, j]
             true_sky_model=np.array([[1.0 / B1, 0, 0, s_size]])
             cal_sky_model=np.array([[1, 0, 0]])
-
-            print("Baseline " + str(k) + " " + str(j))
-            sys.stdout.flush()
 
             t = T_ghost()
             
@@ -572,7 +549,8 @@ def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array
                 resolution=r,
                 kernel=False,
                 b0=b0,
-                f=fr
+                f=fr,
+                pid=pid
             )
             np.savez("data/baselines/Baseline" + k + j, 
                 r_pq=r_pq, 
@@ -592,14 +570,11 @@ def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array
                 K2=K2,
                 fr=fr,
                 phi=phi)
-    except KeyboardInterrupt:
-        # print("Keyboard interrupt in process")
-        sys.exit(0)
-    # finally:
-    #     print("cleaning up thread ", pid)
-    shared_array[pid] = False
-    del shared_array[pid]
-    return pid
+    # except KeyboardInterrupt:
+    #     sys.exit(0)
+    finally:
+        shared_array[pid] = False
+        return not (j > k)
 
 if __name__ == "__main__":
 
@@ -620,24 +595,25 @@ if __name__ == "__main__":
     t = T_ghost()
 
     baseline = np.array(args.baseline)
-    phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),
-                    (-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), 
-                    (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), 
-                    (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), 
-                    (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),
-                    (-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), 
-                    (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), 
-                    (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),
-                    (-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75), 
-                    (-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75), 
-                    (-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5), 
-                    (-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9), 
-                    (18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), 
-                    (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75, -9.5, -9, -0.5, 0)])
+    # phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),
+    #                 (-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), 
+    #                 (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), 
+    #                 (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), 
+    #                 (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),
+    #                 (-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), 
+    #                 (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), 
+    #                 (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),
+    #                 (-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75), 
+    #                 (-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75), 
+    #                 (-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5), 
+    #                 (-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9), 
+    #                 (18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), 
+    #                 (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75, -9.5, -9, -0.5, 0)])
 
+    phi= 4 * np.array([(0, 1, 2, 3), (-1, 0, 1, 2), (-2, -1, 0, 1),(-3, -2, -1, 0)])
     image_s = 3
     s = 1
-    resolution = 100
+    resolution = 10
     # point source case GT-1
     # t.extrapolation_function(baseline=baseline, true_sky_model=np.array([[1, 0, 0], [0.2, 1, 0]]), cal_sky_model=np.array(
     #     [[1, 0, 0]]), Phi=np.array([[0, 3, 5], [-3, 0, 2], [-5, -2, 0]]), image_s=image_s, s=s, resolution=resolution, kernel=True)
@@ -866,5 +842,3 @@ if __name__ == "__main__":
         #                          kernel=True)
         print()
         every_baseline(phi)
-
-    print()
