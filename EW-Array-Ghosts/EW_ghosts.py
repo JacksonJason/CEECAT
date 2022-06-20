@@ -236,7 +236,7 @@ class T_ghost:
         delta_l = resolution * (1.0 / 3600.0) * (np.pi / 180.0)
         delta_m = delta_l
         N = int(np.ceil(1 / (delta_l * delta_u))) + 1
-        N = 100
+        # N = 25
 
         if (N % 2) == 0:
             N = N + 1
@@ -261,6 +261,7 @@ class T_ghost:
         # p_bar = tqdm(total=u_dim)
         str_baseline = str(baseline[0]) + " " + str(baseline[1])
         # int_baseline = int(str(baseline[0]) + str(baseline[1]))
+        # print(pid)
         # print(pid)
         with tqdm(total=u_dim, desc=str_baseline, position=pid, leave=False) as pbar:
             for i in range(u_dim):
@@ -492,12 +493,20 @@ def every_baseline(phi, b0=36, fr=1.45e9, K1 = 50, K2=100):
     signal.signal(signal.SIGINT, original_sigint_handler)
     m = mp.Manager()
     shared_array = m.dict()
+    pid = 0
     try:
         for k in range(len(phi)):
             for j in range(len(phi)):
-                # while (len(shared_array) > mp.cpu_count()):
-                #     time.sleep(5)
-                res = pool.starmap_async(process_baseline, [(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array)])
+                time.sleep(.1)
+                if (len(shared_array) >= mp.cpu_count()):
+                    pids = [pid for pid, running in shared_array.items() if not running]
+                    while (len(pids) == 0):
+                        time.sleep(.1)
+                        pids = [pid for pid, running in shared_array.items() if not running]
+
+                    pid = shared_array.keys().index(pids[0])
+                res = pool.starmap_async(process_baseline, [(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array, pid)])
+                pid += 1
                
     except KeyboardInterrupt:
         print("CTRL+C")
@@ -510,24 +519,16 @@ def every_baseline(phi, b0=36, fr=1.45e9, K1 = 50, K2=100):
     while True:
         time.sleep(5)
         pids = [pid for pid, running in shared_array.items() if running]
-        # print('running jobs:', shared_array, len(pids))
         
         if (len(pids) == 0):
             print("Program finished")
             pool.terminate()
             pool.join()
-            # sys.exit(0)
             break
 
 
-def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array):
+def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array, pid):
     try:
-        if (len(shared_array) == mp.cpu_count()):
-            pids = [pid for pid, running in shared_array.items() if not running]
-            pid = shared_array.keys().index(pids[0])
-        else:
-            pid = len(shared_array)
-        # pid = uuid.uuid4().hex
         shared_array[pid] = True
         if j > k:
             baseline = [k, j]
@@ -567,8 +568,6 @@ def process_baseline(k, j, phi, siz, r, b0, fr, K1, K2, s_size, B1, shared_array
                 K2=K2,
                 fr=fr,
                 phi=phi)
-    # except KeyboardInterrupt:
-    #     sys.exit(0)
     finally:
         shared_array[pid] = False
         return not (j > k)
@@ -592,22 +591,22 @@ if __name__ == "__main__":
     t = T_ghost()
 
     baseline = np.array(args.baseline)
-    # phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),
-    #                 (-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), 
-    #                 (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), 
-    #                 (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), 
-    #                 (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),
-    #                 (-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), 
-    #                 (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), 
-    #                 (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),
-    #                 (-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75), 
-    #                 (-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75), 
-    #                 (-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5), 
-    #                 (-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9), 
-    #                 (18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), 
-    #                 (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75, -9.5, -9, -0.5, 0)])
+    phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),
+                    (-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), 
+                    (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), 
+                    (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), 
+                    (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),
+                    (-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), 
+                    (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), 
+                    (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),
+                    (-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75), 
+                    (-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75), 
+                    (-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5), 
+                    (-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9), 
+                    (18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), 
+                    (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75, -9.5, -9, -0.5, 0)])
 
-    phi= 4 * np.array([(0, 1, 2, 3), (-1, 0, 1, 2), (-2, -1, 0, 1),(-3, -2, -1, 0)])
+    # phi= 4 * np.array([(0, 1, 2, 3), (-1, 0, 1, 2), (-2, -1, 0, 1),(-3, -2, -1, 0)])
     image_s = 3
     s = 1
     resolution = 10
