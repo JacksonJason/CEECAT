@@ -340,6 +340,9 @@ def every_baseline(phi, s_size = 0.02, r = 30.0, siz = 3.0, K1=None, K2=None, N=
         print("CTRL+C")
     except Exception as e:
         print(e)
+        f = open("crashReport.txt", "a")
+        f.write("Crash report: " + e)
+        f.close()  
     finally:
         if (not res.get()[0]):
             print(res.get())
@@ -426,7 +429,10 @@ def process_baseline(k, j, phi, siz, r, s_size, shared_array, pid, counter, K1=N
                 plt.plot(u,np.absolute(g_pq**(-1)*r_pq),"r")
                 plt.savefig(file_name)
     except Exception as e:
-        print(e)      
+        print(e) 
+        f = open("crashReport.txt", "a")
+        f.write("Crash report: " + e)
+        f.close()     
     finally:
         shared_array[pid] = False
         return not (j > k)
