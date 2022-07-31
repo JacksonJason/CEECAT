@@ -1368,8 +1368,8 @@ class T_ghost():
                          #ax.set_ylabel(str(j), rotation=0, size='large')
                          #ax.annotate(str(j),(0,10*j)) 
                          ax.annotate(str(j), xy=(0, 0.5), xytext=(-ax.yaxis.labelpad, 0),
-                xycoords=ax.yaxis.label, textcoords='offset points',
-                size='large', ha='right', va='center') 
+                        xycoords=ax.yaxis.label, textcoords='offset points',
+                        size='large', ha='right', va='center') 
 
                       #ax.set_xlabel('K={},L={}'.format(k, l), size=3)
                       #ax.set_xlim([-0.1, 4.1])
