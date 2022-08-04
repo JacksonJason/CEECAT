@@ -63,7 +63,7 @@ def derive_from_theory_linear(sigma, N, phi, p, q, amplitude, u, v):
 				g_pq += a_pq_rs * (2 * np.pi * sigma_2_pq_rs) * np.exp(-2 * np.pi ** 2 * sigma_2_pq_rs * (u ** 2 + v ** 2))
 				g_pq_inv -= (A * B) ** (-1) * d_pq_rs * np.exp(-2 * np.pi ** 2 * sigma_2_pq_rs * (u ** 2 + v ** 2))
 	g_pq += (A * B * 1.0) / N
-	g_pq_inv += (A  *B) ** (-1) * ((2.0 * N - 1) / (N))
+	g_pq_inv += (A  * B) ** (-1) * ((2.0 * N - 1) / (N))
 	return g_pq, g_pq_inv, B
 
 

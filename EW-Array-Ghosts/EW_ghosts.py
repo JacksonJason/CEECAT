@@ -460,8 +460,8 @@ def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None):
     shared_array = m.dict()
     pid = 0
     try:
-        for k in range(len(phi)):
-            for j in range(len(phi)):
+        for k in range(phi.shape[0]):
+            for j in range(phi.shape[1]):
                 time.sleep(0.1)
                 if len(shared_array) >= mp.cpu_count():
                     pids = [pid for pid, running in shared_array.items() if not running]
@@ -492,7 +492,6 @@ def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None):
                 )
                 # process_baseline(k, j, phi, siz, r, s_size, shared_array, pid, counter, K1, K2, N)
                 pid += 1
-                counter += 1
 
     except KeyboardInterrupt:
         print("CTRL+C")
