@@ -617,10 +617,6 @@ def process_baseline(
                 pickle.dump(g_kernal, f)
                 pickle.dump(sigma_kernal, f)
                 pickle.dump(B, f)
-                if K1 is not None:
-                    pickle.dump(K1, f)
-                if K2 is not None:
-                    pickle.dump(K2, f)
                 f.close()
                 plt.clf()
                 plt.plot(u, np.absolute(g_pq_t ** (-1) * r_pq), "b")
@@ -669,10 +665,13 @@ def process_pickle_files_g(phi=np.array([])):
                         + ".p"
                     )
 
-                    pkl_file = open(name, "rb")
+                    pkl_file = open(name, 'rb')
                     g_pq_t = pickle.load(pkl_file)
                     g_pq = pickle.load(pkl_file)
                     g_pq_inv = pickle.load(pkl_file)
+                    r_pq = pickle.load(pkl_file)
+                    g_kernal = pickle.load(pkl_file)
+                    sigma_kernal = pickle.load(pkl_file)
                     B = pickle.load(pkl_file)
 
                     ax = plt.subplot(14, 14, counter2)
@@ -768,12 +767,13 @@ def process_pickle_files_g2(phi=np.array([])):
                         + ".p"
                     )
 
-                    pkl_file = open(name, "rb")
+                    pkl_file = open(name, 'rb')
                     g_pq_t = pickle.load(pkl_file)
                     g_pq = pickle.load(pkl_file)
                     g_pq_inv = pickle.load(pkl_file)
                     r_pq = pickle.load(pkl_file)
-                    r_pq = pickle.load(pkl_file)
+                    g_kernal = pickle.load(pkl_file)
+                    sigma_kernal = pickle.load(pkl_file)
                     B = pickle.load(pkl_file)
 
                     ax = plt.subplot(14, 14, counter2)
@@ -861,14 +861,21 @@ def process_pickle_files_g2(phi=np.array([])):
                         + str(phi[k, j])
                         + ".p"
                     )
-                    pkl_file = open(name, "rb")
+                    pkl_file = open(name, 'rb')
                     g_pq12 = pickle.load(pkl_file)
                     r_pq12 = pickle.load(pkl_file)
+                    g_kernal = pickle.load(pkl_file)
                     g_pq_inv12 = pickle.load(pkl_file)
                     g_pq_t12 = pickle.load(pkl_file)
+                    sigma_b = pickle.load(pkl_file)
                     delta_u = pickle.load(pkl_file)
+                    delta_l = pickle.load(pkl_file)
+                    s_size = pickle.load(pkl_file)
                     siz = pickle.load(pkl_file)
-                    # phi = pickle.load(pkl_file)
+                    r = pickle.load(pkl_file)
+                    phi = pickle.load(pkl_file) 
+                    K1 = pickle.load(pkl_file)
+                    K2 = pickle.load(pkl_file)
                     
                     pkl_file.close()
 
@@ -1012,13 +1019,21 @@ def compute_division_matrix(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                 )
 
 
-                pkl_file = open(name, "rb")
+                pkl_file = open(name, 'rb')
                 g_pq12 = pickle.load(pkl_file)
                 r_pq12 = pickle.load(pkl_file)
+                g_kernal = pickle.load(pkl_file)
                 g_pq_inv12 = pickle.load(pkl_file)
                 g_pq_t12 = pickle.load(pkl_file)
+                sigma_b = pickle.load(pkl_file)
                 delta_u = pickle.load(pkl_file)
+                delta_l = pickle.load(pkl_file)
                 s_size = pickle.load(pkl_file)
+                siz = pickle.load(pkl_file)
+                r = pickle.load(pkl_file)
+                phi = pickle.load(pkl_file) 
+                K1 = pickle.load(pkl_file)
+                K2 = pickle.load(pkl_file)
                 
                 pkl_file.close()
 
@@ -1119,14 +1134,21 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
                         + str(P[k, j])
                         + ".p"
                     )
-                    pkl_file = open(name, "rb")
+                    pkl_file = open(name, 'rb')
                     g_pq12 = pickle.load(pkl_file)
                     r_pq12 = pickle.load(pkl_file)
+                    g_kernal = pickle.load(pkl_file)
                     g_pq_inv12 = pickle.load(pkl_file)
                     g_pq_t12 = pickle.load(pkl_file)
+                    sigma_b = pickle.load(pkl_file)
                     delta_u = pickle.load(pkl_file)
+                    delta_l = pickle.load(pkl_file)
                     s_size = pickle.load(pkl_file)
+                    siz = pickle.load(pkl_file)
                     r = pickle.load(pkl_file)
+                    phi = pickle.load(pkl_file) 
+                    K1 = pickle.load(pkl_file)
+                    K2 = pickle.load(pkl_file)
                     
                     pkl_file.close()
                     B = 2 * np.pi * (s_size * (np.pi / 180)) ** 2
@@ -1448,15 +1470,21 @@ def get_average_response(P=np.array([]), N=14, peak_flux=100):
                     + ".p"
                 )
 
-                pkl_file = open(name, "rb")
+                pkl_file = open(name, 'rb')
                 g_pq12 = pickle.load(pkl_file)
                 r_pq12 = pickle.load(pkl_file)
+                g_kernal = pickle.load(pkl_file)
                 g_pq_inv12 = pickle.load(pkl_file)
                 g_pq_t12 = pickle.load(pkl_file)
+                sigma_b = pickle.load(pkl_file)
                 delta_u = pickle.load(pkl_file)
+                delta_l = pickle.load(pkl_file)
                 s_size = pickle.load(pkl_file)
                 siz = pickle.load(pkl_file)
                 r = pickle.load(pkl_file)
+                phi = pickle.load(pkl_file) 
+                K1 = pickle.load(pkl_file)
+                K2 = pickle.load(pkl_file)
                 
                 pkl_file.close()
 
@@ -1650,15 +1678,21 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                     + ".p"
                 )
 
-                pkl_file = open(name, "rb")
+                pkl_file = open(name, 'rb')
                 g_pq12 = pickle.load(pkl_file)
                 r_pq12 = pickle.load(pkl_file)
+                g_kernal = pickle.load(pkl_file)
                 g_pq_inv12 = pickle.load(pkl_file)
                 g_pq_t12 = pickle.load(pkl_file)
+                sigma_b = pickle.load(pkl_file)
                 delta_u = pickle.load(pkl_file)
+                delta_l = pickle.load(pkl_file)
                 s_size = pickle.load(pkl_file)
                 siz = pickle.load(pkl_file)
                 r = pickle.load(pkl_file)
+                phi = pickle.load(pkl_file) 
+                K1 = pickle.load(pkl_file)
+                K2 = pickle.load(pkl_file)
                 
                 pkl_file.close()
 
