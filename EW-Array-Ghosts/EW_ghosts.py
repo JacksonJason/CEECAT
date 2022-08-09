@@ -621,7 +621,8 @@ def process_baseline(
                 plt.clf()
                 plt.plot(u, np.absolute(g_pq_t ** (-1) * r_pq), "b")
                 plt.plot(u, np.absolute(g_pq ** (-1) * r_pq), "r")
-                plt.savefig(file_name)
+                plt.savefig(file_name, dpi=200)
+                plt.clf()
     except Exception as e:
         print(e)
         f = open("crashReport.txt", "a")
@@ -633,6 +634,8 @@ def process_baseline(
 
 
 def process_pickle_files_g(phi=np.array([])):
+    plt.rcParams['font.size'] = '6'
+    plt.figure(figsize=(12,6))
     counter2 = 0
 
     vis_s = 5000
@@ -730,10 +733,14 @@ def process_pickle_files_g(phi=np.array([])):
                         ha="right",
                         va="center",
                     )
-    plt.savefig(fname="plots/g_.png")
-
+    plt.savefig(fname="plots/g_.png", dpi=200)
+    plt.clf()
+    plt.close()
+    print("G complete")
 
 def process_pickle_files_g2(phi=np.array([])):
+    plt.rcParams['font.size'] = '6'
+    plt.figure(figsize=(12,6))
     counter2 = 0
 
     vis_s = 5000
@@ -964,7 +971,9 @@ def process_pickle_files_g2(phi=np.array([])):
                         va="center",
                     )
     plt.subplots_adjust(wspace=1, hspace=0.3)
-    plt.savefig(fname="plots/g2_.png")
+    plt.savefig(fname="plots/g2_.png", dpi=200)
+    plt.clf()
+    plt.close()
 
 
 def compute_division_matrix(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
@@ -1175,7 +1184,7 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
 
                     if include_baseline(k, j):
                         idx = c1 >= (amp_matrix[k, j, 0] / 2)
-                        integer_map = map(int, idx)
+                        integer_map = idx * 1
                         size_matrix[k, j, 0] = (
                             np.sum(list(integer_map)) * r
                         )  # in arcseconds
@@ -1183,13 +1192,13 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
                         size_matrix[k, j, 0] = np.nan
 
                     idx = c2 >= (amp_matrix[k, j, 1] / 2)
-                    integer_map = map(int, idx)
+                    integer_map = idx * 1
                     size_matrix[k, j, 1] = (
                         np.sum(list(integer_map)) * r
                     )  # in arcseconds
 
                     idx = c3 >= ((amp_matrix[k, j, 2] - np.min(c3)) / 2)
-                    integer_map = map(int, idx)
+                    integer_map = idx * 1
                     size_matrix[k, j, 2] = (
                         np.sum(list(integer_map)) * r
                     )  # in arcseconds
@@ -1240,12 +1249,9 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
 
     P_new = np.zeros(P.shape, dtype=float)
     P_s = np.zeros(P.shape, dtype=float)
-    P_new2 = np.zeros(P.shape, dtype=float)
 
     for k in range(P.shape[0]):
         for j in range(P.shape[1]):
-            if j == k:
-                P_new2[j, k] = np.nan
             if j > k:
                 P_new[k, j] = (
                     np.mean(((P[k, :] ** 2 + P[k, j] ** 2) / P[k, j] ** 2) ** (-1))
@@ -1257,11 +1263,6 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
                 ) / 2
                 P_s[j, k] = P_s[k, j]
                 P_new[j, k] = P_new[k, j]
-                P_new2[k, j] = (
-                    np.mean(((P[k, :] ** 2 + P[k, j] ** 2) / P[k, j] ** 2) ** (1))
-                    + np.mean(((P[:, j] ** 2 + P[k, j] ** 2) / P[k, j] ** 2) ** (1))
-                ) / 2
-                P_new2[j, k] = P_new2[k, j]
 
     plt_imshow(np.absolute(P_s), P, l=r"std$(\hat{K}_{pq})$", name_file="s")
     plt_imshow(np.absolute(P), P, l=r"$\phi_{pq}$", name_file="phi")
@@ -1341,17 +1342,13 @@ def plt_imshow(
     vmax=-1,
     vmin=-1,
 ):
-    N = 20  # number of colors to extract from each of the base_cmaps below
-    base_cmaps = ["YlGnBu", "Greys", "Purples", "Reds", "Oranges"]
-    # we go from 0.2 to 0.8 below to avoid having several whites and blacks in the resulting cmaps
-    colors = np.concatenate(
-        [plt.get_cmap(name)(np.linspace(0.2, 0.8, N)) for name in base_cmaps]
-    )
     fig, ax = plt.subplots()
+    # if (name_file == "k"):
+    #     print(data)
     if vmax == vmin:
-        im = ax.imshow(data, cmap="jet")
+        im = ax.imshow(data, cmap="gist_rainbow")
     else:
-        im = ax.imshow(data, cmap="jet", vmax=vmax, vmin=vmin)
+        im = ax.imshow(data, cmap="gist_rainbow", vmax=vmax, vmin=vmin)
     cbar = fig.colorbar(im)
     cbar.set_label(l, labelpad=10)
 
@@ -1392,7 +1389,8 @@ def plt_imshow(
     ax.set_yticks(yticks)
     ax.set_xlabel("Antenna $q$")
     ax.set_ylabel("Antenna $p$")
-    plt.savefig("plots/" + name_file + ".png")
+    plt.savefig("plots/" + name_file + ".png", dpi=200)
+    plt.clf()
     plt.close()
 
 
@@ -1536,15 +1534,15 @@ def get_average_response(P=np.array([]), N=14, peak_flux=100):
     max_peak[2] = np.max(average_curve3)
 
     idx = average_curve1 >= (max_peak[0] / 2)
-    integer_map = map(int, idx)
+    integer_map = idx * 1
     width[0] = np.sum(list(integer_map)) * r  # in arcseconds
 
     idx = average_curve2 >= (max_peak[1] / 2)
-    integer_map = map(int, idx)
+    integer_map = idx * 1
     width[1] = np.sum(list(integer_map)) * r  # in arcseconds
 
     idx = average_curve3 >= (max_peak[2] / 2)
-    integer_map = map(int, idx)
+    integer_map = idx * 1
     width[2] = np.sum(list(integer_map)) * r  # in arcseconds
 
     flux[0] = (
@@ -1596,7 +1594,7 @@ def create_violin_plot(
         pc.set_edgecolor("black")
         pc.set_alpha(0.2)
 
-    set_axis_style(ax, labels)
+    ax = set_axis_style(ax, labels)
     ax.set_ylabel(yl)
 
     if t:
@@ -1604,7 +1602,8 @@ def create_violin_plot(
         x = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
 
         plt.plot(x, (2.0 * N - 1) / N, "r")
-    plt.savefig(fname="plots/violin_" + label)
+    plt.savefig(fname="plots/violin_" + label, dpi=200)
+    plt.clf()
 
 
 def set_axis_style(ax, labels):
@@ -1614,6 +1613,7 @@ def set_axis_style(ax, labels):
     ax.set_xticklabels(labels)
     ax.set_xlim(0.25, len(labels) + 0.75)
     ax.set_xlabel(r"$N$")
+    return ax
 
 
 def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
@@ -1728,7 +1728,7 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                     if np.max(curves[c]) < peak_flux:
                         r_ampl[c] = np.append(r_ampl[c], [np.max(curves[c])])
                         idx = curves[c] >= (np.max(curves[c]) / 2)
-                        integer_map = map(int, idx)
+                        integer_map = idx * 1
                         r_size[c] = np.append(
                             r_size[c], [np.sum(list(integer_map)) * r]
                         )  # in arcseconds
@@ -1752,7 +1752,7 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                         if np.max(curves[c]) < peak_flux2:
                             r_ampl2[c] = np.append(r_ampl2[c], [np.max(curves[c])])
                             idx = curves[c] >= (np.max(curves[c]) / 2)
-                            integer_map = map(int, idx)
+                            integer_map = idx * 1
                             r_size2[c] = np.append(
                                 r_size2[c], [np.sum(list(integer_map)) * r]
                             )  # in arcseconds
@@ -1945,7 +1945,8 @@ if __name__ == "__main__":
         plt.xlabel(r"$N$")
         plt.ylabel(r"$c$ or FWHM/FWHM$_B$ or Flux [Jy]")
         plt.legend()
-        plt.savefig(fname="semilogy")
+        plt.savefig(fname="plots/semilogy", dpi=200)
+        plt.clf()
 
         n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
         A1 = []
@@ -1998,8 +1999,8 @@ if __name__ == "__main__":
 
         create_violin_plot(data=S1, fc="red", yl=r"FWHM/FWHM$_B$", label="S1")
         create_violin_plot(data=S2, fc="blue", yl=r"FWHM/FWHM$_B$", label="S2")
-        create_violin_plot(data=S3, fc="green", yl=r"FWHM/FWHM$_B$", label="S3")
+        create_violin_plot(data=S3, fc="green", yl=r"FWHM/FWHM$_B$", t=True, label="S3")
 
         create_violin_plot(data=F1, fc="red", yl=r"Flux [Jy]", label="F1")
         create_violin_plot(data=F2, fc="blue", yl=r"Flux [Jy]", label="F2")
-        create_violin_plot(data=F3, fc="green", yl=r"Flux [Jy]", label="F3")
+        create_violin_plot(data=F3, fc="green", yl=r"Flux [Jy]", t=True, label="F3")
