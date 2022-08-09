@@ -84,14 +84,14 @@ class T_ghost():
 
 
     def c_func(self, r, s, p, q, A, B, N):
-	answer = 0
-        if ((r == p) and (s==q) and (r <> s)):
+        answer = 0
+        if ((r == p) and (s==q) and (r != s)):
            answer = (2*A*B*1.0)/N - (A*B*1.0)/(N**2)
-        elif ((r == p) and (s <> q) and (r <> s)):
+        elif ((r == p) and (s != q) and (r != s)):
            answer = (A*B*1.0)/N - (A*B*1.0)/(N**2)
-        elif ((r <> p) and (s == q) and (r <> s)):
+        elif ((r != p) and (s == q) and (r != s)):
            answer = (A*B*1.0)/N - (A*B*1.0)/(N**2)
-        elif ((r <> p) and (s <> q) and (r <> s)):
+        elif ((r != p) and (s != q) and (r != s)):
            answer = - (A*B*1.0)/(N**2)
         else:
            answer = 0
@@ -132,7 +132,7 @@ class T_ghost():
             vt = 0
             for r in range(len_N):
                 for s in range(len_N):
-                    if r <> s:
+                    if r != s:
                        c_pq = self.c_func(r, s, p, q, A, B, len_N)
                        d_pq = c_pq*(A*B)**(-1)
                        A_pq = B**(-1)*((Phi[p,q]**2*1.0)/Phi[r,s]**2)*c_pq
@@ -140,8 +140,8 @@ class T_ghost():
                        g_pq[i]+=A_pq*(2*np.pi*s_pq2)*np.exp(-2*np.pi**2*s_pq2*(ut**2+vt**2))
                        g_pq_inv[i] -= (A*B)**(-1)*d_pq*np.exp(-2*np.pi**2*s_pq2*(ut**2+vt**2))
 
-	    g_pq[i] += (A*B*1.0)/len_N
-            g_pq_inv[i] += (A*B)**(-1)*((2.0*len_N-1)/(len_N))
+        g_pq[i] += (A*B*1.0)/len_N
+        g_pq_inv[i] += (A*B)**(-1)*((2.0*len_N-1)/(len_N))
 
         return g_pq,g_pq_inv,u,B
 
@@ -202,7 +202,7 @@ class T_ghost():
                 vt = v[j]
                 for r in range(len_N):
                     for s in range(len_N):
-                        if r <> s:
+                        if r != s:
                            c_pq = self.c_func(r, s, p, q, A, B, len_N)
                            d_pq = c_pq*(A*B)**(-1)
                            A_pq = B**(-1)*((Phi[p,q]**2*1.0)/Phi[r,s]**2)*c_pq
@@ -210,8 +210,8 @@ class T_ghost():
                            g_pq[i,j]+=A_pq*(2*np.pi*s_pq2)*np.exp(-2*np.pi**2*s_pq2*(ut**2+vt**2))
                            g_pq_inv[i,j] -= (A*B)**(-1)*d_pq*np.exp(-2*np.pi**2*s_pq2*(ut**2+vt**2))
 
-		g_pq[i,j] += (A*B*1.0)/len_N
-                g_pq_inv[i,j] += (A*B)**(-1)*((2.0*len_N-1)/(len_N))
+        g_pq[i,j] += (A*B*1.0)/len_N
+        g_pq_inv[i,j] += (A*B)**(-1)*((2.0*len_N-1)/(len_N))
 
         #plt.imshow((g_pq.real)) 
         #plt.show()
@@ -1311,7 +1311,7 @@ class T_ghost():
         for k in range(len(P)):
             for j in range(len(P)):
                 counter2 += 1
-                if j <> k:  
+                if j != k:  
                    if j > k:
                       #print(counter)
                       name = "g_"+str(k)+"_"+str(counter)+"_"+str(j)+"_"+str(P[k,j])+".p"
@@ -1328,7 +1328,7 @@ class T_ghost():
                       B = pickle.load(pkl_file)
                       
                       ax = plt.subplot(14, 14,counter2)                      
-                      if (k <> 0) or (j <> 1):
+                      if (k != 0) or (j != 1):
                             #print(k)
                             #print(j)
                             #plt.setp(ax, 'frame_on', False)
@@ -1355,7 +1355,7 @@ class T_ghost():
                       ax.set_ylim([0.9, 2.0])
                       
                     
-                      if (k <> 1) or (j <> 2):
+                      if (k != 1) or (j != 2):
                          ax.set_xticks([])
                          ax.set_yticks([])
                       else:
@@ -1417,46 +1417,46 @@ class T_ghost():
         plt.show()
 
     def include_baseline(self,k=0,j=1):
-        
-	if (k==0) and (j==1):
-	   return False 			
-        if (k==0) and (j==2):
-	   return False
-        if (k==0) and (j==3):
-	   return False
-        if (k==1) and (j==2):
-	   return False
-        if (k==1) and (j==3):
-	   return False
-        if (k==1) and (j==4):
-	   return False
-        if (k==2) and (j==3):
-	   return False
-        if (k==2) and (j==4):
-	   return False
-        if (k==2) and (j==5):
-	   return False
-        if (k==3) and (j==4):
-	   return False
-        if (k==3) and (j==5):
-	   return False
-        if (k==4) and (j==5):
-	   return False
-        if (k==4) and (j==6):
-	   return False
-        if (k==5) and (j==6):
-	   return False
-        if (k==5) and (j==7):
-	   return False
-        if (k==6) and (j==7):
-	   return False
-        if (k==6) and (j==8):
-	   return False
-        if (k==7) and (j==8):
-	   return False
-        if (k==12) and (j==13):
-	   return False
-        return True
+      
+      if (k==0) and (j==1):
+         return False
+      if (k==0) and (j==2):
+         return False
+      if (k==0) and (j==3):
+         return False
+      if (k==1) and (j==2):
+         return False
+      if (k==1) and (j==3):
+         return False
+      if (k==1) and (j==4):
+         return False
+      if (k==2) and (j==3):
+         return False
+      if (k==2) and (j==4):
+         return False
+      if (k==2) and (j==5):
+         return False
+      if (k==3) and (j==4):
+         return False
+      if (k==3) and (j==5):
+         return False
+      if (k==4) and (j==5):
+         return False
+      if (k==4) and (j==6):
+         return False
+      if (k==5) and (j==6):
+         return False
+      if (k==5) and (j==7):
+         return False
+      if (k==6) and (j==7):
+         return False
+      if (k==6) and (j==8):
+         return False
+      if (k==7) and (j==8):
+         return False
+      if (k==12) and (j==13):
+         return False
+      return True
 
 
 
@@ -1542,7 +1542,7 @@ class T_ghost():
                    amp_matrix[k,j,:] = np.nan
                    size_matrix[k,j,:] = np.nan
                    flux_matrix[k,j,:] = np.nan
-                if j <> k:  
+                if j != k:  
                    if j > k:
                       name = "10_baseline_"+str(counter)+"_"+str(k)+"_"+str(j)+"_"+str(P[k,j])+".p"
                       counter += 1
@@ -1704,7 +1704,7 @@ class T_ghost():
         for k in range(len(P)):
             for j in range(len(P)):
                 counter2 += 1
-                if j <> k:  
+                if j != k:  
                    if j > k:
                       #print(counter)
                       name = "g_"+str(k)+"_"+str(counter)+"_"+str(j)+"_"+str(P[k,j])+".p"
@@ -1723,7 +1723,7 @@ class T_ghost():
                       ax = plt.subplot(14, 14,counter2)                      
                       #ax.set_ylim([0, 6.0])
 
-                      if (k <> 0) or (j <> 1):
+                      if (k != 0) or (j != 1):
                             #print(k)
                             #print(j)
                             #plt.setp(ax, 'frame_on', False)
@@ -1837,7 +1837,7 @@ class T_ghost():
                       #ax.set_ylim([0.9, 2.0])
                       
                     
-                      if (k <> 2) or (j <> 3):
+                      if (k != 2) or (j != 3):
                          
                          #print(siz)
                          ax.set_xticks([])
@@ -2462,7 +2462,7 @@ class T_ghost():
 
 if __name__ == "__main__":
    #print('hallo')   
-   perform_exp_or_make_plots = True #if true make plots, if false perform experiments
+   perform_exp_or_make_plots = False #if true make plots, if false perform experiments
 
    t = T_ghost()
    #t.process_pickle_file()
@@ -2560,24 +2560,25 @@ if __name__ == "__main__":
 
    else:
        print("PERFORM MAIN EXPERIMENT PER N, GENERATES ALL THE N_10_*.p FILES")
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 14)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 13)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 12)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 11)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 10)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 9)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 8)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 7)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 6)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 5)
-       t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 4)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 14)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 13)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 12)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 11)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 10)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 9)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 8)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 7)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 6)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 5)
+      #  t.anotherExp(P,size_gauss=0.02,K1=30.0,K2=4.0, N = 4)
   
        print("PERFORM SECONDARY EXPERIMENT FOR N=14, GENERATES ALL THE g_*.p FILES")
+       counter = 0
        for k in range(len(P)):
         for j in range(len(P)):
            if j > k:
               print(counter)
-              g_pq_t,g_pq_inv,u,B = t.theory_g_linear(baseline=np.array([k,j]),true_sky_model=np.array([[1,0,0,0.02]]),cal_sky_model=np.array([[1,0,0]]),Phi=P,vis_s=5000,resolution=1)
+            #   g_pq_t,g_pq_inv,u,B = t.theory_g_linear(baseline=np.array([k,j]),true_sky_model=np.array([[1,0,0,0.02]]),cal_sky_model=np.array([[1,0,0]]),Phi=P,vis_s=5000,resolution=1)
               r_pq,g_pq,u,g_kernal,sigma_kernal=t.extrapolation_function_linear(baseline=np.array([k,j]),true_sky_model=np.array([[1,0,0,0.02]]),cal_sky_model=np.array([[1,0,0]]),Phi=P,vis_s=5000,resolution=1)
               plt.clf()
               plt.plot(u,np.absolute(g_pq_t**(-1)*r_pq),"b")

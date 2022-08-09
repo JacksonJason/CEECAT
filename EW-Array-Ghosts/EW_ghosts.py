@@ -382,6 +382,7 @@ class T_ghost:
                     g_pq_t[i],
                     g_pq_t_inv[i],
                     B,
+                    A
                 ) = EW_theoretical_derivation.derive_from_theory_linear(
                     true_sky_model[0][3],
                     N,
@@ -396,6 +397,9 @@ class T_ghost:
                 r_pq[i] = R[baseline[0], baseline[1]]
                 m_pq[i] = M[baseline[0], baseline[1]]
                 g_pq[i] = G[baseline[0], baseline[1]]
+        
+        # g_pq_t[i] += (A * B * 1.0) / N
+        # g_pq_t_inv[i] += (A  * B) ** (-1) * ((2.0 * N - 1) / (N))
 
         lam = (1.0 * 3 * 10**8) / f
         b_len = b0 * Phi[baseline[0], baseline[1]]
@@ -407,7 +411,6 @@ class T_ghost:
             * sigma_kernal**2
             * np.exp(-2 * np.pi**2 * sigma_kernal**2 * (u**2))
         )
-
         return r_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_kernal, u, B
 
 
@@ -449,12 +452,16 @@ def another_exp(phi, size_gauss=0.02, K1=30.0, K2=3.0, N=4):
     every_baseline(phi, s_size, r, siz, K1, K2, N)
 
 
-def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None):
+def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None, vis_s=5000):
 
     mp.freeze_support()
 
     original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    pool = mp.Pool(mp.cpu_count(), initargs=(mp.RLock(),), initializer=tqdm.set_lock)
+    if args.processes:
+        cpu_count = args.processes
+    else:
+        cpu_count = mp.cpu_count()
+    pool = mp.Pool(cpu_count, initargs=(mp.RLock(),), initializer=tqdm.set_lock)
     signal.signal(signal.SIGINT, original_sigint_handler)
     m = mp.Manager()
     shared_array = m.dict()
@@ -487,6 +494,7 @@ def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None):
                             K1,
                             K2,
                             N,
+                            vis_s
                         )
                     ],
                 )
@@ -516,7 +524,7 @@ def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None):
 
 
 def process_baseline(
-    k, j, phi, siz, r, s_size, shared_array, pid, K1=None, K2=None, N=None
+    k, j, phi, siz, r, s_size, shared_array, pid, K1=None, K2=None, N=None, vis_s=5000
 ):
     try:
         shared_array[pid] = True
@@ -605,7 +613,7 @@ def process_baseline(
                     true_sky_model=true_sky_model,
                     cal_sky_model=cal_sky_model,
                     Phi=phi,
-                    vis_s=s_size,
+                    vis_s=vis_s,
                     resolution=r,
                     pid=pid,
                 )
@@ -687,8 +695,8 @@ def process_pickle_files_g(phi=np.array([])):
                     if k == 0:
                         ax.set_title(str(j))
 
-                    ax.plot(u, np.absolute(g_pq) / B, "r")
-                    ax.plot(u, np.absolute(g_pq_t) / B, "b")
+                    ax.plot(u, np.absolute(g_pq) / B, "r",  linewidth=0.5)
+                    ax.plot(u, np.absolute(g_pq_t) / B, "b",  linewidth=0.5)
                     ax = plt.subplot(14, 14, idx_M[j, k])
                     ax.set_ylim([0.9, 2.0])
 
@@ -712,9 +720,9 @@ def process_pickle_files_g(phi=np.array([])):
                             va="center",
                         )
 
-                    ax.plot(u, np.absolute(g_pq ** (-1)) * B, "r")
-                    ax.plot(u, np.absolute(g_pq_t ** (-1)) * B, "b")
-                    ax.plot(u, np.absolute(g_pq_inv) * B, "g")
+                    ax.plot(u, np.absolute(g_pq ** (-1)) * B, "r", linewidth=0.5)
+                    ax.plot(u, np.absolute(g_pq_t ** (-1)) * B, "b", linewidth=0.5)
+                    ax.plot(u, np.absolute(g_pq_inv) * B, "g", linewidth=0.5)
 
             else:
                 if k == 0:
@@ -855,9 +863,9 @@ def process_pickle_files_g2(phi=np.array([])):
                         ax.set_title(str(j))
                         plt_i_domain = False
 
-                    ax.plot(u, np.absolute(g_pq ** (-1) * r_pq), "r")
-                    ax.plot(u, np.absolute(g_pq_t ** (-1) * r_pq), "b")
-                    ax.plot(u, np.absolute(g_pq_inv * r_pq), "g")
+                    ax.plot(u, np.absolute(g_pq ** (-1) * r_pq), "r", linewidth=0.5)
+                    ax.plot(u, np.absolute(g_pq_t ** (-1) * r_pq), "b", linewidth=0.5)
+                    ax.plot(u, np.absolute(g_pq_inv * r_pq), "g", linewidth=0.5)
 
                     name = (
                         "data/10_baseline/14_10_baseline_"
@@ -924,6 +932,7 @@ def process_pickle_files_g2(phi=np.array([])):
                                 )
                             ),
                             "r",
+                            linewidth=0.5
                         )
                         ax.plot(
                             x,
@@ -935,6 +944,7 @@ def process_pickle_files_g2(phi=np.array([])):
                                 )
                             ),
                             "b",
+                            linewidth=0.5
                         )
                         ax.plot(
                             x,
@@ -946,11 +956,13 @@ def process_pickle_files_g2(phi=np.array([])):
                                 )
                             ),
                             "g",
+                            linewidth=0.5
                         )
                         ax.plot(
                             x,
                             cut(img(np.absolute(r_pq12), delta_u, delta_u)),
                             "y",
+                            linewidth=0.5
                         )
 
             else:
@@ -974,6 +986,7 @@ def process_pickle_files_g2(phi=np.array([])):
     plt.savefig(fname="plots/g2_.png", dpi=200)
     plt.clf()
     plt.close()
+    print("g_2 complete")
 
 
 def compute_division_matrix(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
@@ -1809,6 +1822,18 @@ if __name__ == "__main__":
         help="Re-run all baselines if true, if false run from existing files",
     )
 
+    parser.add_argument(
+        "--justG",
+        action=argparse.BooleanOptionalAction,
+        help="Re-run only G if true",
+    )
+
+    parser.add_argument(
+        "--processes",
+        type=int,
+        help="How many cores to run on",
+    )
+
     # parser.add_argument(
     #     "--performExp",
     #     type=bool,
@@ -1821,101 +1846,26 @@ if __name__ == "__main__":
     t = T_ghost()
 
     baseline = np.array(args.baseline)
-    phi = 4 * np.array(
-        [
-            (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),
-            (-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75),
-            (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75),
-            (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75),
-            (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),
-            (-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75),
-            (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75),
-            (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),
-            (-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75),
-            (-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75),
-            (
-                -9.25,
-                -8.25,
-                -7.25,
-                -6.25,
-                -5.25,
-                -4.25,
-                -3.25,
-                -2.25,
-                -1.25,
-                -0.25,
-                0,
-                0.5,
-                9,
-                9.5,
-            ),
-            (
-                -9.75,
-                -8.75,
-                -7.75,
-                -6.75,
-                -5.75,
-                -4.75,
-                -3.75,
-                -2.75,
-                -1.75,
-                -0.75,
-                -0.5,
-                0,
-                8.5,
-                9,
-            ),
-            (
-                18.25,
-                -17.25,
-                -16.25,
-                -15.25,
-                -14.25,
-                -13.25,
-                -12.25,
-                -11.25,
-                -10.25,
-                -9.25,
-                -9,
-                -8.5,
-                0,
-                0.5,
-            ),
-            (
-                -18.75,
-                -17.75,
-                -16.75,
-                -15.75,
-                -14.75,
-                -13.75,
-                -12.75,
-                -11.75,
-                -10.75,
-                -9.75,
-                -9.5,
-                -9,
-                -0.5,
-                0,
-            ),
-        ]
-    )
+    phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),(-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75),(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75),(-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5),(-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9),(-18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75,-9.5, -9, -0.5, 0)])
+
 
     if args.performExp:
         print("Running Experiment")
         print()
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=14)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=13)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=12)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=11)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=10)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=9)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=8)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=7)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=6)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=5)
-        another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=4)
+        if (not args.justG):
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=14)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=13)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=12)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=11)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=10)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=9)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=8)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=7)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=6)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=5)
+            another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=4)
 
-        every_baseline(phi, 5000, 1)
+        every_baseline(phi, r=1, vis_s=5000)
     else:
         print("Saving images")
         process_pickle_files_g(phi=phi)
