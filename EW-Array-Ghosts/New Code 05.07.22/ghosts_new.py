@@ -2578,7 +2578,7 @@ if __name__ == "__main__":
         for j in range(len(P)):
            if j > k:
               print(counter)
-            #   g_pq_t,g_pq_inv,u,B = t.theory_g_linear(baseline=np.array([k,j]),true_sky_model=np.array([[1,0,0,0.02]]),cal_sky_model=np.array([[1,0,0]]),Phi=P,vis_s=5000,resolution=1)
+              g_pq_t,g_pq_inv,u,B = t.theory_g_linear(baseline=np.array([k,j]),true_sky_model=np.array([[1,0,0,0.02]]),cal_sky_model=np.array([[1,0,0]]),Phi=P,vis_s=5000,resolution=1)
               r_pq,g_pq,u,g_kernal,sigma_kernal=t.extrapolation_function_linear(baseline=np.array([k,j]),true_sky_model=np.array([[1,0,0,0.02]]),cal_sky_model=np.array([[1,0,0]]),Phi=P,vis_s=5000,resolution=1)
               plt.clf()
               plt.plot(u,np.absolute(g_pq_t**(-1)*r_pq),"b")
