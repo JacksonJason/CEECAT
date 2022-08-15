@@ -741,7 +741,9 @@ def process_pickle_files_g(phi=np.array([])):
                         ha="right",
                         va="center",
                     )
+    plt.savefig(fname="plots/g_.pdf")
     plt.savefig(fname="plots/g_.png", dpi=200)
+
     plt.clf()
     plt.close()
     print("G complete")
@@ -800,7 +802,7 @@ def process_pickle_files_g2(phi=np.array([])):
                         ax.set_xlabel(r"$u$" + " [rad" + r"$^{-1}$" + "]")
 
                     plt_i_domain = True
-
+                    # This is stopping some things from being plotted
                     if (k == 0) and (j == 1):
                         ax.set_ylim(0, 7)
                         plt_i_domain = False
@@ -934,36 +936,36 @@ def process_pickle_files_g2(phi=np.array([])):
                             "r",
                             linewidth=0.5
                         )
-                        ax.plot(
-                            x,
-                            cut(
-                                img(
-                                    np.absolute(g_pq_t12 ** (-1) * r_pq12) * B,
-                                    delta_u,
-                                    delta_u,
-                                )
-                            ),
-                            "b",
-                            linewidth=0.5
-                        )
-                        ax.plot(
-                            x,
-                            cut(
-                                img(
-                                    np.absolute(g_pq_inv12 * r_pq12) * B,
-                                    delta_u,
-                                    delta_u,
-                                )
-                            ),
-                            "g",
-                            linewidth=0.5
-                        )
-                        ax.plot(
-                            x,
-                            cut(img(np.absolute(r_pq12), delta_u, delta_u)),
-                            "y",
-                            linewidth=0.5
-                        )
+                    ax.plot(
+                        x,
+                        cut(
+                            img(
+                                np.absolute(g_pq_t12 ** (-1) * r_pq12) * B,
+                                delta_u,
+                                delta_u,
+                            )
+                        ),
+                        "b",
+                        linewidth=0.5
+                    )
+                    ax.plot(
+                        x,
+                        cut(
+                            img(
+                                np.absolute(g_pq_inv12 * r_pq12) * B,
+                                delta_u,
+                                delta_u,
+                            )
+                        ),
+                        "g",
+                        linewidth=0.5
+                    )
+                    ax.plot(
+                        x,
+                        cut(img(np.absolute(r_pq12), delta_u, delta_u)),
+                        "y",
+                        linewidth=0.5
+                    )
 
             else:
                 if k == 0:
@@ -983,7 +985,9 @@ def process_pickle_files_g2(phi=np.array([])):
                         va="center",
                     )
     plt.subplots_adjust(wspace=1, hspace=0.3)
+    plt.savefig(fname="plots/g2_.pdf")
     plt.savefig(fname="plots/g2_.png", dpi=200)
+
     plt.clf()
     plt.close()
     print("g_2 complete")
@@ -1402,6 +1406,7 @@ def plt_imshow(
     ax.set_yticks(yticks)
     ax.set_xlabel("Antenna $q$")
     ax.set_ylabel("Antenna $p$")
+    plt.savefig("plots/" + name_file + ".pdf")
     plt.savefig("plots/" + name_file + ".png", dpi=200)
     plt.clf()
     plt.close()
