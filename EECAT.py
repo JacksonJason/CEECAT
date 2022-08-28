@@ -1974,7 +1974,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--justG",
         action=argparse.BooleanOptionalAction,
-        help="Re-run only G if true",
+        help="Run only the linear experiments",
     )
 
     parser.add_argument(

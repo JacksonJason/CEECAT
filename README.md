@@ -1,11 +1,11 @@
-"# ghosts"
+#The Extended Emission Calibration Artefacts Tool (EECAT).
+
+This tool allows the user to generate artefact maps of sky models that they choose. All experiment conditions can be added in the experiment.yaml file in the same format as the example file.
+The tool also allows the user to generate validation experiments. Simply run the tool with the validate argument first, once that has completed, which may take up to a few days. Run the tool with the validationImages argument in order to generate the graphs needed for validation.
 
 Arguments:
- * --algo Choose the algorithm, in all CAPS
- * --baseline 2 numbers separated by a space
- * --mask Apply the mask to the image if present
- * --sigma Change the size of the point sources, lower is smaller points, larger is larger points
- * --pickle_file Choose the pickle file to run
- * --dont_save Add this argument to not save the image
- * --type The type of experiment to run.
- * --radius The radius of the final image
+ * --validate Re-run all baselines.
+ * --validationImages Run the imaging from existing files.
+ * --justG Run only the linear experiments.
+ * --processes How many cores to run on.
+ * --experimentConditions The YAML file where all the experiment conditions are.
