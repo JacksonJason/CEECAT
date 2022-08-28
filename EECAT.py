@@ -1,7 +1,7 @@
 import time
 import yaml
 import numpy as np
-import EW_theoretical_derivation
+import EECAT_theoretical_derivation
 import signal
 import matplotlib.pyplot as plt
 import argparse
@@ -137,8 +137,7 @@ class T_ghost:
 
         plt.xlabel("$l$ [degrees]")
         plt.ylabel("$m$ [degrees]")
-        plt.title("Baseline " +
-                  str(baseline[0]) + str(baseline[1]) + " --- Real")
+        plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
 
         plt.savefig(
             "images/Figure_Real_pq"
@@ -175,13 +174,10 @@ class T_ghost:
         b0=36,
         f=1.45e9,
         plot_artefact_map=False,
-        gaussian_source=False
+        gaussian_source=False,
     ):
         s_old = s
         temp = np.ones(Phi.shape, dtype=complex)
-
-        # FFT SCALING
-        ######################################################
         delta_u = 1 / (2 * s * image_s * (np.pi / 180))
         delta_v = delta_u
         delta_l = resolution * (1.0 / 3600.0) * (np.pi / 180.0)
@@ -195,7 +191,7 @@ class T_ghost:
         uu, vv = np.meshgrid(u, v)
         u_dim = uu.shape[0]
         v_dim = uu.shape[1]
-        #######################################################
+
         r_pq = np.zeros((u_dim, v_dim), dtype=complex)
         g_pq = np.zeros((u_dim, v_dim), dtype=complex)
         g_pq_t = np.zeros((u_dim, v_dim), dtype=complex)
@@ -293,7 +289,7 @@ class T_ghost:
                         (
                             g_pq_t[i, j],
                             g_pq_t_inv[i, j],
-                        ) = EW_theoretical_derivation.derive_from_theory(
+                        ) = EECAT_theoretical_derivation.derive_from_theory(
                             true_sky_model[0][3],
                             N,
                             Phi,
@@ -318,7 +314,7 @@ class T_ghost:
             * sigma_kernal**2
             * np.exp(-2 * np.pi**2 * sigma_kernal**2 * (uu**2 + vv**2))
         )
-        
+
         if plot_artefact_map:
             if gaussian_source:
                 g_kernal = None
@@ -349,7 +345,6 @@ class T_ghost:
                 vv,
                 baseline,
                 kernel=g_kernal,
-
             )
             self.plot_image(
                 "GTR-R",
@@ -363,7 +358,6 @@ class T_ghost:
                 uu,
                 vv,
                 baseline,
-                
                 kernel=g_kernal,
             )
             self.plot_image(
@@ -378,7 +372,6 @@ class T_ghost:
                 uu,
                 vv,
                 baseline,
-                
                 kernel=g_kernal,
             )
             self.plot_image(
@@ -560,8 +553,8 @@ class T_ghost:
                     g_pq_t[i],
                     g_pq_t_inv[i],
                     B,
-                    A
-                ) = EW_theoretical_derivation.derive_from_theory_linear(
+                    A,
+                ) = EECAT_theoretical_derivation.derive_from_theory_linear(
                     true_sky_model[0][3],
                     N,
                     Phi,
@@ -575,10 +568,6 @@ class T_ghost:
                 r_pq[i] = R[baseline[0], baseline[1]]
                 m_pq[i] = M[baseline[0], baseline[1]]
                 g_pq[i] = G[baseline[0], baseline[1]]
-        
-        # g_pq_t[i] += (A * B * 1.0) / N
-        # g_pq_t_inv[i] += (A  * B) ** (-1) * ((2.0 * N - 1) / (N))
-
         lam = (1.0 * 3 * 10**8) / f
         b_len = b0 * Phi[baseline[0], baseline[1]]
         fwhm = 1.02 * lam / (b_len)
@@ -630,7 +619,9 @@ def another_exp(phi, size_gauss=0.02, K1=30.0, K2=3.0, N=4):
     every_baseline(phi, s_size, r, siz, K1, K2, N)
 
 
-def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None, vis_s=5000):
+def every_baseline(
+    phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None, vis_s=5000
+):
 
     mp.freeze_support()
 
@@ -657,27 +648,11 @@ def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None, 
                         ]
 
                     pid = shared_array.keys().index(pids[0])
-                
+
                 res = pool.starmap_async(
                     process_baseline,
-                    [
-                        (
-                            k,
-                            j,
-                            phi,
-                            siz,
-                            r,
-                            s_size,
-                            shared_array,
-                            pid,
-                            K1,
-                            K2,
-                            N,
-                            vis_s
-                        )
-                    ],
+                    [(k, j, phi, siz, r, s_size, shared_array, pid, K1, K2, N, vis_s)],
                 )
-                # process_baseline(k, j, phi, siz, r, s_size, shared_array, pid, counter, K1, K2, N)
                 pid += 1
 
     except KeyboardInterrupt:
@@ -729,13 +704,7 @@ def process_baseline(
                 )
             else:
                 file_name = (
-                    "data/G/g_"
-                    + str(k)
-                    + "_"
-                    + str(j)
-                    + "_"
-                    + str(phi[k, j])
-                    + ".png"
+                    "data/G/g_" + str(k) + "_" + str(j) + "_" + str(phi[k, j]) + ".png"
                 )
 
             if N is not None:
@@ -822,8 +791,8 @@ def process_baseline(
 
 
 def process_pickle_files_g(phi=np.array([])):
-    plt.rcParams['font.size'] = '6'
-    plt.figure(figsize=(12,6))
+    plt.rcParams["font.size"] = "6"
+    plt.figure(figsize=(12, 6))
     counter2 = 0
 
     vis_s = 5000
@@ -856,7 +825,7 @@ def process_pickle_files_g(phi=np.array([])):
                         + ".p"
                     )
 
-                    pkl_file = open(name, 'rb')
+                    pkl_file = open(name, "rb")
                     g_pq_t = pickle.load(pkl_file)
                     g_pq = pickle.load(pkl_file)
                     g_pq_inv = pickle.load(pkl_file)
@@ -875,8 +844,8 @@ def process_pickle_files_g(phi=np.array([])):
                     if k == 0:
                         ax.set_title(str(j))
 
-                    ax.plot(u, np.absolute(g_pq) / B, "r",  linewidth=0.5)
-                    ax.plot(u, np.absolute(g_pq_t) / B, "b",  linewidth=0.5)
+                    ax.plot(u, np.absolute(g_pq) / B, "r", linewidth=0.5)
+                    ax.plot(u, np.absolute(g_pq_t) / B, "b", linewidth=0.5)
                     ax = plt.subplot(14, 14, idx_M[j, k])
                     ax.set_ylim([0.9, 2.0])
 
@@ -928,9 +897,10 @@ def process_pickle_files_g(phi=np.array([])):
     plt.close()
     print("G complete")
 
+
 def process_pickle_files_g2(phi=np.array([])):
-    plt.rcParams['font.size'] = '6'
-    plt.figure(figsize=(12,6))
+    plt.rcParams["font.size"] = "6"
+    plt.figure(figsize=(12, 6))
     counter2 = 0
 
     vis_s = 5000
@@ -964,7 +934,7 @@ def process_pickle_files_g2(phi=np.array([])):
                         + ".p"
                     )
 
-                    pkl_file = open(name, 'rb')
+                    pkl_file = open(name, "rb")
                     g_pq_t = pickle.load(pkl_file)
                     g_pq = pickle.load(pkl_file)
                     g_pq_inv = pickle.load(pkl_file)
@@ -982,7 +952,6 @@ def process_pickle_files_g2(phi=np.array([])):
                         ax.set_xlabel(r"$u$" + " [rad" + r"$^{-1}$" + "]")
 
                     plt_i_domain = True
-                    # This is stopping some things from being plotted
                     if (k == 0) and (j == 1):
                         ax.set_ylim(0, 7)
                         plt_i_domain = False
@@ -1058,7 +1027,7 @@ def process_pickle_files_g2(phi=np.array([])):
                         + str(phi[k, j])
                         + ".p"
                     )
-                    pkl_file = open(name, 'rb')
+                    pkl_file = open(name, "rb")
                     g_pq12 = pickle.load(pkl_file)
                     r_pq12 = pickle.load(pkl_file)
                     g_kernal = pickle.load(pkl_file)
@@ -1070,10 +1039,10 @@ def process_pickle_files_g2(phi=np.array([])):
                     s_size = pickle.load(pkl_file)
                     siz = pickle.load(pkl_file)
                     r = pickle.load(pkl_file)
-                    phi = pickle.load(pkl_file) 
+                    phi = pickle.load(pkl_file)
                     K1 = pickle.load(pkl_file)
                     K2 = pickle.load(pkl_file)
-                    
+
                     pkl_file.close()
 
                     ax = plt.subplot(14, 14, idx_M[j, k])
@@ -1114,7 +1083,7 @@ def process_pickle_files_g2(phi=np.array([])):
                                 )
                             ),
                             "r",
-                            linewidth=0.5
+                            linewidth=0.5,
                         )
                     ax.plot(
                         x,
@@ -1126,7 +1095,7 @@ def process_pickle_files_g2(phi=np.array([])):
                             )
                         ),
                         "b",
-                        linewidth=0.5
+                        linewidth=0.5,
                     )
                     ax.plot(
                         x,
@@ -1138,13 +1107,13 @@ def process_pickle_files_g2(phi=np.array([])):
                             )
                         ),
                         "g",
-                        linewidth=0.5
+                        linewidth=0.5,
                     )
                     ax.plot(
                         x,
                         cut(img(np.absolute(r_pq12), delta_u, delta_u)),
                         "y",
-                        linewidth=0.5
+                        linewidth=0.5,
                     )
 
             else:
@@ -1224,8 +1193,7 @@ def compute_division_matrix(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                     + ".p"
                 )
 
-
-                pkl_file = open(name, 'rb')
+                pkl_file = open(name, "rb")
                 g_pq12 = pickle.load(pkl_file)
                 r_pq12 = pickle.load(pkl_file)
                 g_kernal = pickle.load(pkl_file)
@@ -1237,10 +1205,10 @@ def compute_division_matrix(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                 s_size = pickle.load(pkl_file)
                 siz = pickle.load(pkl_file)
                 r = pickle.load(pkl_file)
-                phi = pickle.load(pkl_file) 
+                phi = pickle.load(pkl_file)
                 K1 = pickle.load(pkl_file)
                 K2 = pickle.load(pkl_file)
-                
+
                 pkl_file.close()
 
                 B = 2 * np.pi * (s_size * (np.pi / 180)) ** 2
@@ -1340,7 +1308,7 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
                         + str(P[k, j])
                         + ".p"
                     )
-                    pkl_file = open(name, 'rb')
+                    pkl_file = open(name, "rb")
                     g_pq12 = pickle.load(pkl_file)
                     r_pq12 = pickle.load(pkl_file)
                     g_kernal = pickle.load(pkl_file)
@@ -1352,13 +1320,12 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
                     s_size = pickle.load(pkl_file)
                     siz = pickle.load(pkl_file)
                     r = pickle.load(pkl_file)
-                    phi = pickle.load(pkl_file) 
+                    phi = pickle.load(pkl_file)
                     K1 = pickle.load(pkl_file)
                     K2 = pickle.load(pkl_file)
-                    
+
                     pkl_file.close()
                     B = 2 * np.pi * (s_size * (np.pi / 180)) ** 2
-                    # PROCESS THE INFORMATION AS A FUNCTION OF PHI
                     c1 = cut(
                         img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
                     )
@@ -1666,7 +1633,7 @@ def get_average_response(P=np.array([]), N=14, peak_flux=100):
                     + ".p"
                 )
 
-                pkl_file = open(name, 'rb')
+                pkl_file = open(name, "rb")
                 g_pq12 = pickle.load(pkl_file)
                 r_pq12 = pickle.load(pkl_file)
                 g_kernal = pickle.load(pkl_file)
@@ -1678,10 +1645,10 @@ def get_average_response(P=np.array([]), N=14, peak_flux=100):
                 s_size = pickle.load(pkl_file)
                 siz = pickle.load(pkl_file)
                 r = pickle.load(pkl_file)
-                phi = pickle.load(pkl_file) 
+                phi = pickle.load(pkl_file)
                 K1 = pickle.load(pkl_file)
                 K2 = pickle.load(pkl_file)
-                
+
                 pkl_file.close()
 
                 B = 2 * np.pi * (s_size * (np.pi / 180)) ** 2
@@ -1846,7 +1813,6 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
         P = np.delete(P, [1, 2, 3, 4, 5, 6, 7, 8, 11, 12], axis=0)
         P = np.delete(P, [1, 2, 3, 4, 5, 6, 7, 8, 11, 12], axis=1)
 
-
     r_ampl = [np.array([]), np.array([]), np.array([])]
     r_size = [np.array([]), np.array([]), np.array([])]
     r_flux = [np.array([]), np.array([]), np.array([])]
@@ -1876,7 +1842,7 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                     + ".p"
                 )
 
-                pkl_file = open(name, 'rb')
+                pkl_file = open(name, "rb")
                 g_pq12 = pickle.load(pkl_file)
                 r_pq12 = pickle.load(pkl_file)
                 g_kernal = pickle.load(pkl_file)
@@ -1888,10 +1854,10 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                 s_size = pickle.load(pkl_file)
                 siz = pickle.load(pkl_file)
                 r = pickle.load(pkl_file)
-                phi = pickle.load(pkl_file) 
+                phi = pickle.load(pkl_file)
                 K1 = pickle.load(pkl_file)
                 K2 = pickle.load(pkl_file)
-                
+
                 pkl_file.close()
 
                 B = 2 * np.pi * (s_size * (np.pi / 180)) ** 2
@@ -2002,7 +1968,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--validationImages",
         action=argparse.BooleanOptionalAction,
-        help="Run the imageing from existing files",
+        help="Run the imaging from existing files",
     )
 
     parser.add_argument(
@@ -2027,9 +1993,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     t = T_ghost()
 
-    baseline = np.array(args.baseline)
     phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),(-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75),(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75),(-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5),(-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9),(-18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75,-9.5, -9, -0.5, 0)])
-
 
     if args.validate:
         print("Running Experiment")
@@ -2141,17 +2105,16 @@ if __name__ == "__main__":
             try:
                 experiment = yaml.safe_load(stream)
                 t.extrapolation_function(
-                        baseline=np.array(experiment["baseline"]),
-                        true_sky_model=np.array(experiment["true_sky_model"]),
-                        cal_sky_model=np.array(experiment["cal_sky_model"]),
-                        Phi=np.array(experiment["phi"]),
-                        image_s=experiment["image_size"],
-                        s=experiment["size"],
-                        resolution=experiment["resolution"],
-                        pid=1,
-                        plot_artefact_map=args.experimentConditions != None,
-                        gaussian_source=experiment["gaussian_source"]
+                    baseline=np.array(experiment["baseline"]),
+                    true_sky_model=np.array(experiment["true_sky_model"]),
+                    cal_sky_model=np.array(experiment["cal_sky_model"]),
+                    Phi=np.array(experiment["phi"]),
+                    image_s=experiment["image_size"],
+                    s=experiment["size"],
+                    resolution=experiment["resolution"],
+                    pid=1,
+                    plot_artefact_map=args.experimentConditions != None,
+                    gaussian_source=experiment["gaussian_source"],
                 )
             except yaml.YAMLError as exc:
                 print(exc)
-
