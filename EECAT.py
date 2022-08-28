@@ -149,6 +149,17 @@ class T_ghost:
             format="png",
             bbox_inches="tight",
         )
+
+        plt.savefig(
+            "images/Figure_Real_pq"
+            + str(baseline[0])
+            + str(baseline[1])
+            + " "
+            + type_plot
+            + ".pdf",
+            format="pdf",
+            bbox_inches="tight",
+        )
         plt.clf()
         plt.cla()
 
