@@ -1,22 +1,13 @@
-from email.mime import base
 import time
-
-# from threading import active_count
-import uuid
+import yaml
 import numpy as np
 import EW_theoretical_derivation
-import sys
-
 import signal
 import matplotlib.pyplot as plt
 import argparse
 import multiprocessing as mp
-
-# from multiprocessing.managers import SyncManager
 from tqdm import tqdm
-import random
 import pickle
-
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -84,6 +75,84 @@ class T_ghost:
         for k in range(len(rad)):
             plt.plot(rad[k] * x_c, rad[k] * y_c, "k", ls=":", lw=0.5)
 
+    def plot_image(
+        self,
+        type_plot,
+        g_pq,
+        r_pq,
+        m_pq,
+        delta_u,
+        delta_v,
+        s_old,
+        image_s,
+        uu,
+        vv,
+        baseline,
+        kernel,
+    ):
+        if type_plot == "GT-1":
+            vis = (g_pq) ** (-1) - 1
+        elif type_plot == "GT":
+            vis = (g_pq) ** (-1)
+        elif type_plot == "GT_theory":
+            vis = (g_pq) ** (-1)
+        elif type_plot == "R":
+            vis = r_pq
+        elif type_plot == "M":
+            vis = m_pq
+        elif type_plot == "G":
+            vis = g_pq
+        elif type_plot == "G_theory":
+            vis = g_pq
+        elif type_plot == "GTR-R":
+            vis = (g_pq) ** (-1) * r_pq - r_pq
+        elif type_plot == "GTR":
+            vis = (g_pq) ** (-1) * r_pq
+
+        if kernel is not None:
+            vis = vis * kernel
+        vis = vis[:, ::-1]
+
+        zz = vis
+        zz = np.roll(zz, -int(zz.shape[0] / 2), axis=0)
+        zz = np.roll(zz, -int(zz.shape[0] / 2), axis=1)
+
+        zz_f = np.fft.fft2(zz) * (delta_u * delta_v)
+        zz_f = np.roll(zz_f, -int(zz.shape[0] / 2), axis=0)
+        zz_f = np.roll(zz_f, -int(zz.shape[0] / 2), axis=1)
+
+        fig, ax = plt.subplots()
+        im = ax.imshow(
+            zz_f.real,
+            cmap="cubehelix",
+            extent=[
+                -s_old * image_s,
+                s_old * image_s,
+                -s_old * image_s,
+                s_old * image_s,
+            ],
+        )
+        fig.colorbar(im, ax=ax)
+        self.plt_circle_grid(image_s)
+
+        plt.xlabel("$l$ [degrees]")
+        plt.ylabel("$m$ [degrees]")
+        plt.title("Baseline " +
+                  str(baseline[0]) + str(baseline[1]) + " --- Real")
+
+        plt.savefig(
+            "images/Figure_Real_pq"
+            + str(baseline[0])
+            + str(baseline[1])
+            + " "
+            + type_plot
+            + ".png",
+            format="png",
+            bbox_inches="tight",
+        )
+        plt.clf()
+        plt.cla()
+
     """
     resolution --- resolution in image domain in arcseconds
     images_s --- overall extend of image in degrees
@@ -105,7 +174,10 @@ class T_ghost:
         pid,
         b0=36,
         f=1.45e9,
+        plot_artefact_map=False,
+        gaussian_source=False
     ):
+        s_old = s
         temp = np.ones(Phi.shape, dtype=complex)
 
         # FFT SCALING
@@ -217,19 +289,20 @@ class T_ghost:
                             )
                     g_stef, G = self.create_G_stef(R, M, 200, 1e-8, temp, no_auto=False)
 
-                    (
-                        g_pq_t[i, j],
-                        g_pq_t_inv[i, j],
-                    ) = EW_theoretical_derivation.derive_from_theory(
-                        true_sky_model[0][3],
-                        N,
-                        Phi,
-                        baseline[0],
-                        baseline[1],
-                        true_sky_model[0][0],
-                        ut,
-                        vt,
-                    )
+                    if not plot_artefact_map:
+                        (
+                            g_pq_t[i, j],
+                            g_pq_t_inv[i, j],
+                        ) = EW_theoretical_derivation.derive_from_theory(
+                            true_sky_model[0][3],
+                            N,
+                            Phi,
+                            baseline[0],
+                            baseline[1],
+                            true_sky_model[0][0],
+                            ut,
+                            vt,
+                        )
 
                     r_pq[j, i] = R[baseline[0], baseline[1]]
                     m_pq[j, i] = M[baseline[0], baseline[1]]
@@ -245,6 +318,111 @@ class T_ghost:
             * sigma_kernal**2
             * np.exp(-2 * np.pi**2 * sigma_kernal**2 * (uu**2 + vv**2))
         )
+        
+        if plot_artefact_map:
+            if gaussian_source:
+                g_kernal = None
+            self.plot_image(
+                "GT-1",
+                g_pq,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+                kernel=g_kernal,
+            )
+            self.plot_image(
+                "GT",
+                g_pq,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+                kernel=g_kernal,
+
+            )
+            self.plot_image(
+                "GTR-R",
+                g_pq,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+                
+                kernel=g_kernal,
+            )
+            self.plot_image(
+                "GTR",
+                g_pq,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+                
+                kernel=g_kernal,
+            )
+            self.plot_image(
+                "R",
+                g_pq,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+                kernel=g_kernal,
+            )
+            self.plot_image(
+                "M",
+                g_pq,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+                kernel=g_kernal,
+            )
+            self.plot_image(
+                "G",
+                g_pq,
+                r_pq,
+                m_pq,
+                delta_u,
+                delta_v,
+                s_old,
+                image_s,
+                uu,
+                vv,
+                baseline,
+                kernel=g_kernal,
+            )
 
         return (
             r_pq,
@@ -479,6 +657,7 @@ def every_baseline(phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None, 
                         ]
 
                     pid = shared_array.keys().index(pids[0])
+                
                 res = pool.starmap_async(
                     process_baseline,
                     [
@@ -560,6 +739,7 @@ def process_baseline(
                 )
 
             if N is not None:
+                print(siz, r)
                 (
                     r_pq,
                     g_pq,
@@ -1814,17 +1994,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--baseline",
-        type=int,
-        nargs="+",
-        default=[0, 1],
-        help="The baseline to calculate on",
+        "--validate",
+        action=argparse.BooleanOptionalAction,
+        help="Re-run all baselines if true, if false run from existing files",
     )
 
     parser.add_argument(
-        "--performExp",
+        "--validationImages",
         action=argparse.BooleanOptionalAction,
-        help="Re-run all baselines if true, if false run from existing files",
+        help="Run the imageing from existing files",
     )
 
     parser.add_argument(
@@ -1839,12 +2017,11 @@ if __name__ == "__main__":
         help="How many cores to run on",
     )
 
-    # parser.add_argument(
-    #     "--performExp",
-    #     type=bool,
-    #     default=True,
-    #     help="Re-run all baselines if true, if false run from existing files",
-    # )
+    parser.add_argument(
+        "--experimentConditions",
+        type=str,
+        help="The YAML file where all the experiment conditions are",
+    )
 
     global args
     args = parser.parse_args()
@@ -1854,10 +2031,10 @@ if __name__ == "__main__":
     phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),(-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75),(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75),(-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5),(-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9),(-18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75,-9.5, -9, -0.5, 0)])
 
 
-    if args.performExp:
+    if args.validate:
         print("Running Experiment")
         print()
-        if (not args.justG):
+        if not args.justG:
             another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=14)
             another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=13)
             another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=12)
@@ -1871,7 +2048,7 @@ if __name__ == "__main__":
             another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=4)
 
         every_baseline(phi, r=1, vis_s=5000)
-    else:
+    elif args.validationImages:
         print("Saving images")
         process_pickle_files_g(phi=phi)
         process_pickle_files_g2(phi=phi)
@@ -1959,3 +2136,22 @@ if __name__ == "__main__":
         create_violin_plot(data=F1, fc="red", yl=r"Flux [Jy]", label="F1")
         create_violin_plot(data=F2, fc="blue", yl=r"Flux [Jy]", label="F2")
         create_violin_plot(data=F3, fc="green", yl=r"Flux [Jy]", t=True, label="F3")
+    elif args.experimentConditions != None:
+        with open(args.experimentConditions, "r") as stream:
+            try:
+                experiment = yaml.safe_load(stream)
+                t.extrapolation_function(
+                        baseline=np.array(experiment["baseline"]),
+                        true_sky_model=np.array(experiment["true_sky_model"]),
+                        cal_sky_model=np.array(experiment["cal_sky_model"]),
+                        Phi=np.array(experiment["phi"]),
+                        image_s=experiment["image_size"],
+                        s=experiment["size"],
+                        resolution=experiment["resolution"],
+                        pid=1,
+                        plot_artefact_map=args.experimentConditions != None,
+                        gaussian_source=experiment["gaussian_source"]
+                )
+            except yaml.YAMLError as exc:
+                print(exc)
+
