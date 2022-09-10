@@ -1,4 +1,4 @@
-# The Extended Emission Calibration Artefacts Tool (EECAT).
+# The Compact and Extended Emission Calibration Artefacts Tool (CEECAT).
 
 This tool allows the user to generate artefact maps of sky models that they choose. All experiment conditions can be added in the experiment.yaml file in the same format as the example file.
 

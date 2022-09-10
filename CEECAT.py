@@ -1,9 +1,10 @@
 import time
 import yaml
 import numpy as np
-import EECAT_theoretical_derivation
+import CEECAT_theoretical_derivation
 import signal
 import matplotlib.pyplot as plt
+import matplotlib.ticker as tick
 import argparse
 import multiprocessing as mp
 from tqdm import tqdm
@@ -300,7 +301,7 @@ class T_ghost:
                         (
                             g_pq_t[i, j],
                             g_pq_t_inv[i, j],
-                        ) = EECAT_theoretical_derivation.derive_from_theory(
+                        ) = CEECAT_theoretical_derivation.derive_from_theory(
                             true_sky_model[0][3],
                             N,
                             Phi,
@@ -565,7 +566,7 @@ class T_ghost:
                     g_pq_t_inv[i],
                     B,
                     A,
-                ) = EECAT_theoretical_derivation.derive_from_theory_linear(
+                ) = CEECAT_theoretical_derivation.derive_from_theory_linear(
                     true_sky_model[0][3],
                     N,
                     Phi,
