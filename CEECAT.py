@@ -4,7 +4,8 @@ import numpy as np
 import CEECAT_theoretical_derivation
 import signal
 import matplotlib.pyplot as plt
-import matplotlib.ticker as tick
+from matplotlib.colors import TwoSlopeNorm
+import matplotlib.colors
 import argparse
 import multiprocessing as mp
 from tqdm import tqdm
@@ -125,7 +126,7 @@ class T_ghost:
         fig, ax = plt.subplots()
         im = ax.imshow(
             zz_f.real,
-            cmap="cubehelix",
+            cmap="gnuplot",
             extent=[
                 -s_old * image_s,
                 s_old * image_s,
