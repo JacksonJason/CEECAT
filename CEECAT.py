@@ -1780,6 +1780,7 @@ def create_violin_plot(
 
         plt.plot(x, (2.0 * N - 1) / N, "r")
     plt.savefig(fname="plots/violin_" + label, dpi=200)
+    plt.savefig("plots/violin_" + label + ".pdf")
     plt.clf()
 
 
@@ -2054,6 +2055,8 @@ if __name__ == "__main__":
         plt.ylabel(r"$c$ or FWHM/FWHM$_B$ or Flux [Jy]")
         plt.legend()
         plt.savefig(fname="plots/semilogy", dpi=200)
+        plt.savefig("plots/semilogy.pdf")
+
         plt.clf()
 
         n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
