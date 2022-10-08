@@ -1,5 +1,5 @@
 # Please input the baseline in [x,y] format
-baseline: [1,2]
+baseline: [0,1]
 # Please input the true_sky_model in [[x, y, z, s], ...] format, where x, y and z are the source co-ordinates and s is sigma (optional).
 true_sky_model: [[1, 0, 0], [0.2, 1, 0]]
 # Please input the cal_sky_model in [[x, y, z, s], ...] format, where x, y and z are the source co-ordinates and s is sigma (optional).
