@@ -1556,7 +1556,7 @@ def plt_imshow(
                 int(np.absolute(p)),
                 va="center",
                 ha="center",
-                color="white",
+                color="black",
             )
 
     ax = plt.gca()
