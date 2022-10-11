@@ -4,13 +4,14 @@ import numpy as np
 import CEECAT_theoretical_derivation
 import signal
 import matplotlib.pyplot as plt
-from matplotlib.colors import TwoSlopeNorm
-import matplotlib.colors
 import argparse
 import multiprocessing as mp
 from tqdm import tqdm
 import pickle
 import warnings
+import os
+import Utilities
+import Imaging_tools
 
 warnings.filterwarnings("ignore")
 
@@ -29,43 +30,6 @@ class T_ghost:
 
     def __init__(self):
         pass
-
-    def create_G_stef(self, R, M, imax, tau, temp, no_auto):
-        """This function finds argmin G ||R-GMG^H|| using StEFCal.
-        R is your observed visibilities matrx.
-        M is your predicted visibilities.
-        imax maximum amount of iterations.
-        tau stopping criteria.
-        g the antenna gains.
-        G = gg^H."""
-        N = R.shape[0]
-        g_temp = np.ones((N,), dtype=complex)
-        if no_auto:
-            R = R - R * np.eye(R.shape[0])
-            M = M - M * np.eye(M.shape[0])
-        for k in range(imax):
-            g_old = np.copy(g_temp)
-            for p in range(N):
-                z = g_old * M[:, p]
-                g_temp[p] = np.sum(np.conj(R[:, p]) * z) / (np.sum(np.conj(z) * z))
-
-            if k % 2 == 0:
-                if (
-                    np.sqrt(np.sum(np.absolute(g_temp - g_old) ** 2))
-                    / np.sqrt(np.sum(np.absolute(g_temp) ** 2))
-                    <= tau
-                ):
-                    break
-                else:
-                    g_temp = (g_temp + g_old) / 2
-
-        G_m = np.dot(np.diag(g_temp), temp)
-        G_m = np.dot(G_m, np.diag(g_temp.conj()))
-
-        g = g_temp
-        G = G_m
-
-        return g, G
 
     def plt_circle_grid(self, grid_m):
         rad = np.arange(1, 1 + grid_m, 1)
@@ -296,7 +260,7 @@ class T_ghost:
                                 )
                                 * g_kernal
                             )
-                    g_stef, G = self.create_G_stef(R, M, 200, 1e-8, temp, no_auto=False)
+                    g_stef, G = Utilities.create_G_stef(R, M, 200, 1e-8, temp, no_auto=False)
 
                     if not plot_artefact_map:
                         (
@@ -560,7 +524,7 @@ class T_ghost:
                             )
                             * g_kernal
                         )
-                g_stef, G = self.create_G_stef(R, M, 200, 1e-8, temp, no_auto=False)
+                g_stef, G = Utilities.create_G_stef(R, M, 200, 1e-8, temp, no_auto=False)
 
                 (
                     g_pq_t[i],
@@ -721,7 +685,6 @@ def process_baseline(
                 )
 
             if N is not None:
-                print(siz, r)
                 (
                     r_pq,
                     g_pq,
@@ -828,24 +791,15 @@ def process_pickle_files_g(phi=np.array([])):
             counter2 += 1
             if j != k:
                 if j > k:
-                    name = (
-                        "data/G/g_"
-                        + str(k)
-                        + "_"
-                        + str(j)
-                        + "_"
-                        + str(phi[k, j])
-                        + ".p"
-                    )
-
-                    pkl_file = open(name, "rb")
-                    g_pq_t = pickle.load(pkl_file)
-                    g_pq = pickle.load(pkl_file)
-                    g_pq_inv = pickle.load(pkl_file)
-                    r_pq = pickle.load(pkl_file)
-                    g_kernal = pickle.load(pkl_file)
-                    sigma_kernal = pickle.load(pkl_file)
-                    B = pickle.load(pkl_file)
+                    (
+                        g_pq_t, 
+                        g_pq, 
+                        g_pq_inv, 
+                        r_pq, 
+                        g_kernal, 
+                        sigma_kernal, 
+                        B
+                    ) = Utilities.load_g_pickle(phi, k, j)
 
                     ax = plt.subplot(14, 14, counter2)
                     if (k != 0) or (j != 1):
@@ -910,6 +864,153 @@ def process_pickle_files_g(phi=np.array([])):
     plt.close()
     print("G complete")
 
+def process_pickle_files_g2_individual(phi=np.array([])):
+
+    vis_s = 5000
+    resolution = 1
+
+    N = int(np.ceil(vis_s * 2 / resolution))
+    if (N % 2) == 0:
+        N = N + 1
+    u = np.linspace(-(N - 1) / 2 * resolution, (N - 1) / 2 * resolution, N)
+
+    idx_M = np.zeros(phi.shape, dtype=int)
+    c = 0
+    for k in range(len(phi)):
+        for j in range(len(phi)):
+            c += 1
+            idx_M[k, j] = c
+
+    for k in range(len(phi)):
+        for j in range(len(phi)):
+            if j != k:
+                if j > k:
+                    (
+                        g_pq_t, 
+                        g_pq, 
+                        g_pq_inv, 
+                        r_pq, 
+                        g_kernal, 
+                        sigma_kernal, 
+                        B
+                    ) = Utilities.load_g_pickle(phi, k, j)
+
+                    if Utilities.magic_baseline(k, j):
+                        plt.plot(u, np.absolute(g_pq) / B, "r", label=r"$S_3$")
+                        plt.plot(u, np.absolute(g_pq_t) / B, "b", label=r"$S_2$")
+                        plt.title("Baseline " + str(k) + "-" + str(j))
+                        plt.xlabel(r"$u$ [rad$^{-1}$]")
+                        plt.legend()
+                        plt.savefig(fname="plots/magic_baseline/g_pq_" + str(k) + "-" + str(j) + ".pdf")
+                        plt.savefig(fname="plots/magic_baseline/g_pq_" + str(k) + "-" + str(j) + ".png", dpi=200)
+                        plt.clf()
+                        plt.close()
+
+                        plt.plot(u, np.absolute(g_pq ** (-1) * B), "r", label=r"$S_3$")
+                        plt.plot(
+                            u, np.absolute(g_pq_t ** (-1) * B), "b", label=r"$S_2$"
+                        )
+                        plt.plot(u, np.absolute(g_pq_inv) * B, "g", label=r"$S_1$")
+                        plt.title("Baseline " + str(k) + "-" + str(j))
+                        plt.ylim([0.9, 2.1])
+                        plt.xlabel(r"$u$ [rad$^{-1}$]")
+                        plt.legend()
+                        plt.savefig(fname="plots/magic_baseline/g_pq_inv_" + str(k) + "-" + str(j) + ".pdf")
+                        plt.savefig(fname="plots/magic_baseline/g_pq_inv_" + str(k) + "-" + str(j) + ".png", dpi=200)
+                        plt.clf()
+                        plt.close()
+
+                        plt.plot(
+                            u, np.absolute(g_pq ** (-1) * r_pq), "r", label=r"$S_3$"
+                        )
+                        plt.plot(
+                            u, np.absolute(g_pq_t ** (-1) * r_pq), "b", label=r"$S_2$"
+                        )
+                        plt.plot(u, np.absolute(g_pq_inv * r_pq), "g", label=r"$S_1$")
+                        if (k == 2) and (j == 3):
+                            plt.ylim([0, 3.6])
+                        plt.xlabel(r"$u$ [rad$^{-1}$]")
+                        plt.title("Baseline " + str(k) + "-" + str(j))
+                        plt.legend()
+                        plt.savefig(fname="plots/magic_baseline/g_pq_inv_r_" + str(k) + "-" + str(j) + ".pdf")
+                        plt.savefig(fname="plots/magic_baseline/g_pq_inv_r_" + str(k) + "-" + str(j) + ".png", dpi=200)
+                        plt.clf()
+                        plt.close()
+
+                    (
+                        g_pq12, 
+                        r_pq12, 
+                        g_kernal,
+                        g_pq_inv12,
+                        g_pq_t12,
+                        sigma_b, 
+                        delta_u, 
+                        delta_l, 
+                        s_size, 
+                        siz, 
+                        r, 
+                        phi, 
+                        K1, 
+                        K2
+                    ) = Utilities.load_14_10_pickle(phi, k, j)
+                    
+                    if (k == 2) and (j == 3):
+                        plt_i_domain = False
+                    else:
+                        plt_i_domain = True
+
+                    if Utilities.magic_baseline(k, j):
+                        x = np.linspace(-1 * siz, siz, len(g_pq12))
+                        if plt_i_domain:
+                            plt.plot(
+                                x,
+                                Utilities.cut(
+                                    Utilities.img(
+                                        np.absolute(g_pq12 ** (-1) * r_pq12) * B,
+                                        delta_u,
+                                        delta_u,
+                                    )
+                                ),
+                                "r",
+                                label=r"$S_3$",
+                            )
+                        plt.plot(
+                            x,
+                            Utilities.cut(
+                                Utilities.img(
+                                    np.absolute(g_pq_t12 ** (-1) * r_pq12) * B,
+                                    delta_u,
+                                    delta_u,
+                                )
+                            ),
+                            "b",
+                            label=r"$S_2$",
+                        )
+                        plt.plot(
+                            x,
+                            Utilities.cut(
+                                Utilities.img(
+                                    np.absolute(g_pq_inv12 * r_pq12) * B,
+                                    delta_u,
+                                    delta_u,
+                                )
+                            ),
+                            "g",
+                            label=r"$S_1$",
+                        )
+                        plt.plot(
+                            x,
+                            Utilities.cut(Utilities.img(np.absolute(r_pq12), delta_u, delta_u)),
+                            "y",
+                        )
+                        plt.title("Baseline " + str(k) + "-" + str(j))
+                        plt.xlabel(r"$l$ [degrees]")
+                        plt.legend()
+                        plt.savefig(fname="plots/magic_baseline/g_pq_t_" + str(k) + "-" + str(j) + ".pdf")
+                        plt.savefig(fname="plots/magic_baseline/g_pq_t_" + str(k) + "-" + str(j) + ".png", dpi=200)
+                        plt.clf()
+                        plt.close()
+
 
 def process_pickle_files_g2(phi=np.array([])):
     plt.rcParams["font.size"] = "6"
@@ -936,25 +1037,15 @@ def process_pickle_files_g2(phi=np.array([])):
             counter2 += 1
             if j != k:
                 if j > k:
-                    # print(phi)
-                    name = (
-                        "data/G/g_"
-                        + str(k)
-                        + "_"
-                        + str(j)
-                        + "_"
-                        + str(phi[k, j])
-                        + ".p"
-                    )
-
-                    pkl_file = open(name, "rb")
-                    g_pq_t = pickle.load(pkl_file)
-                    g_pq = pickle.load(pkl_file)
-                    g_pq_inv = pickle.load(pkl_file)
-                    r_pq = pickle.load(pkl_file)
-                    g_kernal = pickle.load(pkl_file)
-                    sigma_kernal = pickle.load(pkl_file)
-                    B = pickle.load(pkl_file)
+                    (
+                        g_pq_t, 
+                        g_pq, 
+                        g_pq_inv, 
+                        r_pq, 
+                        g_kernal, 
+                        sigma_kernal, 
+                        B
+                    ) = Utilities.load_g_pickle(phi, k, j)
 
                     ax = plt.subplot(14, 14, counter2)
 
@@ -1031,32 +1122,22 @@ def process_pickle_files_g2(phi=np.array([])):
                     ax.plot(u, np.absolute(g_pq_t ** (-1) * r_pq), "b", linewidth=0.5)
                     ax.plot(u, np.absolute(g_pq_inv * r_pq), "g", linewidth=0.5)
 
-                    name = (
-                        "data/10_baseline/14_10_baseline_"
-                        + str(k)
-                        + "_"
-                        + str(j)
-                        + "_"
-                        + str(phi[k, j])
-                        + ".p"
-                    )
-                    pkl_file = open(name, "rb")
-                    g_pq12 = pickle.load(pkl_file)
-                    r_pq12 = pickle.load(pkl_file)
-                    g_kernal = pickle.load(pkl_file)
-                    g_pq_inv12 = pickle.load(pkl_file)
-                    g_pq_t12 = pickle.load(pkl_file)
-                    sigma_b = pickle.load(pkl_file)
-                    delta_u = pickle.load(pkl_file)
-                    delta_l = pickle.load(pkl_file)
-                    s_size = pickle.load(pkl_file)
-                    siz = pickle.load(pkl_file)
-                    r = pickle.load(pkl_file)
-                    phi = pickle.load(pkl_file)
-                    K1 = pickle.load(pkl_file)
-                    K2 = pickle.load(pkl_file)
-
-                    pkl_file.close()
+                    (
+                        g_pq12, 
+                        r_pq12, 
+                        g_kernal,
+                        g_pq_inv12,
+                        g_pq_t12,
+                        sigma_b, 
+                        delta_u, 
+                        delta_l, 
+                        s_size, 
+                        siz, 
+                        r, 
+                        phi, 
+                        K1, 
+                        K2
+                    ) = Utilities.load_14_10_pickle(phi, k, j)
 
                     ax = plt.subplot(14, 14, idx_M[j, k])
 
@@ -1088,8 +1169,8 @@ def process_pickle_files_g2(phi=np.array([])):
                     if plt_i_domain:
                         ax.plot(
                             x,
-                            cut(
-                                img(
+                            Utilities.cut(
+                                Utilities.img(
                                     np.absolute(g_pq12 ** (-1) * r_pq12) * B,
                                     delta_u,
                                     delta_u,
@@ -1100,8 +1181,8 @@ def process_pickle_files_g2(phi=np.array([])):
                         )
                     ax.plot(
                         x,
-                        cut(
-                            img(
+                        Utilities.cut(
+                            Utilities.img(
                                 np.absolute(g_pq_t12 ** (-1) * r_pq12) * B,
                                 delta_u,
                                 delta_u,
@@ -1112,8 +1193,8 @@ def process_pickle_files_g2(phi=np.array([])):
                     )
                     ax.plot(
                         x,
-                        cut(
-                            img(
+                        Utilities.cut(
+                            Utilities.img(
                                 np.absolute(g_pq_inv12 * r_pq12) * B,
                                 delta_u,
                                 delta_u,
@@ -1124,7 +1205,7 @@ def process_pickle_files_g2(phi=np.array([])):
                     )
                     ax.plot(
                         x,
-                        cut(img(np.absolute(r_pq12), delta_u, delta_u)),
+                        Utilities.cut(Utilities.img(np.absolute(r_pq12), delta_u, delta_u)),
                         "y",
                         linewidth=0.5,
                     )
@@ -1226,14 +1307,14 @@ def compute_division_matrix(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
 
                 B = 2 * np.pi * (s_size * (np.pi / 180)) ** 2
 
-                c1 = cut(
-                    img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
+                c1 = Utilities.cut(
+                    Utilities.img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
                 )  # red
-                c2 = cut(
-                    img(np.absolute(g_pq_t12 ** (-1) * r_pq12) * B, delta_u, delta_u)
+                c2 = Utilities.cut(
+                    Utilities.img(np.absolute(g_pq_t12 ** (-1) * r_pq12) * B, delta_u, delta_u)
                 )  # blue
-                c3 = cut(
-                    img(np.absolute(g_pq_inv12 * r_pq12) * B, delta_u, delta_u)
+                c3 = Utilities.cut(
+                    Utilities.img(np.absolute(g_pq_inv12 * r_pq12) * B, delta_u, delta_u)
                 )  # green
 
                 curves[0] = c1
@@ -1339,16 +1420,16 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
 
                     pkl_file.close()
                     B = 2 * np.pi * (s_size * (np.pi / 180)) ** 2
-                    c1 = cut(
-                        img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
+                    c1 = Utilities.cut(
+                        Utilities.img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
                     )
-                    c2 = cut(
-                        img(
+                    c2 = Utilities.cut(
+                        Utilities.img(
                             np.absolute(g_pq_t12 ** (-1) * r_pq12) * B, delta_u, delta_u
                         )
                     )
-                    c3 = cut(
-                        img(np.absolute(g_pq_inv12 * r_pq12) * B, delta_u, delta_u)
+                    c3 = Utilities.cut(
+                        Utilities.img(np.absolute(g_pq_inv12 * r_pq12) * B, delta_u, delta_u)
                     )
 
                     if include_baseline(k, j):
@@ -1520,8 +1601,6 @@ def plt_imshow(
     vmin=-1,
 ):
     fig, ax = plt.subplots()
-    # if (name_file == "k"):
-    #     print(data)
     if vmax == vmin:
         im = ax.imshow(data, cmap="gist_rainbow")
     else:
@@ -1570,21 +1649,6 @@ def plt_imshow(
     plt.savefig("plots/" + name_file + ".png", dpi=200)
     plt.clf()
     plt.close()
-
-
-def cut(inp):
-    return inp.real[int(inp.shape[0] / 2), :]
-
-
-def img(inp, delta_u, delta_v):
-    zz = inp
-    zz = np.roll(zz, -int(zz.shape[0] / 2), axis=0)
-    zz = np.roll(zz, -int(zz.shape[0] / 2), axis=1)
-
-    zz_f = np.fft.fft2(zz) * (delta_u * delta_v)
-    zz_f = np.roll(zz_f, -int(zz.shape[0] / 2) - 1, axis=0)
-    zz_f = np.roll(zz_f, -int(zz.shape[0] / 2) - 1, axis=1)
-    return zz_f.real
 
 
 def get_average_response(P=np.array([]), N=14, peak_flux=100):
@@ -1671,14 +1735,14 @@ def get_average_response(P=np.array([]), N=14, peak_flux=100):
                     * 3600
                 )
 
-                c1 = cut(
-                    img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
+                c1 = Utilities.cut(
+                    Utilities.img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
                 )  # red
-                c2 = cut(
-                    img(np.absolute(g_pq_t12 ** (-1) * r_pq12) * B, delta_u, delta_u)
+                c2 = Utilities.cut(
+                    Utilities.img(np.absolute(g_pq_t12 ** (-1) * r_pq12) * B, delta_u, delta_u)
                 )  # blue
-                c3 = cut(
-                    img(np.absolute(g_pq_inv12 * r_pq12) * B, delta_u, delta_u)
+                c3 = Utilities.cut(
+                    Utilities.img(np.absolute(g_pq_inv12 * r_pq12) * B, delta_u, delta_u)
                 )  # green
 
                 if np.max(c1) < peak_flux:
@@ -1882,13 +1946,13 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
                 )
                 x = np.linspace(-1 * siz, siz, len(g_pq12))
 
-                c1 = cut(
-                    img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
+                c1 = Utilities.cut(
+                    Utilities.img(np.absolute(g_pq12 ** (-1) * r_pq12) * B, delta_u, delta_u)
                 )
-                c2 = cut(
-                    img(np.absolute(g_pq_t12 ** (-1) * r_pq12) * B, delta_u, delta_u)
+                c2 = Utilities.cut(
+                    Utilities.img(np.absolute(g_pq_t12 ** (-1) * r_pq12) * B, delta_u, delta_u)
                 )
-                c3 = cut(img(np.absolute(g_pq_inv12 * r_pq12) * B, delta_u, delta_u))
+                c3 = Utilities.cut(Utilities.img(np.absolute(g_pq_inv12 * r_pq12) * B, delta_u, delta_u))
 
                 curves[0] = c1
                 curves[1] = c2
@@ -1954,7 +2018,7 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
     return (
         curves,
         x,
-        cut(img(np.absolute(r_pq12), delta_u, delta_u)),
+        Utilities.cut(Utilities.img(np.absolute(r_pq12), delta_u, delta_u)),
         r_ampl,
         r_size,
         r_flux,
@@ -1968,6 +2032,106 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
         r_phi,
         r_phi2,
     )
+
+def image_visibilities(phi):
+    resolution_bool = True  # NB --- user needs to be able to toggle this --- if true produce at calculated resolution otherwise use pre-computed values corresponding to extrapolated case
+    add_circle = False  # Do not change
+
+    P = phi
+    Imaging_tools.get_main_graphs(phi=P)
+    u_m, v_m = Imaging_tools.generate_uv_tracks(P=P)
+    s_img = 1
+    de_u = 1 / (2 * s_img * (np.pi / 180))
+    r_vis = 28000
+    N = int(r_vis / de_u)
+    de_l = (N * de_u) ** (-1)
+    r = ((1.0 / 3600.0) * (np.pi / 180.0)) ** (-1) * de_l
+    s_size = 0.02  # source size is in degrees
+    B = 2 * (s_size * (np.pi / 180)) ** 2 * np.pi
+    f = 1.45e9
+    lam = 3e8 / 1.45e9
+    fwhm = 1.02 * (lam / 2700.0)
+    C = 2 * np.sqrt(2 * np.log(2))
+    beam = (fwhm / C) * (180 / np.pi)
+    clean_beam = 0.0019017550075500233
+    B2 = 2 * (clean_beam * (np.pi / 180)) ** 2 * np.pi
+
+    if resolution_bool:  # use pre-computed values similar to other experiments
+        s_img = 0.08
+        r = 2.4
+        add_circle = True
+
+    print("PLOTTING SYNTHESIS")
+    print("PLOTTING UV-COVERAGE")
+    print("CREATING VISIBILITIES")
+    R, M = Imaging_tools.create_vis_matrix(
+        u_m=u_m,
+        v_m=v_m,
+        true_sky_model=np.array([[1.0, 0, 0, s_size]]),
+        cal_sky_model=np.array([[1, 0, 0]]),
+    )
+    print("GRIDDING PSF")
+    g_psf, dl, u, du = Imaging_tools.gridding(
+        u_m=u_m, v_m=v_m, D=M, image_s=s_img, s=1, w=1, resolution=r
+    )
+    print("CREATING AN IMAGE OF PSF")
+    psf, img = Utilities.image(g_psf, g_psf, dl, du, clean_beam, "PSF")
+    print("GRIDDING PSF NOT ALL BASELINES")
+    g_psf_2, dl, u, du = Imaging_tools.gridding(
+        u_m=u_m, v_m=v_m, D=M, image_s=s_img, s=1, resolution=r, grid_all=False
+    )
+    print("GRIDDING TRUE SKY_MODEL (1 Jy normalized)")
+    g_img, dl, u, du = Imaging_tools.gridding(
+        u_m=u_m, v_m=v_m, D=R / B, image_s=s_img, s=1, resolution=r
+    )
+    print("CALIBRATE SYNTHESIS IMAGE")
+    g, G = Imaging_tools.calibrate(R, M)
+    print("UNIT TEST: EXTRAPOLATION VERSUS STEFCAL")
+    print("Single gain value: Stefcal")
+    print(np.absolute(G[0, 1, 0]))
+    
+    g_pq = Imaging_tools.extrapolation_function(
+        baseline=np.array([0, 1]),
+        true_sky_model=np.array([[1.0, 0, 0, s_size]]),
+        cal_sky_model=np.array([[1, 0, 0]]),
+        Phi=P,
+        u=u_m[0, 1, 0],
+        v=v_m[0, 1, 0],
+    )
+    print("single gain value: Extrapolation")
+    print(np.absolute(g_pq))
+    print("GRIDDING GAINS ONLY (normalized)")
+    g_img2, dl, u, du = Imaging_tools.gridding(
+        u_m=u_m, v_m=v_m, D=G / B, image_s=s_img, s=1, resolution=r
+    )
+    print("GRIDDING CORRECTED VIS")
+    g_img3, dl, u, du = Imaging_tools.gridding(
+        u_m=u_m,
+        v_m=v_m,
+        D=R * G ** (-1),
+        image_s=s_img,
+        s=1,
+        resolution=r,
+        w=1,
+        grid_all=False,
+    )
+
+    print("PLOTTING GAUSSIAN SYNTHESIS IMAGE")
+    psf, img = Utilities.image(g_img, g_psf, dl, du, clean_beam, "gaussian_synth")
+    print("PLOTTING GAINS SYNTHESIS IMAGE --- SHOWING GHOST")
+    psf, img_c = Utilities.image(g_img2, g_psf, dl, du, clean_beam, "gaussian_synth_ghost")
+    print("PLOTTING CORRECTED VIS SYNTHESIS IMAGE")
+    psf, img_c2 = Utilities.image(
+        g_img3, g_psf_2, dl, du, clean_beam, "corrected_vis_synth", add_circle=add_circle
+    )
+
+    print("COMPARING CLEAN BEAM AND PSF")
+    cut_psf = Utilities.cut(psf)
+    plt.plot(dl * (180.0 / np.pi), cut_psf / np.max(cut_psf), "b")
+    theory = np.exp(-(dl**2) / (2 * (clean_beam * (np.pi / 180)) ** 2))
+    plt.plot(dl * (180.0 / np.pi), theory, "r")
+    plt.savefig(fname="plots/imaging_results/CleanBeamAndPSF.pdf")
+    plt.savefig(fname="plots/imaging_results/CleanBeamAndPSF.png", dpi=200)
 
 
 if __name__ == "__main__":
@@ -2011,6 +2175,8 @@ if __name__ == "__main__":
 
     if args.validate:
         print("Running Experiment")
+        os.makedirs('data/G', exist_ok=True)
+        os.makedirs('data/10_baseline', exist_ok=True)
         print()
         if not args.justG:
             another_exp(phi, size_gauss=0.02, K1=30.0, K2=4.0, N=14)
@@ -2027,96 +2193,104 @@ if __name__ == "__main__":
 
         every_baseline(phi, r=1, vis_s=5000)
     elif args.validationImages:
-        print("Saving images")
-        process_pickle_files_g(phi=phi)
-        process_pickle_files_g2(phi=phi)
-        m, amp_matrix = compute_division_matrix(
-            P=phi, N=14, peak_flux=2, peak_flux2=100
-        )
-        main_phi_plot(P=phi, m=m)
-        n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        os.makedirs('plots/', exist_ok=True)
+        os.makedirs('plots/magic_baseline', exist_ok=True)
+        os.makedirs('plots/imaging_results', exist_ok=True)
+        # # os.makedirs('images/')
+        # print("Saving images")
+        # process_pickle_files_g(phi=phi)
+        # process_pickle_files_g2(phi=phi)
+        # process_pickle_files_g2_individual(phi=phi)
+        # m, amp_matrix = compute_division_matrix(
+        #     P=phi, N=14, peak_flux=2, peak_flux2=100
+        # )
+        # main_phi_plot(P=phi, m=m)
+        # n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
 
-        peak = np.zeros((len(n), 3), dtype=float)
-        width = np.zeros((len(n), 3), dtype=float)
-        flux = np.zeros((len(n), 3), dtype=float)
+        # peak = np.zeros((len(n), 3), dtype=float)
+        # width = np.zeros((len(n), 3), dtype=float)
+        # flux = np.zeros((len(n), 3), dtype=float)
 
-        for k in range(len(n)):
-            peak[k, :], width[k, :], flux[k, :] = get_average_response(
-                P=phi, N=n[k], peak_flux=100
-            )
+        # for k in range(len(n)):
+        #     peak[k, :], width[k, :], flux[k, :] = get_average_response(
+        #         P=phi, N=n[k], peak_flux=100
+        #     )
 
-        c = ["r", "b", "g"]
-        for i in range(3):
+        # c = ["r", "b", "g"]
+        # for i in range(3):
 
-            plt.semilogy(n, peak[:, i], c[i])
-            plt.semilogy(n, width[:, i], c[i] + "--")
-            plt.semilogy(n, flux[:, i], c[i] + ":")
+        #     plt.semilogy(n, peak[:, i], c[i])
+        #     plt.semilogy(n, width[:, i], c[i] + "--")
+        #     plt.semilogy(n, flux[:, i], c[i] + ":")
 
-        plt.xlabel(r"$N$")
-        plt.ylabel(r"$c$ or FWHM/FWHM$_B$ or Flux [Jy]")
-        plt.legend()
-        plt.savefig(fname="plots/semilogy", dpi=200)
-        plt.savefig("plots/semilogy.pdf")
+        # plt.xlabel(r"$N$")
+        # plt.ylabel(r"$c$ or FWHM/FWHM$_B$ or Flux [Jy]")
+        # plt.legend()
+        # plt.savefig(fname="plots/semilogy", dpi=200)
+        # plt.savefig("plots/semilogy.pdf")
 
-        plt.clf()
+        # plt.clf()
 
-        n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
-        A1 = []
-        A2 = []
-        A3 = []
+        # n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        # A1 = []
+        # A2 = []
+        # A3 = []
 
-        S1 = []
-        S2 = []
-        S3 = []
+        # S1 = []
+        # S2 = []
+        # S3 = []
 
-        F1 = []
-        F2 = []
-        F3 = []
+        # F1 = []
+        # F2 = []
+        # F3 = []
 
-        P1 = []
-        P2 = []
-        P3 = []
+        # P1 = []
+        # P2 = []
+        # P3 = []
 
-        for k in range(len(n)):
-            (
-                curves,
-                x,
-                r,
-                A,
-                S,
-                F,
-                C,
-                A_2,
-                S_2,
-                F_2,
-                C_2,
-                B,
-                FW,
-                PM,
-                PM_2,
-            ) = plot_as_func_of_N(P=phi, N=n[k], peak_flux=100, peak_flux2=100)
-            A1.append(A[0])
-            A2.append(A[1])
-            A3.append(A[2])
-            S1.append(S[0] / FW)
-            S2.append(S[1] / FW)
-            S3.append(S[2] / FW)
-            F1.append(F[0] / B)
-            F2.append(F[1] / B)
-            F3.append(F[2] / B)
+        # for k in range(len(n)):
+        #     (
+        #         curves,
+        #         x,
+        #         r,
+        #         A,
+        #         S,
+        #         F,
+        #         C,
+        #         A_2,
+        #         S_2,
+        #         F_2,
+        #         C_2,
+        #         B,
+        #         FW,
+        #         PM,
+        #         PM_2,
+        #     ) = plot_as_func_of_N(P=phi, N=n[k], peak_flux=100, peak_flux2=100)
+        #     A1.append(A[0])
+        #     A2.append(A[1])
+        #     A3.append(A[2])
+        #     S1.append(S[0] / FW)
+        #     S2.append(S[1] / FW)
+        #     S3.append(S[2] / FW)
+        #     F1.append(F[0] / B)
+        #     F2.append(F[1] / B)
+        #     F3.append(F[2] / B)
 
-        create_violin_plot(data=A1, fc="red", yl="c", t=False, label="A1")
-        create_violin_plot(data=A2, fc="blue", yl="c", t=False, label="A2")
-        create_violin_plot(data=A3, fc="green", yl="c", t=True, label="A3")
+        # create_violin_plot(data=A1, fc="red", yl="c", t=False, label="A1")
+        # create_violin_plot(data=A2, fc="blue", yl="c", t=False, label="A2")
+        # create_violin_plot(data=A3, fc="green", yl="c", t=True, label="A3")
 
-        create_violin_plot(data=S1, fc="red", yl=r"FWHM/FWHM$_B$", label="S1")
-        create_violin_plot(data=S2, fc="blue", yl=r"FWHM/FWHM$_B$", label="S2")
-        create_violin_plot(data=S3, fc="green", yl=r"FWHM/FWHM$_B$", t=True, label="S3")
+        # create_violin_plot(data=S1, fc="red", yl=r"FWHM/FWHM$_B$", label="S1")
+        # create_violin_plot(data=S2, fc="blue", yl=r"FWHM/FWHM$_B$", label="S2")
+        # create_violin_plot(data=S3, fc="green", yl=r"FWHM/FWHM$_B$", t=True, label="S3")
 
-        create_violin_plot(data=F1, fc="red", yl=r"Flux [Jy]", label="F1")
-        create_violin_plot(data=F2, fc="blue", yl=r"Flux [Jy]", label="F2")
-        create_violin_plot(data=F3, fc="green", yl=r"Flux [Jy]", t=True, label="F3")
+        # create_violin_plot(data=F1, fc="red", yl=r"Flux [Jy]", label="F1")
+        # create_violin_plot(data=F2, fc="blue", yl=r"Flux [Jy]", label="F2")
+        # create_violin_plot(data=F3, fc="green", yl=r"Flux [Jy]", t=True, label="F3")
+
+        image_visibilities(phi = phi)
     elif args.experimentConditions != None:
+        os.makedirs('images/', exist_ok=True)
         with open(args.experimentConditions, "r") as stream:
             try:
                 experiment = yaml.safe_load(stream)
