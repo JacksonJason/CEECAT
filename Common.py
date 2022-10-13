@@ -110,8 +110,7 @@ def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
     zz = np.roll(zz, -int(zz.shape[0] / 2), axis=0)
     zz = np.roll(zz, -int(zz.shape[0] / 2), axis=1)
 
-
-    zz_f = np.fft.fft2(zz) 
+    zz_f = np.fft.fft2(zz)
     zz_f = zz_f / mx
     zz_f = np.roll(zz_f, -int(zz.shape[0] / 2) - 1, axis=0)
     zz_f = np.roll(zz_f, -int(zz.shape[0] / 2) - 1, axis=1)
@@ -119,7 +118,7 @@ def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
         "nameofcolormap", ["b", "y", "r"], gamma=0.35
     )
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 6))
     im = ax.imshow(
         np.absolute(zz_f_psf),
         extent=[
@@ -147,7 +146,7 @@ def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
     x2 = 2 * 0.0019017550075500233 * np.cos(phi)
     y2 = 2 * 0.0019017550075500233 * np.sin(phi)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 6))
     im = ax.imshow(
         np.absolute(zz_f),
         extent=[
@@ -210,3 +209,37 @@ def create_G_stef(R, M, imax, tau, temp, no_auto):
     G = G_m
 
     return g, G
+
+
+def extrapolation_calculation(s, u_m, v_m):
+    return s[0] * np.exp(
+        -2 * np.pi * 1j * (u_m * (s[1] * np.pi / 180.0) + v_m * (s[2] * np.pi / 180.0))
+    )
+
+def extrapolation_loop(true_sky_model, cal_sky_model, u_m, v_m, R, M):
+    for k in range(len(true_sky_model)):
+        s = true_sky_model[k]
+        if len(s) <= 3:
+            R += extrapolation_calculation(s, u_m, v_m)
+        else:
+            sigma = s[3] * (np.pi / 180)
+            g_kernal = g_kernel_calculation(sigma, u_m, v_m)
+            R += extrapolation_calculation(s, u_m, v_m) * g_kernal
+    
+    for k in range(len(cal_sky_model)):
+        s = cal_sky_model[k]
+        if len(s) <= 3:
+            M += extrapolation_calculation(s, u_m, v_m)
+        else:
+            sigma = s[3] * (np.pi / 180)
+            g_kernal = g_kernel_calculation(sigma, u_m, v_m)
+            M += extrapolation_calculation(s, u_m, v_m) * g_kernal
+    return R, M
+
+def g_kernel_calculation(sigma, u_m, v_m):
+    return (
+        2
+        * np.pi
+        * sigma**2
+        * np.exp(-2 * np.pi**2 * sigma**2 * (u_m**2 + v_m**2))
+    )

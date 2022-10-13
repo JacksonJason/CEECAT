@@ -1,9 +1,7 @@
 import numpy as np
 import pylab as plt
-import pickle
-import math
 import matplotlib.colors as colors
-import Utilities
+import Common
 
 
 def include_100_baseline(p=0, q=0):
@@ -190,7 +188,7 @@ def get_main_graphs(phi=np.array([])):
                             g_kernal,
                             sigma_kernal,
                             B,
-                        ) = Utilities.load_g_pickle(phi, k, j)
+                        ) = Common.load_g_pickle(phi, k, j)
                         B_old = B
 
                         (
@@ -208,7 +206,7 @@ def get_main_graphs(phi=np.array([])):
                             phi,
                             K1,
                             K2,
-                        ) = Utilities.load_14_10_pickle(phi, k, j)
+                        ) = Common.load_14_10_pickle(phi, k, j)
 
                         if len(new_x) == 0:
                             new_x = np.absolute(g_pq12 ** (-1) * r_pq12)  # *B
@@ -222,7 +220,7 @@ def get_main_graphs(phi=np.array([])):
     uu, vv = np.meshgrid(u, v)
     u_dim = uu.shape[0]
     v_dim = uu.shape[1]
-    #######################################################
+
     f = np.zeros((u_dim, v_dim), dtype=complex)
     sigma = 0.0019017550075500233 * (np.pi / 180)
 
@@ -233,7 +231,7 @@ def get_main_graphs(phi=np.array([])):
             )
 
     fig, ax = plt.subplots()
-    psf = Utilities.img(f, 1.0, 1.0)
+    psf = Common.img(f, 1.0, 1.0)
     ma = np.max(psf)
     ma = 1 / ma
 
@@ -244,24 +242,21 @@ def get_main_graphs(phi=np.array([])):
     x2 = 2 * 0.0019017550075500233 * np.cos(phi)
     y2 = 2 * 0.0019017550075500233 * np.sin(phi)
 
-    print("PLOTTING EXTRAPOLATION RESULTS")
-    print("PLOTTING CLEAN BEAM")
-    im = ax.imshow(Utilities.img(f, ma, 1.0), extent=[-siz, siz, -siz, siz], cmap="jet")
+    fig, ax = plt.subplots(figsize=(6, 6))
+    im = ax.imshow(Common.img(f, ma, 1.0), extent=[-siz, siz, -siz, siz], cmap="jet")
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label("Jy/beam", labelpad=10)
     ax.set_xlabel(r"$l$ [degrees]")
     ax.set_ylabel(r"$m$ [degrees]")
-    # ax.plot(x2,y2,"k",lw=2.0)
-
+    
     plt.savefig(fname="plots/imaging_results/CleanBeam.pdf")
     plt.savefig(fname="plots/imaging_results/CleanBeam.png", dpi=200)
     plt.cla()
     plt.close()
 
-    print("PLOTTING CORRECTED VIS")
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 6))
     im = ax.imshow(
-        Utilities.img(f * (new_x / counter), ma, 1),
+        Common.img(f * (new_x / counter), ma, 1),
         extent=[-siz, siz, -siz, siz],
         cmap="jet",
     )
@@ -276,10 +271,9 @@ def get_main_graphs(phi=np.array([])):
     plt.cla()
     plt.close()
 
-    print("PLOTTING GAUSSIAN")
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 6))
     im = ax.imshow(
-        Utilities.img(f * (new_r / B_old), ma, 1),
+        Common.img(f * (new_r / B_old), ma, 1),
         extent=[-siz, siz, -siz, siz],
         cmap="jet",
     )
@@ -309,6 +303,7 @@ def generate_uv_tracks(P=np.array([]), freq=1.45e9, b0=36, time_slots=500, d=90)
                 v_m[i, j] = lam ** (-1) * b0 * P[i, j] * np.sin(H) * np.sin(delta)
                 v_m[j, i] = -1 * v_m[i, j]
 
+    plt.figure(figsize=(6, 6))
     for i in range(len(P)):
         for j in range(len(P)):
             if j > i:
@@ -333,12 +328,7 @@ def create_vis_matrix(
     for k in range(len(true_sky_model)):
         s = true_sky_model[k]
         if len(s) <= 3:
-            R += s[0] * np.exp(
-                -2
-                * np.pi
-                * 1j
-                * (u_m * (s[1] * np.pi / 180.0) + v_m * (s[2] * np.pi / 180.0))
-            )
+            R += Common.extrapolation_calculation(s, u_m, v_m)
         else:
             sigma = s[3] * (np.pi / 180)
             g_kernal = (
@@ -360,12 +350,7 @@ def create_vis_matrix(
     for k in range(len(cal_sky_model)):
         s = cal_sky_model[k]
         if len(s) <= 3:
-            M += s[0] * np.exp(
-                -2
-                * np.pi
-                * 1j
-                * (u_m * (s[1] * np.pi / 180.0) + v_m * (s[2] * np.pi / 180.0))
-            )
+            M += Common.extrapolation_calculation(s, u_m, v_m)
         else:
             sigma = s[3] * (np.pi / 180)
             g_kernal = (
@@ -413,7 +398,6 @@ def gridding(
     l_cor = np.linspace(-1 / (2 * delta_u), 1 / (2 * delta_u), N)
 
     uu, vv = np.meshgrid(u, v)
-    #######################################################
 
     counter = np.zeros(uu.shape, dtype=int)
 
@@ -460,7 +444,7 @@ def calibrate(R=np.array([]), M=np.array([])):
     temp = np.ones((R.shape[0], R.shape[1]), dtype=complex)
 
     for t in range(R.shape[2]):
-        g[:, t], G[:, :, t] = Utilities.create_G_stef(
+        g[:, t], G[:, :, t] = Common.create_G_stef(
             R[:, :, t], M[:, :, t], 200, 1e-20, temp, False
         )
 
@@ -482,61 +466,8 @@ def extrapolation_function(
     v_m = (Phi * vt) / (1.0 * Phi[baseline[0], baseline[1]])
     R = np.zeros(Phi.shape, dtype=complex)
     M = np.zeros(Phi.shape, dtype=complex)
-    for k in range(len(true_sky_model)):
-        s = true_sky_model[k]
-        if len(s) <= 3:
-            R += s[0] * np.exp(
-                -2
-                * np.pi
-                * 1j
-                * (u_m * (s[1] * np.pi / 180.0) + v_m * (s[2] * np.pi / 180.0))
-            )
-        else:
-            sigma = s[3] * (np.pi / 180)
-            g_kernal = (
-                2
-                * np.pi
-                * sigma**2
-                * np.exp(-2 * np.pi**2 * sigma**2 * (u_m**2 + v_m**2))
-            )
-            R += (
-                s[0]
-                * np.exp(
-                    -2
-                    * np.pi
-                    * 1j
-                    * (u_m * (s[1] * np.pi / 180.0) + v_m * (s[2] * np.pi / 180.0))
-                )
-                * g_kernal
-            )
-    for k in range(len(cal_sky_model)):
-        s = cal_sky_model[k]
-        if len(s) <= 3:
-            M += s[0] * np.exp(
-                -2
-                * np.pi
-                * 1j
-                * (u_m * (s[1] * np.pi / 180.0) + v_m * (s[2] * np.pi / 180.0))
-            )
-        else:
-            sigma = s[3] * (np.pi / 180)
-            g_kernal = (
-                2
-                * np.pi
-                * sigma**2
-                * np.exp(-2 * np.pi**2 * sigma**2 * (u_m**2 + v_m**2))
-            )
-            M += (
-                s[0]
-                * np.exp(
-                    -2
-                    * np.pi
-                    * 1j
-                    * (u_m * (s[1] * np.pi / 180.0) + v_m * (s[2] * np.pi / 180.0))
-                )
-                * g_kernal
-            )
-    g_stef, G = Utilities.create_G_stef(R, M, 200, 1e-20, temp, no_auto=False)
+    R, M = Common.extrapolation_loop(true_sky_model, cal_sky_model, u_m, v_m, R, M)
+    g_stef, G = Common.create_G_stef(R, M, 200, 1e-20, temp, no_auto=False)
     r_pq = R[baseline[0], baseline[1]]
     m_pq = M[baseline[0], baseline[1]]
     g_pq = G[baseline[0], baseline[1]]
