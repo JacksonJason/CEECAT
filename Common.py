@@ -145,6 +145,8 @@ def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
 
     x2 = 2 * 0.0019017550075500233 * np.cos(phi)
     y2 = 2 * 0.0019017550075500233 * np.sin(phi)
+    x3 = 0.04*0.38219481012960854*np.cos(phi)
+    y3 = 0.04*0.38219481012960854*np.sin(phi)  
 
     fig, ax = plt.subplots(figsize=(6, 6))
     im = ax.imshow(
@@ -165,6 +167,7 @@ def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
     if add_circle:
         ax.plot(x, y, "r", lw=2.0)
         ax.plot(x2, y2, "k", lw=2.0)
+        ax.plot(x3,y3,"y",lw=2.0)
 
     plt.savefig(fname="plots/imaging_results/" + name + ".pdf")
     plt.savefig(fname="plots/imaging_results/" + name + ".png", dpi=200)

@@ -1995,10 +1995,10 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
 
 def image_visibilities(phi):
     print("Imaging")
-    resolution_bool = True  
+    resolution_bool = False  
     # ^ NB --- user needs to be able to toggle this --- 
     # if true produce at calculated resolution otherwise use pre-computed values corresponding to extrapolated case
-    add_circle = False
+    add_circle = True
 
     P = phi
     Imaging_tools.get_main_graphs(phi=P)
@@ -2076,6 +2076,8 @@ def image_visibilities(phi):
     )
 
 
+    plt.cla()
+    plt.close()
     cut_psf = Common.cut(psf)
     plt.plot(dl * (180.0 / np.pi), cut_psf / np.max(cut_psf), "b")
     theory = np.exp(-(dl**2) / (2 * (clean_beam * (np.pi / 180)) ** 2))
@@ -2147,95 +2149,95 @@ if __name__ == "__main__":
         os.makedirs('plots/magic_baseline', exist_ok=True)
         os.makedirs('plots/imaging_results', exist_ok=True)
         print("Saving images")
-        # process_pickle_files_g(phi=phi)
-        # process_pickle_files_g2(phi=phi)
-        # plt.rcParams["font.size"] = "15"
-        # process_pickle_files_g2_individual(phi=phi)
-        # m, amp_matrix = compute_division_matrix(
-        #     P=phi, N=14, peak_flux=2, peak_flux2=100
-        # )
-        # main_phi_plot(P=phi, m=m)
-        # n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        process_pickle_files_g(phi=phi)
+        process_pickle_files_g2(phi=phi)
+        plt.rcParams["font.size"] = "15"
+        process_pickle_files_g2_individual(phi=phi)
+        m, amp_matrix = compute_division_matrix(
+            P=phi, N=14, peak_flux=2, peak_flux2=100
+        )
+        main_phi_plot(P=phi, m=m)
+        n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
 
-        # peak = np.zeros((len(n), 3), dtype=float)
-        # width = np.zeros((len(n), 3), dtype=float)
-        # flux = np.zeros((len(n), 3), dtype=float)
+        peak = np.zeros((len(n), 3), dtype=float)
+        width = np.zeros((len(n), 3), dtype=float)
+        flux = np.zeros((len(n), 3), dtype=float)
 
-        # for k in range(len(n)):
-        #     peak[k, :], width[k, :], flux[k, :] = get_average_response(
-        #         P=phi, N=n[k], peak_flux=100
-        #     )
+        for k in range(len(n)):
+            peak[k, :], width[k, :], flux[k, :] = get_average_response(
+                P=phi, N=n[k], peak_flux=100
+            )
 
-        # c = ["r", "b", "g"]
-        # fig, ax = plt.subplots(figsize=(6, 6))
-        # for i in range(3):
-        #     plt.semilogy(n, peak[:, i], c[i])
-        #     plt.semilogy(n, width[:, i], c[i] + "--")
-        #     plt.semilogy(n, flux[:, i], c[i] + ":")
+        c = ["r", "b", "g"]
+        fig, ax = plt.subplots(figsize=(6, 6))
+        for i in range(3):
+            plt.semilogy(n, peak[:, i], c[i])
+            plt.semilogy(n, width[:, i], c[i] + "--")
+            plt.semilogy(n, flux[:, i], c[i] + ":")
 
-        # plt.xlabel(r"$N$")
-        # plt.ylabel(r"$c$ or FWHM/FWHM$_B$ or Flux [Jy]")
-        # plt.savefig(fname="plots/semilogy", dpi=200)
-        # plt.savefig("plots/semilogy.pdf")
+        plt.xlabel(r"$N$")
+        plt.ylabel(r"$c$ or FWHM/FWHM$_B$ or Flux [Jy]")
+        plt.savefig(fname="plots/semilogy", dpi=200)
+        plt.savefig("plots/semilogy.pdf")
 
-        # plt.clf()
+        plt.clf()
 
-        # n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
-        # A1 = []
-        # A2 = []
-        # A3 = []
+        n = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        A1 = []
+        A2 = []
+        A3 = []
 
-        # S1 = []
-        # S2 = []
-        # S3 = []
+        S1 = []
+        S2 = []
+        S3 = []
 
-        # F1 = []
-        # F2 = []
-        # F3 = []
+        F1 = []
+        F2 = []
+        F3 = []
 
-        # P1 = []
-        # P2 = []
-        # P3 = []
+        P1 = []
+        P2 = []
+        P3 = []
 
-        # for k in range(len(n)):
-        #     (
-        #         curves,
-        #         x,
-        #         r,
-        #         A,
-        #         S,
-        #         F,
-        #         C,
-        #         A_2,
-        #         S_2,
-        #         F_2,
-        #         C_2,
-        #         B,
-        #         FW,
-        #         PM,
-        #         PM_2,
-        #     ) = plot_as_func_of_N(P=phi, N=n[k], peak_flux=100, peak_flux2=100)
-        #     A1.append(A[0])
-        #     A2.append(A[1])
-        #     A3.append(A[2])
-        #     S1.append(S[0] / FW)
-        #     S2.append(S[1] / FW)
-        #     S3.append(S[2] / FW)
-        #     F1.append(F[0] / B)
-        #     F2.append(F[1] / B)
-        #     F3.append(F[2] / B)
+        for k in range(len(n)):
+            (
+                curves,
+                x,
+                r,
+                A,
+                S,
+                F,
+                C,
+                A_2,
+                S_2,
+                F_2,
+                C_2,
+                B,
+                FW,
+                PM,
+                PM_2,
+            ) = plot_as_func_of_N(P=phi, N=n[k], peak_flux=100, peak_flux2=100)
+            A1.append(A[0])
+            A2.append(A[1])
+            A3.append(A[2])
+            S1.append(S[0] / FW)
+            S2.append(S[1] / FW)
+            S3.append(S[2] / FW)
+            F1.append(F[0] / B)
+            F2.append(F[1] / B)
+            F3.append(F[2] / B)
 
-        # create_violin_plot(data=A1, fc="red", yl="c", t=False, label="A1")
-        # create_violin_plot(data=A2, fc="blue", yl="c", t=False, label="A2")
-        # create_violin_plot(data=A3, fc="green", yl="c", t=True, label="A3")
+        create_violin_plot(data=A1, fc="red", yl="c", t=False, label="A1")
+        create_violin_plot(data=A2, fc="blue", yl="c", t=False, label="A2")
+        create_violin_plot(data=A3, fc="green", yl="c", t=True, label="A3")
 
-        # create_violin_plot(data=S1, fc="red", yl=r"FWHM/FWHM$_B$", label="S1")
-        # create_violin_plot(data=S2, fc="blue", yl=r"FWHM/FWHM$_B$", label="S2")
-        # create_violin_plot(data=S3, fc="green", yl=r"FWHM/FWHM$_B$", t=True, label="S3")
+        create_violin_plot(data=S1, fc="red", yl=r"FWHM/FWHM$_B$", label="S1")
+        create_violin_plot(data=S2, fc="blue", yl=r"FWHM/FWHM$_B$", label="S2")
+        create_violin_plot(data=S3, fc="green", yl=r"FWHM/FWHM$_B$", t=True, label="S3")
 
-        # create_violin_plot(data=F1, fc="red", yl=r"Flux [Jy]", label="F1")
-        # create_violin_plot(data=F2, fc="blue", yl=r"Flux [Jy]", label="F2")
-        # create_violin_plot(data=F3, fc="green", yl=r"Flux [Jy]", t=True, label="F3")
+        create_violin_plot(data=F1, fc="red", yl=r"Flux [Jy]", label="F1")
+        create_violin_plot(data=F2, fc="blue", yl=r"Flux [Jy]", label="F2")
+        create_violin_plot(data=F3, fc="green", yl=r"Flux [Jy]", t=True, label="F3")
 
         image_visibilities(phi = phi)
     elif args.experimentConditions != None:
