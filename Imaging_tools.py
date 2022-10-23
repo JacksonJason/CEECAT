@@ -303,14 +303,14 @@ def generate_uv_tracks(P=np.array([]), freq=1.45e9, b0=36, time_slots=500, d=90)
                 v_m[i, j] = lam ** (-1) * b0 * P[i, j] * np.sin(H) * np.sin(delta)
                 v_m[j, i] = -1 * v_m[i, j]
 
-    plt.figure(figsize=(6, 6))
+    plt.figure(figsize=(8, 6))
     for i in range(len(P)):
         for j in range(len(P)):
             if j > i:
                 plt.plot(u_m[i, j, :], v_m[i, j, :], "r")
                 plt.plot(-u_m[i, j, :], -v_m[i, j, :], "b")
     plt.xlabel("$u$ [rad$^{-1}$]", fontsize=18)
-    plt.ylabel("$v$ [rad$^{-1}$]", fontsize=14)
+    plt.ylabel("$v$ [rad$^{-1}$]", fontsize=18)
     plt.title("$uv$-Coverage of WSRT", fontsize=18)
     plt.savefig(fname="plots/imaging_results/UV-Tracks.pdf")
     plt.savefig(fname="plots/imaging_results/UV-Tracks.png", dpi=200)
