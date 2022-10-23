@@ -1,0 +1,214 @@
+Our approximate derivation of $\Gcal$ is now complete. Up until this point we have made no assumptions about $\Xcal$ and $\Mcal$. Recall that in Section~\ref{sec:intro} we mentioned that in this paper we are interested in investigating a specific use case. We want to investigate the systematics that are produced when we model extended emission with a point source. Now let:
+\begin{equation}
+\label{eq:skymodel}
+I_{\Xcal}(\bss) = A e^{\frac{-\bss^T\cdot\bss}{2\sigma^2}}  
+\end{equation}
+and
+\begin{equation}
+\label{eq:skymodel2}
+I_{\Mcal}(\bss) = \delta(\bss).  
+\end{equation}
+
+Take note of the fact that $I_{\Xcal}(\bss)$ and $I_{\Mcal}(\bss)$ denotes the true and the model sky distributions, $\delta(\bss)$ represent the delta function, $\bss = [l, m]^T$ denotes the position vector and $l$ and $m$ are direction cosines. Moreover, let
+\begin{equation}
+B = 2\sigma^2\pi.    
+\end{equation}
+In other words, $I_{\Xcal}(\bss)$ is made up of an $AB$ Jy Gaussian source centered at the field center with an associated standard deviation of $\sigma$ in the $l$ and $m$ direction, while $I_{\Mcal}(\bss)$ consists of a 1 Jy point source at the field center. This implies that
+
+\begin{eqnarray}
+\Mcal & = & \bone\bone^H \label{eq:defRk}\\
+\left [ \Xcal \right ]_{pq} & = & AB e^{-\pi B\bb_{pq}^T\cdot\bb_{pq}} \label{eq:defRu},
+\end{eqnarray}
+where $\boldsymbol{1}$ represents an all one column vector.
+
+If we substitute Eq.~\eqref{eq:defRk} and Eq.~\eqref{eq:defRu} into Eq.~\eqref{eq:matrices} we obtain
+\begin{equation}
+\begin{bmatrix}
+\bA & \bB\\
+\bC & \bD
+\end{bmatrix} =
+\begin{bmatrix}
+ N\bI & \bone\bone^H\\
+\bone\bone^H & N\bI
+\end{bmatrix},\label{eq:ABCD}
+\end{equation}
+\begin{equation}
+\bE\bg_t = AB
+\begin{bmatrix}
+\sum_{s}e^{-\pi B \bb_{1s}^T\cdot\bb_{1s}}-N\\
+\sum_{s}e^{-\pi B \bb_{2s}^T\cdot\bb_{2s}}-N\\
+\vdots\\
+\sum_{s}e^{-\pi B \bb_{Ns}^T\cdot\bb_{2s}}-N\\
+\end{bmatrix},\label{eq:E_m}
+\end{equation}
+and
+\begin{equation}
+\bF\bg_t = AB
+\begin{bmatrix}
+\sum_{r}e^{-\pi B \bb_{r1}^T\cdot\bb_{r1}}-N\\
+\sum_{r}e^{-\pi B \bb_{r2}^T\cdot\bb_{r2}}-N\\
+\vdots\\
+\sum_{r}e^{-\pi B \bb_{rN}^T\cdot\bb_{rN}}-N\\
+\end{bmatrix}.\label{eq:F_m}
+\end{equation}
+Moreover,
+\begin{equation}
+\begin{bmatrix}
+\bA & \bB\\
+\bC & \bD
+\end{bmatrix}^{\dagger} =
+\frac{1}{N}\bI -\frac{1}{4N^2}\begin{bmatrix}
+3\bone\bone^H & -\bone\bone^H\\
+-\bone\bone^H & 3\bone\bone^H
+\end{bmatrix},\label{eq:p_inv}
+\end{equation}
+where $()^{\dagger}$ denotes the pseudo-inverse. Note that for the sake of simplicity we merely present the answer of the pseudo-inverse above. The reader interested in the full derivation is again referred to \cite{ghost2}.
+We can now calculate $\Delta\bg$ by employing equation~(\ref{eq:Deltag2}), equation~(\ref{eq:E_m}), equation~(\ref{eq:F_m}) and equation~(\ref{eq:p_inv}). If we now assume that the perturbation is small and that $\bg_t=\boldsymbol{1}$ we get:
+\begin{eqnarray}
+\Gcal & = & \left ( \bone + \Delta \bg \right ) \left ( \bone + \Delta \bg \right )^H \nonumber\\
+& \approx & \bone \bone^H + \Delta \bg \bone^H + \bone \Delta \bg^H \label{eq:Gcal_vector_form}
+\end{eqnarray}
+
+% Since the visibility calibration matrix $\Gcal^{\odot -1}$ is simply the Hadamard inverse of the visibility gain matrix, the assumption that the gain deviations are small, has the interesting consequence that
+% \begin{eqnarray}
+% \Gcal^{\odot -1} & \approx & \left ( \bone \bone^H + \Delta \bg \bone^H + \bone \Delta \bg^H \right )^{\odot -1} \nonumber\\
+% & \approx & \bone \bone^H - \Delta \bg \bone^H - \bone \Delta \bg^H \label{eq:invGcal_vector_form},
+% \end{eqnarray}
+% since we can use the approximation $(1 + x)^{-1} \approx (1 - x)$, which holds for $x << 1$.  
+It now follows that the $pq$-th entry of the visibility gain matrix has the following form:
+\begin{equation}
+\left [ \Gcal \right ]_{pq} = g_{pq} \approx AB c_{pq,0} + AB \sum_{r \neq s}  c_{pq,rs} e^{- \pi B \bb_{rs}^T \cdot \bb_{rs}}. \label{eq:g_pq}
+\end{equation}
+with
+\begin{equation}
+c_{pq,0} = \frac{1}{N},  \label{eq:c0pq}
+\end{equation}
+and
+\begin{equation}
+c_{pq,rs} =
+  \begin{cases}
+   \frac{2}{N} - \frac{1}{N^2} & \text{if } rs \in \mI_1  \\
+   \frac{1}{N} - \frac{1}{N^2} & \text{if } rs \in \mI_2 \\
+   \frac{1}{N} - \frac{1}{N^2} & \text{if }  rs \in \mI_3 \\
+   -\frac{1}{N^2} & \text{if }  rs \in \mI_4 \\
+   0 & \text{if } rs \in \mI_5
+  \end{cases}, 
+  \label{eq:cpqrs}
+\end{equation}
+where
+\begin{eqnarray}
+\mI_1 &=& \{rs|(r=p)\wedge(s=q)\wedge (r\neq s)\}\nonumber\\
+\mI_2 &=& \{rs|(r=p)\wedge(s\neq q)\wedge (r\neq s)\}\nonumber\\
+\mI_3 &=& \{rs|(r\neq p)\wedge(s = q)\wedge (r\neq s)\}\nonumber\\
+\mI_4 &=& \{rs|(r\neq p) \wedge (s\neq q) \wedge (r\neq s)\}\nonumber\\
+\mI_5 &=& \{rs|(r = s)\} \label{eq:index_sets},
+\end{eqnarray}
+and ``$\wedge$'' denotes logical and. 
+
+If we now apply the extrapolation technique (which was presented in Section~\ref{sec:extrap}) to $g_{pq}$ we find
+\begin{equation}
+\label{eq:g_2}
+g_{pq}(\phi_{pq}^{-1}\bb) \approx AB c_{pq,0} + AB\sum_{r\neq s} c_{pq,rs} e^{-\pi B \frac{\phi_{rs}^2}{\phi_{pq}^2}\bb^T\cdot\bb}
+\end{equation}
+
+Before we can use $g_{pq}$ to correct our observed visibilities we first have to take its reciprocal. To approximate this reciprocal we will need an intermediate variable. Let 
+\begin{equation} 
+h_{pq}(\phi_{pq}^{-1}\bb) = (AB)^{-1}g_{pq}(\phi_{pq}^{-1}\bb).   
+\end{equation}
+Since, $(1+f)^{-1} \approx 1-f$ (when $|f| \ll 1$), we may write
+\begin{align}
+g_{pq}^{-1}(\phi_{pq}^{-1}\bb) &= \frac{1}{AB h_{pq}(\phi_{pq}^{-1}\bb)}\\
+&= \frac{1}{AB + AB(h_{pq}(\phi_{pq}^{-1}\bb)-1)}\\
+&\approx (AB)^{-1}(2-h_{pq}(\phi_{pq}^{-1}\bb))\\
+&= 2(AB)^{-1} - (AB)^{-2}g_{pq}(\phi_{pq}^{-1}\bb). \label{eq:g_inv_int}
+\end{align}
+Here $f = h_{pq}-1$, as such $f(\boldsymbol{0}) = 0$. In the limit $f$ approaches $\frac{N-1}{N} < 1$. This approximation is, therefore, accurate close to the origin, but its accuracy deteriorates as we move away from the origin. The results presented in Section~\ref{sec:gains} (also see Fig.~\ref{fig:g_ginv_figure}) corroborates this assertion.
+
+If we now substitute equation~(\ref{eq:g_2}) into equation~(\ref{eq:g_inv_int}) we find that
+\begin{equation}
+\label{eq:g_inv_2}
+g_{pq}^{-1}(\phi_{pq}^{-1}\bb) \approx (AB)^{-1}K_N - (AB)^{-1} \sum_{r\neq s} c_{pq,rs} e^{-\pi B \frac{\phi_{rs}^2}{\phi_{pq}^2}\bb^T\cdot\bb}.
+\end{equation}
+where $K_N=\frac{2N-1}{N}$.
+If we now sample equation~(\ref{eq:g_inv_2}) along the $uv$-track $\bb_{pq}$ we find
+\begin{equation}
+g_{pq}^{-1} \approx (AB)^{-1}K_N - (AB)^{-1} \sum_{r\neq s} c_{pq,rs} e^{-\pi B \mathbf{b}_{rs}^T\cdot\mathbf{b}_{rs}},
+\end{equation}
+
+Moreover, the $\mathcal{F}^{-1}\{g_{pq}(\phi_{pq}^{-1}\bb)\}$ is approximately equal to  \begin{equation}
+\label{eq:g_sky}
+AB c_{pq,0}\delta(\bss) + A\sum_{r\neq s} \frac{\phi_{pq}^2}{\phi_{rs}^2}c_{pq,rs}e^{-\frac{\bss^T\cdot\bss}{2\sigma_{pq,rs}^2}},   
+\end{equation}
+where $\mathcal{F}^{-1}$ denotes the inverse Fourier Transform and $\sigma_{pq,rs} = \sigma\frac{\phi_{rs}}{\phi_{pq}}$. 
+
+The artefact map associated with $g_{pq}$, therefore, consists of multiple ghosts. It contains a spurious point source at the field center and a number of spurious Gaussian sources which are also centered at the field centre. These Gaussians form a single spurious source which can be represented as a sum of Gaussians. 
+
+Similarly, the $\mathcal{F}^{-1}\{g_{pq}^{-1}(\phi_{pq}^{-1}\bb)\}$ is approximately equal to 
+\begin{equation}
+\label{eq:g_inv_sky}
+(AB)^{-1}K_N\delta(\bss) - A^{-1}B^{-2}\sum_{r\neq s} \frac{\phi_{pq}^2}{\phi_{rs}^2}c_{pq,rs}e^{-\frac{\bss^T\cdot\bss}{2\sigma_{pq,rs}^2}}.  
+\end{equation}
+As was the case for equation~\eqref{eq:g_sky}, the above equation implies that the artefact map associated with $g_{pq}^{-1}$ contains multiple ghosts. It contains a spurious point source at the field center and a number of spurious Gaussian sources also positioned at the field center (i.e a sum of Gaussians). 
+
+Since $\bg_t = \bone$ and $\Xcal$ is given by equation~\eqref{eq:defRu} we may write:
+\begin{equation}
+r_{pq} = AB e^{-\pi B\bb_{pq}^T\cdot\bb_{pq}}.  
+\end{equation}
+
+Again by performing extrapolation we find:
+\begin{equation}
+r_{pq}(\phi_{pq}^{-1}\bb) = AB e^{-\pi B\bb^T\cdot\bb}.     
+\end{equation}
+
+
+If we now correct our observed visibilities we obtain $s_{pq}(\phi_{pq}^{-1}\bb)=g_{pq}^{-1}(\phi_{pq}^{-1}\bb)r_{pq}(\phi_{pq}^{-1}\bb)$. If we evaluate this expression we find:
+\begin{equation}
+\label{eq:cor_vis_eq}
+s_{pq}(\phi_{pq}^{-1}\bb)=K_N e^{-\pi B\bb^T\cdot\bb}-\sum_{r\neq s} c_{pq,rs} e^{-\pi B K_{pq,rs}^2 \bb^T \cdot \bb},     
+\end{equation}
+where 
+\begin{equation}
+\label{eq:k-def}
+ K_{pq,rs} = \frac{\sqrt{\phi_{pq}^2+\phi_{rs}^2}}{\phi_{pq}}.   
+\end{equation}
+
+Furthermore, the $\mathcal{F}^{-1}\{g_{pq}^{-1}(\phi_{pq}^{-1}\bb)\}r_{pq}(\phi_{pq}^{-1}\bb)\}$ is approximatly equal to
+\begin{equation}
+\label{eq:K}
+I_{\Ccal}(\bss) \approx B^{-1}K_Ne^{-\frac{\bss^T\cdot\bss}{2\sigma^2}}-B^{-1}\sum_{r\neq s}K_{pq,rs}^{-2}c_{pq,rs} e^{-\frac{\bss^T\cdot\bss}{2\sigma^2K_{pq,rs}^2}}.    
+\end{equation}
+When we correct our visibilities the original Gaussian source in $I_{\Xcal}(\bss)$ gets convolved with the ghosts in equation~(\ref{eq:g_inv_sky}). In other words the original source gets convolved with both the spurious point source and the spurious source contained in equation~(\ref{eq:g_inv_sky}) which is composed of many individual spurious Gaussian sources. The net effect of this is yet another source which also consists of many Gaussian sources. Moreover, note that 
+\begin{equation}
+\label{eq:K_int}
+\int I_{\Ccal}(\bss) d\bss \approx 1~\textrm{and}~I_{\Ccal}(\boldsymbol{0}) \approx B^{-1}\Bigg (K_N - \sum_{r \neq s} \frac{c_{pq,rs}}{K_{pq,rs}^2}\Bigg).     
+\end{equation}
+
+\begin{table}
+	\centering
+	\caption{The experimental parameters which was used to generate the results that are reported in Section~\ref{sec:results} is presented in this table. The table also contains the results of a unit test which was performed. This unit test shows that extrapolation can be used as a validation strategy in Section~\ref{sec:results}.}
+	\label{tab:exp_parameters}
+\begin{tabular}{ |c|c|c|c| } 
+ \hline
+ \multicolumn{2}{c}{Experimental Parameters}\\
+ \hline
+ \hline 
+ Telescope& WSRT\\
+ Peak $A$ & 1 \\ 
+ Gaussian size $\sigma$ & $0.02^{\circ}$ \\ 
+ Frequency $\nu$ & 1.45 GHz \\
+ Declination $\delta$ & $90^{\circ}$\\
+ Hour angle range $H$ & [$-6^\textrm{h}$,$6^\textrm{h}]$\\
+ Time Steps T & 500\\
+ Antennas $N$ & 14\\
+ Geometry matrix $\boldsymbol{\Phi}$ & Fig.~\ref{fig:geo_WSRT}\\
+ \hline
+ \multicolumn{2}{c}{Extrapolation Unit Test}\\
+ \hline
+ \hline 
+ %Time Step $t_0$ & 1\\
+ $uv$-coordinate $\bb_{01}$ & $[0,-696]^T$\\
+ $g_{01}(P^{-1}_{01}(\bb_{01}))$ & $3.78\times 10^{-17}$\\
+ \rule{0pt}{3ex} $g_{01}^{\textrm{StEFCal}}$ & $3.78\times 10^{-17}$\\
+  \hline
+\end{tabular}
+\end{table}

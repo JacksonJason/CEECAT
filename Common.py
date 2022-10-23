@@ -118,7 +118,7 @@ def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
         "nameofcolormap", ["b", "y", "r"], gamma=0.35
     )
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     im = ax.imshow(
         np.absolute(zz_f_psf),
         extent=[
@@ -148,7 +148,7 @@ def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
     x3 = 0.04*0.38219481012960854*np.cos(phi)
     y3 = 0.04*0.38219481012960854*np.sin(phi)  
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     im = ax.imshow(
         np.absolute(zz_f),
         extent=[

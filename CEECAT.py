@@ -1558,7 +1558,7 @@ def plt_imshow(
     vmax=-1,
     vmin=-1,
 ):
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     if vmax == vmin:
         im = ax.imshow(data, cmap="gist_rainbow")
     else:
@@ -1779,7 +1779,7 @@ def create_violin_plot(
     t=False,
     label="",
 ):
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     # Create a plot
     parts = ax.violinplot(data, showmeans=True, showmedians=True)
 
@@ -2169,7 +2169,7 @@ if __name__ == "__main__":
             )
 
         c = ["r", "b", "g"]
-        fig, ax = plt.subplots(figsize=(6, 6))
+        fig, ax = plt.subplots(figsize=(8, 6))
         for i in range(3):
             plt.semilogy(n, peak[:, i], c[i])
             plt.semilogy(n, width[:, i], c[i] + "--")

@@ -242,7 +242,7 @@ def get_main_graphs(phi=np.array([])):
     x2 = 2 * 0.0019017550075500233 * np.cos(phi)
     y2 = 2 * 0.0019017550075500233 * np.sin(phi)
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     im = ax.imshow(Common.img(f, ma, 1.0), extent=[-siz, siz, -siz, siz], cmap="jet")
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label("Jy/beam", labelpad=10)
@@ -254,7 +254,7 @@ def get_main_graphs(phi=np.array([])):
     plt.cla()
     plt.close()
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     im = ax.imshow(
         Common.img(f * (new_x / counter), ma, 1),
         extent=[-siz, siz, -siz, siz],
@@ -271,7 +271,7 @@ def get_main_graphs(phi=np.array([])):
     plt.cla()
     plt.close()
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     im = ax.imshow(
         Common.img(f * (new_r / B_old), ma, 1),
         extent=[-siz, siz, -siz, siz],
