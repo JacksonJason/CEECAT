@@ -242,6 +242,9 @@ def get_main_graphs(phi=np.array([])):
     x2 = 2 * 0.0019017550075500233 * np.cos(phi)
     y2 = 2 * 0.0019017550075500233 * np.sin(phi)
 
+    x3 = 0.04*0.38219481012960854*np.cos(phi)
+    y3 = 0.04*0.38219481012960854*np.sin(phi)  
+
     fig, ax = plt.subplots(figsize=(8, 6))
     im = ax.imshow(Common.img(f, ma, 1.0), extent=[-siz, siz, -siz, siz], cmap="jet")
     cbar = fig.colorbar(im, ax=ax)
@@ -254,6 +257,7 @@ def get_main_graphs(phi=np.array([])):
     plt.cla()
     plt.close()
 
+    plt.rcParams["font.size"] = "16"
     fig, ax = plt.subplots(figsize=(8, 6))
     im = ax.imshow(
         Common.img(f * (new_x / counter), ma, 1),
@@ -266,11 +270,13 @@ def get_main_graphs(phi=np.array([])):
     ax.set_ylabel(r"$m$ [degrees]")
     ax.plot(x, y, "r", lw=2.0)
     ax.plot(x2, y2, "k", lw=2.0)
+    ax.plot(x3,y3,"y",lw=2.0)
     plt.savefig(fname="plots/imaging_results/CorrectedVis.pdf")
     plt.savefig(fname="plots/imaging_results/CorrectedVis.png", dpi=200)
     plt.cla()
     plt.close()
 
+    plt.rcParams["font.size"] = "16"
     fig, ax = plt.subplots(figsize=(8, 6))
     im = ax.imshow(
         Common.img(f * (new_r / B_old), ma, 1),
@@ -303,6 +309,7 @@ def generate_uv_tracks(P=np.array([]), freq=1.45e9, b0=36, time_slots=500, d=90)
                 v_m[i, j] = lam ** (-1) * b0 * P[i, j] * np.sin(H) * np.sin(delta)
                 v_m[j, i] = -1 * v_m[i, j]
 
+    plt.rcParams["font.size"] = "16"
     plt.figure(figsize=(8, 6))
     for i in range(len(P)):
         for j in range(len(P)):

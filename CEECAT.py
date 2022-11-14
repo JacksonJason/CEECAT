@@ -1995,7 +1995,7 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
 
 def image_visibilities(phi):
     print("Imaging")
-    resolution_bool = False  
+    resolution_bool = False
     # ^ NB --- user needs to be able to toggle this --- 
     # if true produce at calculated resolution otherwise use pre-computed values corresponding to extrapolated case
     add_circle = True
@@ -2078,6 +2078,8 @@ def image_visibilities(phi):
 
     plt.cla()
     plt.close()
+
+    plt.rcParams["font.size"] = "16"
     cut_psf = Common.cut(psf)
     plt.plot(dl * (180.0 / np.pi), cut_psf / np.max(cut_psf), "b")
     theory = np.exp(-(dl**2) / (2 * (clean_beam * (np.pi / 180)) ** 2))
@@ -2151,7 +2153,7 @@ if __name__ == "__main__":
         print("Saving images")
         process_pickle_files_g(phi=phi)
         process_pickle_files_g2(phi=phi)
-        plt.rcParams["font.size"] = "15"
+        plt.rcParams["font.size"] = "16"
         process_pickle_files_g2_individual(phi=phi)
         m, amp_matrix = compute_division_matrix(
             P=phi, N=14, peak_flux=2, peak_flux2=100
