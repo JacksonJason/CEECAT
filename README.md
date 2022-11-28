@@ -21,4 +21,4 @@ Arguments:
 * tqdm==4.64.0
 * argparse==1.4.0
 
- For any questions or comments please direct them to [Jason Jackson](mailto:ajsnpjackson@gmail.com)
+ For any questions or comments please direct them to [Jason Jackson](mailto:ajsnpjackson@gmail.com).
