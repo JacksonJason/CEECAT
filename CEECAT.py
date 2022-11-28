@@ -14,497 +14,605 @@ import Common
 import Imaging_tools
 
 warnings.filterwarnings("ignore")
-
-"""
-This class produces the theoretical ghost patterns of a simple two source case. It is based on a very simple EW array layout.
-EW-layout: (0)---3---(1)---2---(2)
-
-"""
 print_lock = mp.Lock()
 
+def __init__(self):
+    pass
 
-class T_ghost:
-    """
-    This function initializes the theoretical ghost object
-    """
-
-    def __init__(self):
-        pass
-
-    def plt_circle_grid(self, grid_m):
-        rad = np.arange(1, 1 + grid_m, 1)
-        x = np.linspace(0, 1, 500)
-        y = np.linspace(0, 1, 500)
-
-        x_c = np.cos(2 * np.pi * x)
-        y_c = np.sin(2 * np.pi * y)
-        for k in range(len(rad)):
-            plt.plot(rad[k] * x_c, rad[k] * y_c, "k", ls=":", lw=0.5)
-
-    def plot_image(
-        self,
-        type_plot,
-        g_pq,
-        r_pq,
-        m_pq,
-        delta_u,
-        delta_v,
-        s_old,
-        image_s,
-        uu,
-        vv,
-        baseline,
-        kernel,
-    ):
-        if type_plot == "GT-1":
-            vis = (g_pq) ** (-1) - 1
-        elif type_plot == "G-1":
-            vis = (g_pq) - 1
-        elif type_plot == "GT":
-            vis = (g_pq) ** (-1)
-        elif type_plot == "GT_theory":
-            vis = (g_pq) ** (-1)
-        elif type_plot == "R":
-            vis = r_pq
-        elif type_plot == "M":
-            vis = m_pq
-        elif type_plot == "G":
-            vis = g_pq
-        elif type_plot == "G_theory":
-            vis = g_pq
-        elif type_plot == "GTR-R":
-            vis = (g_pq) ** (-1) * r_pq - r_pq
-        elif type_plot == "GTR":
-            vis = (g_pq) ** (-1) * r_pq
-
-        if kernel is not None:
-            vis = vis * kernel
-        vis = vis[:, ::-1]
-
-        zz = vis
-        zz = np.roll(zz, -int(zz.shape[0] / 2), axis=0)
-        zz = np.roll(zz, -int(zz.shape[0] / 2), axis=1)
-
-        zz_f = np.fft.fft2(zz) * (delta_u * delta_v)
-        zz_f = np.roll(zz_f, -int(zz.shape[0] / 2), axis=0)
-        zz_f = np.roll(zz_f, -int(zz.shape[0] / 2), axis=1)
-
-        fig, ax = plt.subplots()
-        im = ax.imshow(
-            zz_f.real,
-            cmap="gnuplot",
-            extent=[
-                -s_old * image_s,
-                s_old * image_s,
-                -s_old * image_s,
-                s_old * image_s,
-            ],
-        )
-        cb = fig.colorbar(im, ax=ax)
-        self.plt_circle_grid(image_s)
-
-        plt.xlabel("$l$ [degrees]")
-        plt.ylabel("$m$ [degrees]")
-        plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
-
-        plt.savefig(
-            "images/Figure_Real_pq"
-            + str(baseline[0])
-            + str(baseline[1])
-            + " "
-            + type_plot
-            + ".png",
-            format="png",
-            bbox_inches="tight",
-        )
-
-        plt.savefig(
-            "images/Figure_Real_pq"
-            + str(baseline[0])
-            + str(baseline[1])
-            + " "
-            + type_plot
-            + ".pdf",
-            format="pdf",
-            bbox_inches="tight",
-        )
-        plt.clf()
-        plt.cla()
+def plt_circle_grid(grid_m):
 
     """
-    resolution --- resolution in image domain in arcseconds
-    images_s --- overall extend of image in degrees
-    Phi --- geometry matrix
-    true_skymodel --- true skymodel
-    cal_skymodel --- model skymodel
-    baseline --- baseline to focus on
+    The function that adds the black circles to the image for better source recognition    
+
+    :param grid_m: The overall extend of image in degrees
+    :type grid_m: Integer
     """
+    rad = np.arange(1, 1 + grid_m, 1)
+    x = np.linspace(0, 1, 500)
+    y = np.linspace(0, 1, 500)
 
-    def extrapolation_function(
-        self,
-        baseline,
-        true_sky_model,
-        cal_sky_model,
-        Phi,
-        image_s,
-        s,
-        resolution,
-        pid,
-        b0=36,
-        f=1.45e9,
-        plot_artefact_map=False,
-        gaussian_source=False,
-    ):
-        s_old = s
-        temp = np.ones(Phi.shape, dtype=complex)
-        delta_u = 1 / (2 * s * image_s * (np.pi / 180))
-        delta_v = delta_u
-        delta_l = resolution * (1.0 / 3600.0) * (np.pi / 180.0)
-        N = int(np.ceil(1 / (delta_l * delta_u))) + 1
+    x_c = np.cos(2 * np.pi * x)
+    y_c = np.sin(2 * np.pi * y)
+    for k in range(len(rad)):
+        plt.plot(rad[k] * x_c, rad[k] * y_c, "k", ls=":", lw=0.5)
 
-        if (N % 2) == 0:
-            N = N + 1
 
-        u = np.linspace(-(N - 1) / 2 * delta_u, (N - 1) / 2 * delta_u, N)
-        v = np.linspace(-(N - 1) / 2 * delta_v, (N - 1) / 2 * delta_v, N)
-        uu, vv = np.meshgrid(u, v)
-        u_dim = uu.shape[0]
-        v_dim = uu.shape[1]
-
-        r_pq = np.zeros((u_dim, v_dim), dtype=complex)
-        g_pq = np.zeros((u_dim, v_dim), dtype=complex)
-        g_pq_t = np.zeros((u_dim, v_dim), dtype=complex)
-        g_pq_t_inv = np.zeros((u_dim, v_dim), dtype=complex)
-        m_pq = np.zeros((u_dim, v_dim), dtype=complex)
-
-        R = np.zeros(Phi.shape, dtype=complex)
-        M = np.zeros(Phi.shape, dtype=complex)
-
-        str_baseline = str(baseline[0]) + " " + str(baseline[1])
-        with tqdm(total=u_dim, desc=str_baseline, position=pid, leave=False) as pbar:
-            for i in range(u_dim):
-                pbar.update(1)
-                for j in range(v_dim):
-                    ut = u[i]
-                    vt = v[j]
-                    u_m = (Phi * ut) / (1.0 * Phi[baseline[0], baseline[1]])
-                    v_m = (Phi * vt) / (1.0 * Phi[baseline[0], baseline[1]])
-                    R = np.zeros(Phi.shape, dtype=complex)
-                    M = np.zeros(Phi.shape, dtype=complex)
-                    R, M = Common.extrapolation_loop(true_sky_model, cal_sky_model, u_m, v_m, R, M)
-                    g_stef, G = Common.create_G_stef(R, M, 200, 1e-8, temp, no_auto=False)
-
-                    if not plot_artefact_map:
-                        (
-                            g_pq_t[i, j],
-                            g_pq_t_inv[i, j],
-                        ) = CEECAT_theoretical_derivation.derive_from_theory(
-                            true_sky_model[0][3],
-                            N,
-                            Phi,
-                            baseline[0],
-                            baseline[1],
-                            true_sky_model[0][0],
-                            ut,
-                            vt,
-                        )
-
-                    r_pq[j, i] = R[baseline[0], baseline[1]]
-                    m_pq[j, i] = M[baseline[0], baseline[1]]
-                    g_pq[j, i] = G[baseline[0], baseline[1]]
-
-        lam = (1.0 * 3 * 10**8) / f
-        b_len = b0 * Phi[baseline[0], baseline[1]]
-        fwhm = 1.02 * lam / (b_len)
-        sigma_kernal = fwhm / (2 * np.sqrt(2 * np.log(2)))
-        g_kernal = (
-            2
-            * np.pi
-            * sigma_kernal**2
-            * np.exp(-2 * np.pi**2 * sigma_kernal**2 * (uu**2 + vv**2))
-        )
-
-        if plot_artefact_map:
-            if gaussian_source:
-                g_kernal = None
-            self.plot_image(
-                "GT-1",
-                g_pq,
-                r_pq,
-                m_pq,
-                delta_u,
-                delta_v,
-                s_old,
-                image_s,
-                uu,
-                vv,
-                baseline,
-                kernel=g_kernal,
-            )
-            self.plot_image(
-                "G-1",
-                g_pq,
-                r_pq,
-                m_pq,
-                delta_u,
-                delta_v,
-                s_old,
-                image_s,
-                uu,
-                vv,
-                baseline,
-                kernel=g_kernal,
-            )
-            self.plot_image(
-                "GT",
-                g_pq,
-                r_pq,
-                m_pq,
-                delta_u,
-                delta_v,
-                s_old,
-                image_s,
-                uu,
-                vv,
-                baseline,
-                kernel=g_kernal,
-            )
-            self.plot_image(
-                "GTR-R",
-                g_pq,
-                r_pq,
-                m_pq,
-                delta_u,
-                delta_v,
-                s_old,
-                image_s,
-                uu,
-                vv,
-                baseline,
-                kernel=g_kernal,
-            )
-            self.plot_image(
-                "GTR",
-                g_pq,
-                r_pq,
-                m_pq,
-                delta_u,
-                delta_v,
-                s_old,
-                image_s,
-                uu,
-                vv,
-                baseline,
-                kernel=g_kernal,
-            )
-            self.plot_image(
-                "R",
-                g_pq,
-                r_pq,
-                m_pq,
-                delta_u,
-                delta_v,
-                s_old,
-                image_s,
-                uu,
-                vv,
-                baseline,
-                kernel=g_kernal,
-            )
-            self.plot_image(
-                "M",
-                g_pq,
-                r_pq,
-                m_pq,
-                delta_u,
-                delta_v,
-                s_old,
-                image_s,
-                uu,
-                vv,
-                baseline,
-                kernel=g_kernal,
-            )
-            self.plot_image(
-                "G",
-                g_pq,
-                r_pq,
-                m_pq,
-                delta_u,
-                delta_v,
-                s_old,
-                image_s,
-                uu,
-                vv,
-                baseline,
-                kernel=g_kernal,
-            )
-
-        return (
-            r_pq,
-            g_pq,
-            g_pq_t,
-            g_pq_t_inv,
-            g_kernal,
-            sigma_kernal,
-            delta_u,
-            delta_v,
-            delta_l,
-        )
+def plot_image(
+    type_plot,
+    g_pq,
+    r_pq,
+    m_pq,
+    delta_u,
+    delta_v,
+    s_old,
+    image_s,
+    uu,
+    vv,
+    baseline,
+    kernel,
+):
 
     """
-    resolution --- resolution in image domain in arcseconds
-    images_s --- overall extend of image in degrees
-    Phi --- geometry matrix
-    true_skymodel --- true skymodel
-    cal_skymodel --- model skymodel
-    baseline --- baseline to focus on
+    The function that plots the artefact maps    
+
+    :param type_plot: The type of artefact map to output
+    :type type_plot: String
+
+    :param g_pq: The gain matrix
+    :type g_pq: A 2d numpy array
+
+    :param r_pq: The observed visibility matrix
+    :type r_pq: A 2d numpy array
+
+    :param m_pq: The predicted visibility matrix
+    :type m_pq: A 2d numpy array 
+
+    :param delta_u: The visibility delta u value
+    :type delta_u: Float
+
+    :param delta_v: The visibility delta v value
+    :type delta_v: Float
+
+    :param s_old: The old scaling size of the image
+    :type s_old: Float
+
+    :param image_s: The overall extend of image in degrees
+    :type image_s: Integer
+
+    :param uu: The meshgrid of the UV track
+    :type uu: A 2d numpy array 
+
+    :param vv: The meshgrid of the UV track
+    :type vv: A 2d numpy array 
+
+    :param baseline: The baseline that was used to calculate the visibilities
+    :type baseline: 1d numpy array
+
+    :param kernel: The kernel to apply to the sources
+    :type kernel: Float
     """
 
-    def extrapolation_function_linear(
-        self,
-        baseline,
-        true_sky_model,
-        cal_sky_model,
-        Phi,
-        vis_s,
-        resolution,
-        pid,
-        b0=36,
-        f=1.45e9,
-    ):
-        temp = np.ones(Phi.shape, dtype=complex)
+    if type_plot == "GT-1":
+        vis = (g_pq) ** (-1) - 1
+    elif type_plot == "G-1":
+        vis = (g_pq) - 1
+    elif type_plot == "GT":
+        vis = (g_pq) ** (-1)
+    elif type_plot == "GT_theory":
+        vis = (g_pq) ** (-1)
+    elif type_plot == "R":
+        vis = r_pq
+    elif type_plot == "M":
+        vis = m_pq
+    elif type_plot == "G":
+        vis = g_pq
+    elif type_plot == "G_theory":
+        vis = g_pq
+    elif type_plot == "GTR-R":
+        vis = (g_pq) ** (-1) * r_pq - r_pq
+    elif type_plot == "GTR":
+        vis = (g_pq) ** (-1) * r_pq
 
-        N = int(np.ceil(vis_s * 2 / resolution))
+    if kernel is not None:
+        vis = vis * kernel
+    vis = vis[:, ::-1]
 
-        if (N % 2) == 0:
-            N = N + 1
-        u = np.linspace(-(N - 1) / 2 * resolution, (N - 1) / 2 * resolution, N)
-        r_pq = np.zeros(u.shape, dtype=complex)
-        g_pq = np.zeros(u.shape, dtype=complex)
-        g_pq_t = np.zeros(u.shape, dtype=complex)
-        g_pq_t_inv = np.zeros(u.shape, dtype=complex)
-        m_pq = np.zeros(u.shape, dtype=complex)
+    zz = vis
+    zz = np.roll(zz, -int(zz.shape[0] / 2), axis=0)
+    zz = np.roll(zz, -int(zz.shape[0] / 2), axis=1)
 
-        R = np.zeros(Phi.shape, dtype=complex)
-        M = np.zeros(Phi.shape, dtype=complex)
+    zz_f = np.fft.fft2(zz) * (delta_u * delta_v)
+    zz_f = np.roll(zz_f, -int(zz.shape[0] / 2), axis=0)
+    zz_f = np.roll(zz_f, -int(zz.shape[0] / 2), axis=1)
 
-        str_baseline = str(baseline[0]) + " " + str(baseline[1])
-        with tqdm(total=len(u), desc=str_baseline, position=pid, leave=False) as pbar:
-            for i in range(len(u)):
-                pbar.update(1)
+    fig, ax = plt.subplots()
+    im = ax.imshow(
+        zz_f.real,
+        cmap="gnuplot",
+        extent=[
+            -s_old * image_s,
+            s_old * image_s,
+            -s_old * image_s,
+            s_old * image_s,
+        ],
+    )
+    cb = fig.colorbar(im, ax=ax)
+    plt_circle_grid(image_s)
+
+    plt.xlabel("$l$ [degrees]")
+    plt.ylabel("$m$ [degrees]")
+    plt.title("Baseline " + str(baseline[0]) + str(baseline[1]) + " --- Real")
+
+    plt.savefig(
+        "images/Figure_Real_pq"
+        + str(baseline[0])
+        + str(baseline[1])
+        + " "
+        + type_plot
+        + ".png",
+        format="png",
+        bbox_inches="tight",
+    )
+
+    plt.savefig(
+        "images/Figure_Real_pq"
+        + str(baseline[0])
+        + str(baseline[1])
+        + " "
+        + type_plot
+        + ".pdf",
+        format="pdf",
+        bbox_inches="tight",
+    )
+    plt.clf()
+    plt.cla()
+
+
+def extrapolation_function(
+    baseline,
+    true_sky_model,
+    cal_sky_model,
+    Phi,
+    image_s,
+    s,
+    resolution,
+    pid,
+    b0=36,
+    f=1.45e9,
+    plot_artefact_map=False,
+    gaussian_source=False,
+):
+
+    """
+    The main loop of the program, it calculates the visibilities and plots the artefact maps.    
+
+    :param baseline: The baseline to use in the extrapolation function
+    :type baseline: Float
+
+    :param true_sky_model: The true sky model to use the loop with
+    :type true_sky_model: A 2d numpy array
+
+    :param cal_sky_model: The calibration sky model to use the loop with
+    :type cal_sky_model: A 2d numpy array
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    
+    :param image_s: The overall extend of image in degrees
+    :type image_s: Integer   
+    
+    :param s: Scaling size of the image
+    :type s: Integer
+
+    :param resolution: The resolution of the desired image
+    :type resolution: Integer    
+
+    :param pid: The process ID of the calculation for the progress bar
+    :type pid: Integer
+
+    :param f: The frequency to use in the calculation
+    :type f: Float
+
+    :param plot_artefact_map: The boolean that controls if plotting happens or not
+    :type plot_artefact_map: boolean
+
+    :param plot_artefact_map: The boolean that controls if the kernel is added the the sources
+    :type plot_artefact_map: boolean
+
+    :returns: All of the needed information to output artefact maps
+    """
+
+    s_old = s
+    temp = np.ones(Phi.shape, dtype=complex)
+    delta_u = 1 / (2 * s * image_s * (np.pi / 180))
+    delta_v = delta_u
+    delta_l = resolution * (1.0 / 3600.0) * (np.pi / 180.0)
+    N = int(np.ceil(1 / (delta_l * delta_u))) + 1
+
+    if (N % 2) == 0:
+        N = N + 1
+
+    u = np.linspace(-(N - 1) / 2 * delta_u, (N - 1) / 2 * delta_u, N)
+    v = np.linspace(-(N - 1) / 2 * delta_v, (N - 1) / 2 * delta_v, N)
+    uu, vv = np.meshgrid(u, v)
+    u_dim = uu.shape[0]
+    v_dim = uu.shape[1]
+
+    r_pq = np.zeros((u_dim, v_dim), dtype=complex)
+    g_pq = np.zeros((u_dim, v_dim), dtype=complex)
+    g_pq_t = np.zeros((u_dim, v_dim), dtype=complex)
+    g_pq_t_inv = np.zeros((u_dim, v_dim), dtype=complex)
+    m_pq = np.zeros((u_dim, v_dim), dtype=complex)
+
+    R = np.zeros(Phi.shape, dtype=complex)
+    M = np.zeros(Phi.shape, dtype=complex)
+
+    str_baseline = str(baseline[0]) + " " + str(baseline[1])
+    with tqdm(total=u_dim, desc=str_baseline, position=pid, leave=False) as pbar:
+        for i in range(u_dim):
+            pbar.update(1)
+            for j in range(v_dim):
                 ut = u[i]
-                vt = 0
+                vt = v[j]
                 u_m = (Phi * ut) / (1.0 * Phi[baseline[0], baseline[1]])
                 v_m = (Phi * vt) / (1.0 * Phi[baseline[0], baseline[1]])
                 R = np.zeros(Phi.shape, dtype=complex)
                 M = np.zeros(Phi.shape, dtype=complex)
-                for k in range(len(true_sky_model)):
-                    s = true_sky_model[k]
-                    if len(s) <= 3:
-                        R += s[0] * np.exp(
-                            -2
-                            * np.pi
-                            * 1j
-                            * (
-                                u_m * (s[1] * np.pi / 180.0)
-                                + v_m * (s[2] * np.pi / 180.0)
-                            )
-                        )
-                    else:
-                        sigma = s[3] * (np.pi / 180)
-                        g_kernal = (
-                            2
-                            * np.pi
-                            * sigma**2
-                            * np.exp(
-                                -2 * np.pi**2 * sigma**2 * (u_m**2 + v_m**2)
-                            )
-                        )
-                        R += (
-                            s[0]
-                            * np.exp(
-                                -2
-                                * np.pi
-                                * 1j
-                                * (
-                                    u_m * (s[1] * np.pi / 180.0)
-                                    + v_m * (s[2] * np.pi / 180.0)
-                                )
-                            )
-                            * g_kernal
-                        )
-
-                for k in range(len(cal_sky_model)):
-                    s = cal_sky_model[k]
-                    if len(s) <= 3:
-                        M += s[0] * np.exp(
-                            -2
-                            * np.pi
-                            * 1j
-                            * (
-                                u_m * (s[1] * np.pi / 180.0)
-                                + v_m * (s[2] * np.pi / 180.0)
-                            )
-                        )
-                    else:
-                        sigma = s[3] * (np.pi / 180)
-                        g_kernal = (
-                            2
-                            * np.pi
-                            * sigma**2
-                            * np.exp(
-                                -2 * np.pi**2 * sigma**2 * (u_m**2 + v_m**2)
-                            )
-                        )
-                        M += (
-                            s[0]
-                            * np.exp(
-                                -2
-                                * np.pi
-                                * 1j
-                                * (
-                                    u_m * (s[1] * np.pi / 180.0)
-                                    + v_m * (s[2] * np.pi / 180.0)
-                                )
-                            )
-                            * g_kernal
-                        )
+                R, M = Common.extrapolation_loop(true_sky_model, cal_sky_model, u_m, v_m, R, M)
                 g_stef, G = Common.create_G_stef(R, M, 200, 1e-8, temp, no_auto=False)
 
-                (
-                    g_pq_t[i],
-                    g_pq_t_inv[i],
-                    B,
-                    A,
-                ) = CEECAT_theoretical_derivation.derive_from_theory_linear(
-                    true_sky_model[0][3],
-                    N,
-                    Phi,
-                    baseline[0],
-                    baseline[1],
-                    true_sky_model[0][0],
-                    ut,
-                    vt,
-                )
+                if not plot_artefact_map:
+                    (
+                        g_pq_t[i, j],
+                        g_pq_t_inv[i, j],
+                    ) = CEECAT_theoretical_derivation.derive_from_theory(
+                        true_sky_model[0][3],
+                        N,
+                        Phi,
+                        baseline[0],
+                        baseline[1],
+                        true_sky_model[0][0],
+                        ut,
+                        vt,
+                    )
 
-                r_pq[i] = R[baseline[0], baseline[1]]
-                m_pq[i] = M[baseline[0], baseline[1]]
-                g_pq[i] = G[baseline[0], baseline[1]]
-        lam = (1.0 * 3 * 10**8) / f
-        b_len = b0 * Phi[baseline[0], baseline[1]]
-        fwhm = 1.02 * lam / (b_len)
-        sigma_kernal = fwhm / (2 * np.sqrt(2 * np.log(2)))
-        g_kernal = (
-            2
-            * np.pi
-            * sigma_kernal**2
-            * np.exp(-2 * np.pi**2 * sigma_kernal**2 * (u**2))
+                r_pq[j, i] = R[baseline[0], baseline[1]]
+                m_pq[j, i] = M[baseline[0], baseline[1]]
+                g_pq[j, i] = G[baseline[0], baseline[1]]
+
+    lam = (1.0 * 3 * 10**8) / f
+    b_len = b0 * Phi[baseline[0], baseline[1]]
+    fwhm = 1.02 * lam / (b_len)
+    sigma_kernal = fwhm / (2 * np.sqrt(2 * np.log(2)))
+    g_kernal = (
+        2
+        * np.pi
+        * sigma_kernal**2
+        * np.exp(-2 * np.pi**2 * sigma_kernal**2 * (uu**2 + vv**2))
+    )
+
+    if plot_artefact_map:
+        if gaussian_source:
+            g_kernal = None
+        plot_image(
+            "GT-1",
+            g_pq,
+            r_pq,
+            m_pq,
+            delta_u,
+            delta_v,
+            s_old,
+            image_s,
+            uu,
+            vv,
+            baseline,
+            kernel=g_kernal,
         )
-        return r_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_kernal, u, B
+        plot_image(
+            "G-1",
+            g_pq,
+            r_pq,
+            m_pq,
+            delta_u,
+            delta_v,
+            s_old,
+            image_s,
+            uu,
+            vv,
+            baseline,
+            kernel=g_kernal,
+        )
+        plot_image(
+            "GT",
+            g_pq,
+            r_pq,
+            m_pq,
+            delta_u,
+            delta_v,
+            s_old,
+            image_s,
+            uu,
+            vv,
+            baseline,
+            kernel=g_kernal,
+        )
+        plot_image(
+            "GTR-R",
+            g_pq,
+            r_pq,
+            m_pq,
+            delta_u,
+            delta_v,
+            s_old,
+            image_s,
+            uu,
+            vv,
+            baseline,
+            kernel=g_kernal,
+        )
+        plot_image(
+            "GTR",
+            g_pq,
+            r_pq,
+            m_pq,
+            delta_u,
+            delta_v,
+            s_old,
+            image_s,
+            uu,
+            vv,
+            baseline,
+            kernel=g_kernal,
+        )
+        plot_image(
+            "R",
+            g_pq,
+            r_pq,
+            m_pq,
+            delta_u,
+            delta_v,
+            s_old,
+            image_s,
+            uu,
+            vv,
+            baseline,
+            kernel=g_kernal,
+        )
+        plot_image(
+            "M",
+            g_pq,
+            r_pq,
+            m_pq,
+            delta_u,
+            delta_v,
+            s_old,
+            image_s,
+            uu,
+            vv,
+            baseline,
+            kernel=g_kernal,
+        )
+        plot_image(
+            "G",
+            g_pq,
+            r_pq,
+            m_pq,
+            delta_u,
+            delta_v,
+            s_old,
+            image_s,
+            uu,
+            vv,
+            baseline,
+            kernel=g_kernal,
+        )
+
+    return (
+        r_pq,
+        g_pq,
+        g_pq_t,
+        g_pq_t_inv,
+        g_kernal,
+        sigma_kernal,
+        delta_u,
+        delta_v,
+        delta_l,
+    )
+
+
+def extrapolation_function_linear(
+    baseline,
+    true_sky_model,
+    cal_sky_model,
+    Phi,
+    vis_s,
+    resolution,
+    pid,
+    b0=36,
+    f=1.45e9,
+):
+    """
+    The main loop of the theory part of the program, it calculates the visibilities and plots the artefact maps.    
+
+    :param baseline: The baseline to use in the extrapolation function
+    :type baseline: Float
+
+    :param true_sky_model: The true sky model to use the loop with
+    :type true_sky_model: A 2d numpy array
+
+    :param cal_sky_model: The calibration sky model to use the loop with
+    :type cal_sky_model: A 2d numpy array
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    
+    :param vis_s: The overall extend of image in degrees
+    :type vis_s: Integer   
+    
+    :param s: Scaling size of the image
+    :type s: Integer
+
+    :param resolution: The resolution of the desired image
+    :type resolution: Integer    
+
+    :param pid: The process ID of the calculation for the progress bar
+    :type pid: Integer
+
+    :param f: The frequency to use in the calculation
+    :type f: Float
+    """
+
+    temp = np.ones(Phi.shape, dtype=complex)
+
+    N = int(np.ceil(vis_s * 2 / resolution))
+
+    if (N % 2) == 0:
+        N = N + 1
+    u = np.linspace(-(N - 1) / 2 * resolution, (N - 1) / 2 * resolution, N)
+    r_pq = np.zeros(u.shape, dtype=complex)
+    g_pq = np.zeros(u.shape, dtype=complex)
+    g_pq_t = np.zeros(u.shape, dtype=complex)
+    g_pq_t_inv = np.zeros(u.shape, dtype=complex)
+    m_pq = np.zeros(u.shape, dtype=complex)
+
+    R = np.zeros(Phi.shape, dtype=complex)
+    M = np.zeros(Phi.shape, dtype=complex)
+
+    str_baseline = str(baseline[0]) + " " + str(baseline[1])
+    with tqdm(total=len(u), desc=str_baseline, position=pid, leave=False) as pbar:
+        for i in range(len(u)):
+            pbar.update(1)
+            ut = u[i]
+            vt = 0
+            u_m = (Phi * ut) / (1.0 * Phi[baseline[0], baseline[1]])
+            v_m = (Phi * vt) / (1.0 * Phi[baseline[0], baseline[1]])
+            R = np.zeros(Phi.shape, dtype=complex)
+            M = np.zeros(Phi.shape, dtype=complex)
+            for k in range(len(true_sky_model)):
+                s = true_sky_model[k]
+                if len(s) <= 3:
+                    R += s[0] * np.exp(
+                        -2
+                        * np.pi
+                        * 1j
+                        * (
+                            u_m * (s[1] * np.pi / 180.0)
+                            + v_m * (s[2] * np.pi / 180.0)
+                        )
+                    )
+                else:
+                    sigma = s[3] * (np.pi / 180)
+                    g_kernal = (
+                        2
+                        * np.pi
+                        * sigma**2
+                        * np.exp(
+                            -2 * np.pi**2 * sigma**2 * (u_m**2 + v_m**2)
+                        )
+                    )
+                    R += (
+                        s[0]
+                        * np.exp(
+                            -2
+                            * np.pi
+                            * 1j
+                            * (
+                                u_m * (s[1] * np.pi / 180.0)
+                                + v_m * (s[2] * np.pi / 180.0)
+                            )
+                        )
+                        * g_kernal
+                    )
+
+            for k in range(len(cal_sky_model)):
+                s = cal_sky_model[k]
+                if len(s) <= 3:
+                    M += s[0] * np.exp(
+                        -2
+                        * np.pi
+                        * 1j
+                        * (
+                            u_m * (s[1] * np.pi / 180.0)
+                            + v_m * (s[2] * np.pi / 180.0)
+                        )
+                    )
+                else:
+                    sigma = s[3] * (np.pi / 180)
+                    g_kernal = (
+                        2
+                        * np.pi
+                        * sigma**2
+                        * np.exp(
+                            -2 * np.pi**2 * sigma**2 * (u_m**2 + v_m**2)
+                        )
+                    )
+                    M += (
+                        s[0]
+                        * np.exp(
+                            -2
+                            * np.pi
+                            * 1j
+                            * (
+                                u_m * (s[1] * np.pi / 180.0)
+                                + v_m * (s[2] * np.pi / 180.0)
+                            )
+                        )
+                        * g_kernal
+                    )
+            g_stef, G = Common.create_G_stef(R, M, 200, 1e-8, temp, no_auto=False)
+
+            (
+                g_pq_t[i],
+                g_pq_t_inv[i],
+                B,
+                A,
+            ) = CEECAT_theoretical_derivation.derive_from_theory_linear(
+                true_sky_model[0][3],
+                N,
+                Phi,
+                baseline[0],
+                baseline[1],
+                true_sky_model[0][0],
+                ut,
+                vt,
+            )
+
+            r_pq[i] = R[baseline[0], baseline[1]]
+            m_pq[i] = M[baseline[0], baseline[1]]
+            g_pq[i] = G[baseline[0], baseline[1]]
+    lam = (1.0 * 3 * 10**8) / f
+    b_len = b0 * Phi[baseline[0], baseline[1]]
+    fwhm = 1.02 * lam / (b_len)
+    sigma_kernal = fwhm / (2 * np.sqrt(2 * np.log(2)))
+    g_kernal = (
+        2
+        * np.pi
+        * sigma_kernal**2
+        * np.exp(-2 * np.pi**2 * sigma_kernal**2 * (u**2))
+    )
+    return r_pq, g_pq, g_pq_t, g_pq_t_inv, g_kernal, sigma_kernal, u, B
 
 
 def another_exp(phi, size_gauss=0.02, K1=30.0, K2=3.0, N=4):
+    """
+    The function that eliminates baselines from the calculation before it executes the main loop  
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    
+    :param size_gauss: The size of the gaussian that is used
+    :type size_gauss: Float   
+    
+    :param K1: A value used to scale the resolution
+    :type K1: Float
+
+    :param K2: A value used to scale the size of the grid
+    :type K2: Float    
+
+    :param N: The number of antennas
+    :type N: Integer
+    """
+
     s_size = size_gauss  # size of Gaussian in degrees
     r = (s_size * 3600) / (1.0 * K1)  # resolution
     siz = s_size * (K2 * 1.0)
@@ -545,6 +653,34 @@ def another_exp(phi, size_gauss=0.02, K1=30.0, K2=3.0, N=4):
 def every_baseline(
     phi, s_size=0.02, r=30.0, siz=3.0, K1=None, K2=None, N=None, vis_s=5000
 ):
+
+    """
+    The function that runs the program for all baselines and seperates out the baseline extrapolation into seperate processes.  
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    
+    :param s_size: The size of the gaussian that is used
+    :type s_size: Float   
+
+    :param r: The resolution of the grid
+    :type r: Float   
+
+    :param siz: The overall extend of image in degrees
+    :type siz: Integer  
+    
+    :param K1: A value used to scale the resolution
+    :type K1: Float
+
+    :param K2: A value used to scale the size of the grid
+    :type K2: Float    
+
+    :param N: The number of antennas
+    :type N: Integer
+
+    :param vis_s: The overall extend of image in degrees for the linear extrapolation
+    :type vis_s: Integer
+    """
 
     mp.freeze_support()
 
@@ -603,14 +739,39 @@ def every_baseline(
 def process_baseline(
     k, j, phi, siz, r, s_size, shared_array, pid, K1=None, K2=None, N=None, vis_s=5000
 ):
+    """
+    The function that processes the baselines and performs the relevent extrapolation on them
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    
+    :param s_size: The size of the gaussian that is used
+    :type s_size: Float   
+
+    :param r: The resolution of the grid
+    :type r: Float   
+
+    :param siz: The overall extend of image in degrees
+    :type siz: Integer  
+    
+    :param K1: A value used to scale the resolution
+    :type K1: Float
+
+    :param K2: A value used to scale the size of the grid
+    :type K2: Float    
+
+    :param N: The number of antennas
+    :type N: Integer
+
+    :param vis_s: The overall extend of image in degrees for the linear extrapolation
+    :type vis_s: Integer
+    """
     try:
         shared_array[pid] = True
         if j > k:
             baseline = [k, j]
             true_sky_model = np.array([[1.0, 0, 0, s_size]])
             cal_sky_model = np.array([[1, 0, 0]])
-
-            t = T_ghost()
 
             file_name = ""
             if N is not None:
@@ -641,7 +802,7 @@ def process_baseline(
                     delta_u,
                     delta_v,
                     delta_l,
-                ) = t.extrapolation_function(
+                ) = extrapolation_function(
                     baseline=baseline,
                     true_sky_model=true_sky_model,
                     cal_sky_model=cal_sky_model,
@@ -679,7 +840,7 @@ def process_baseline(
                     sigma_kernal,
                     u,
                     B,
-                ) = t.extrapolation_function_linear(
+                ) = extrapolation_function_linear(
                     baseline=baseline,
                     true_sky_model=true_sky_model,
                     cal_sky_model=cal_sky_model,
@@ -713,6 +874,12 @@ def process_baseline(
 
 
 def process_pickle_files_g(phi=np.array([])):
+    """
+    The function that extracts the relevent information out of the pickle files and plots plot the gain responses
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    """
     plt.rcParams["font.size"] = "6"
     plt.figure(figsize=(12, 6))
     counter2 = 0
@@ -810,7 +977,16 @@ def process_pickle_files_g(phi=np.array([])):
     plt.close()
     print("G complete")
 
+
 def process_pickle_files_g2_individual(phi=np.array([])):
+    """
+    The function that extracts the relevent information out of the pickle files and plots plot the observed 
+    sky distribution after having applied the gain responses
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    """
+
     vis_s = 5000
     resolution = 1
 
@@ -971,6 +1147,14 @@ def process_pickle_files_g2_individual(phi=np.array([])):
 
 
 def process_pickle_files_g2(phi=np.array([])):
+    """
+    The function that extracts the relevent information out of the pickle files and plots plot the observed 
+    sky distribution after having applied the gain responses
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    """
+
     plt.rcParams["font.size"] = "6"
     plt.figure(figsize=(12, 6))
     counter2 = 0
@@ -1195,6 +1379,22 @@ def process_pickle_files_g2(phi=np.array([])):
 
 
 def compute_division_matrix(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
+    """
+    The function that calculates the amplitude matrix and the final output division matrix
+
+    :param P: The geometry matrix
+    :type P: A 2d numpy array 
+
+    :param N: The number of baselines to use
+    :type N: Integer
+
+    :param peak_flux: The peak flux to compare with
+    :type peak_flux: Integer
+
+    :param peak_flux2: The second peak flux to compare with
+    :type peak_flux2: Integer
+    """
+
     if N == 5:
         P = np.delete(P, [1, 3, 4, 5, 6, 7, 8, 11, 12], axis=0)
         P = np.delete(P, [1, 3, 4, 5, 6, 7, 8, 11, 12], axis=1)
@@ -1335,6 +1535,17 @@ def compute_division_matrix(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
 
 
 def main_phi_plot(P=np.array([]), m=np.array([])):
+    """
+    The function that calculates the amplitude matrix and the final output division matrix
+
+    :param P: The geometry matrix
+    :type P: A 2d numpy array 
+
+    :param m: The division matrix
+    :type m: 2d numpy array
+
+    """
+
     a = np.unique(np.absolute(P)).astype(int)
 
     amp_matrix = np.zeros((len(P), len(P), 3), dtype=float)
@@ -1509,6 +1720,18 @@ def main_phi_plot(P=np.array([]), m=np.array([])):
 
 
 def include_baseline(k=0, j=1):
+    """
+    The function decides if a baseline should be included or not
+
+    :param P: The first index of the baseline
+    :type P: Integer 
+
+    :param j: The second index of the baseline
+    :type j: Integer
+
+    :returns: A boolean representing if the baseline should be included
+    """
+
     if (k == 0) and (j == 1):
         return False
     if (k == 0) and (j == 2):
@@ -1558,6 +1781,27 @@ def plt_imshow(
     vmax=-1,
     vmin=-1,
 ):
+    """
+    The function that performs the imshow for the data
+
+    :param data: The data to show
+    :type data: A 2d numpy array 
+
+    :param P: The geometry matrix
+    :type P: A 2d numpy array 
+
+    :param l: The label for the image
+    :type l: String
+
+    :param name_file: The name of the file that will be saved
+    :type name_file: String
+
+    :param vmax: The maximum extent for the image
+    :type vmax: Integer
+
+    :param vmin: The minimum extent for the image
+    :type vmin: Integer
+    """
     fig, ax = plt.subplots(figsize=(8, 6))
     if vmax == vmin:
         im = ax.imshow(data, cmap="gist_rainbow")
@@ -1612,6 +1856,19 @@ def plt_imshow(
 
 
 def get_average_response(P=np.array([]), N=14, peak_flux=100):
+    """
+    The function that calculates the average response of the array
+
+    :param P: The geometry matrix
+    :type P: A 2d numpy array 
+
+    :param N: The number of baselines to use
+    :type N: Integer
+
+    :param peak_flux: The peak flux to compare with
+    :type peak_flux: Integer
+    """
+
     if N == 5:
         P = np.delete(P, [1, 3, 4, 5, 6, 7, 8, 11, 12], axis=0)
         P = np.delete(P, [1, 3, 4, 5, 6, 7, 8, 11, 12], axis=1)
@@ -1774,13 +2031,33 @@ def get_average_response(P=np.array([]), N=14, peak_flux=100):
 def create_violin_plot(
     data=[],
     fc="green",
-    labels=["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
     yl=r"Amp. Bright. $\times B$ [Wm$^{-2}$Hz$^{-1}$sr$^{-1}$]",
     t=False,
     label="",
 ):
+    """
+    Creates a violin plot of the data
+
+    :param data: The data to plot with
+    :type data: A 2d numpy array 
+
+    :param fc: The face color for the plot
+    :type fc: String
+
+    :param yl: The y axis label
+    :type yl: String
+
+    :param t: The boolean that defines whether or not the averaging line will appear on top of the plot
+    :type t: Boolean
+
+    :param label: The label for the image
+    :type label: String
+    """
+
     fig, ax = plt.subplots(figsize=(8, 6))
     # Create a plot
+    labels=["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]
+
     parts = ax.violinplot(data, showmeans=True, showmedians=True)
 
     for partname in ("cbars", "cmins", "cmaxes", "cmeans", "cmedians"):
@@ -1810,6 +2087,18 @@ def create_violin_plot(
 
 
 def set_axis_style(ax, labels):
+    """
+    Sets the style of the axis
+
+    :param ax: The axis to set the style of
+    :type ax: An axis for a figure
+
+    :param labels: labels to use in the plot
+    :type labels: A 1d array
+
+    :returns: The modified axis
+    """
+
     ax.xaxis.set_tick_params(direction="out")
     ax.xaxis.set_ticks_position("bottom")
     ax.set_xticks(np.arange(1, len(labels) + 1))
@@ -1820,6 +2109,22 @@ def set_axis_style(ax, labels):
 
 
 def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
+    """
+    The function that gets the data for the violin plot
+
+    :param P: The geometry matrix
+    :type P: A 2d numpy array 
+
+    :param N: The number of baselines to use
+    :type N: Integer
+
+    :param peak_flux: The peak flux to compare with
+    :type peak_flux: Integer
+
+    :param peak_flux2: The second peak flux to compare with
+    :type peak_flux2: Integer
+    """
+
     if N == 5:
         P = np.delete(P, [1, 3, 4, 5, 6, 7, 8, 11, 12], axis=0)
         P = np.delete(P, [1, 3, 4, 5, 6, 7, 8, 11, 12], axis=1)
@@ -1994,6 +2299,14 @@ def plot_as_func_of_N(P=np.array([]), N=14, peak_flux=2, peak_flux2=100):
     )
 
 def image_visibilities(phi):
+    """
+    The function that performs all of the imaging tasks
+
+    :param phi: The geometry matrix
+    :type phi: A 2d numpy array 
+    """
+
+
     print("Imaging")
     resolution_bool = False
     # ^ NB --- user needs to be able to toggle this --- 
@@ -2123,7 +2436,6 @@ if __name__ == "__main__":
 
     global args
     args = parser.parse_args()
-    t = T_ghost()
 
     phi = 4 * np.array([(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9.25, 9.75, 18.25, 18.75),(-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8.25, 8.75, 17.25, 17.75), (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 7.25, 7.75, 16.25, 16.75), (-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 6.25, 6.75, 15.25, 15.75), (-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 5.25, 5.75, 14.25, 14.75),(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 4.25, 4.75, 13.25, 13.75), (-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 3.25, 3.75, 12.25, 12.75), (-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 2.25, 2.75, 11.25, 11.75),(-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 1.25, 1.75, 10.25, 10.75),(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 0.25, 0.75, 9.25, 9.75),(-9.25, -8.25, -7.25, -6.25, -5.25, -4.25, -3.25, -2.25, -1.25, -0.25, 0, 0.5, 9, 9.5),(-9.75, -8.75, -7.75, -6.75, -5.75, -4.75, -3.75, -2.75, -1.75, -0.75, -0.5, 0, 8.5, 9),(-18.25, -17.25, -16.25, -15.25, -14.25, -13.25, -12.25, -11.25, -10.25, -9.25, -9, -8.5, 0, 0.5), (-18.75, -17.75, -16.75, -15.75, -14.75, -13.75, -12.75, -11.75, -10.75, -9.75,-9.5, -9, -0.5, 0)])
 
@@ -2248,7 +2560,7 @@ if __name__ == "__main__":
         with open(args.experimentConditions, "r") as stream:
             try:
                 experiment = yaml.safe_load(stream)
-                t.extrapolation_function(
+                extrapolation_function(
                     baseline=np.array(experiment["baseline"]),
                     true_sky_model=np.array(experiment["true_sky_model"]),
                     cal_sky_model=np.array(experiment["cal_sky_model"]),

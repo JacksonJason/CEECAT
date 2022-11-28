@@ -5,6 +5,18 @@ import Common
 
 
 def include_100_baseline(p=0, q=0):
+    """
+    Decide if the baseline should be included or not.
+
+    :param p: The P part of the baseline
+    :type p: Integer
+
+    :param q: The Q part of the baseline
+    :type q: Integer
+
+    :returns: A boolean to decide if the baseline should be included or not
+    """
+
     if (p == 0) and (q == 4):
         return True
     if (p == 0) and (q == 5):
@@ -153,6 +165,15 @@ def include_100_baseline(p=0, q=0):
 
 
 def get_main_graphs(phi=np.array([])):
+    """
+    A function to output the main graphs for the artefact images
+
+    :param phi: The phi matrix
+    :type phi: Numpy 2d array
+
+    :returns: Nothing
+    """
+
     counter = 0
     vis_s = 5000
     resolution = 1
@@ -292,7 +313,29 @@ def get_main_graphs(phi=np.array([])):
     plt.cla()
     plt.close()
 
+
 def generate_uv_tracks(P=np.array([]), freq=1.45e9, b0=36, time_slots=500, d=90):
+    """
+    A function to generate the UV tracks from the inputs
+
+    :param P: The phi matrix
+    :type P: Numpy 2d array
+
+    :param freq: The frequency to use in the calculation
+    :type freq: Float
+
+    :param b0: The Baseline
+    :type b0: Integer
+
+    :param time_slots: The time slots of the observation
+    :type time_slots: Integer
+
+    :param d: Declination in degrees
+    :type d: Float
+
+    :returns: Nothing
+    """
+
     lam = 3e8 / freq  # observational wavelenth
     H = np.linspace(-6, 6, time_slots) * (np.pi / 12)  # Hour angle in radians
     delta = d * (np.pi / 180)  # Declination in radians
@@ -330,6 +373,24 @@ def create_vis_matrix(
     true_sky_model=np.array([[1, 0, 0], [0.2, 1, 0]]),
     cal_sky_model=np.array([[1, 0, 0]]),
 ):
+    """
+    Perform the calculations to get the visibility matrices
+
+    :param true_sky_model: The true sky model to use the loop with
+    :type true_sky_model: A 2d numpy array
+
+    :param cal_sky_model: The true sky model to use the loop with
+    :type cal_sky_model: A 2d numpy array
+
+    :param u_m: The U part of the UV track
+    :type u_m: A 2d numpy array
+
+    :param v_m: The V part of the UV track
+    :type v_m: A 2d numpy array
+
+    :returns: The observed and predicted visibility matrix
+    """
+
     R = np.zeros(u_m.shape, dtype=complex)
     M = np.zeros(u_m.shape, dtype=complex)
     for k in range(len(true_sky_model)):
@@ -390,6 +451,35 @@ def gridding(
     w=1,
     grid_all=True,
 ):
+    """
+    Perform the gridding algorithm
+
+    :param u_m: The U part of the UV track
+    :type u_m: A 2d numpy array
+
+    :param v_m: The V part of the UV track
+    :type v_m: A 2d numpy array
+
+    :param D: The visibilty array to use.
+    :type D: A 2d numpy array
+
+    :param image_s: The overall extend of image in degrees
+    :type image_s: Integer
+
+    :param s: Scaling size of the image
+    :type s: Integer
+
+    :param resolution: The resolution of the desired image
+    :type resolution: Integer
+
+    :param w: The value that is added to or subtracted from the index value
+    :type w: Integer
+
+    :param grid_all: The boolean that tells the function to grid everything
+    :type grid_all: Boolean
+
+    :returns: The observed and predicted visibility matrix
+    """
     delta_u = 1 / (2 * s * image_s * (np.pi / 180))
     delta_v = delta_u
 
@@ -446,6 +536,18 @@ def gridding(
 
 
 def calibrate(R=np.array([]), M=np.array([])):
+    """
+    Perform calibraion on the visibilities
+
+    :param R: The observed visibility matrix
+    :type R: A 2d numpy array
+
+    :param M: The predicted visibilities
+    :type M: A 2d numpy array
+
+    :returns: The gains of the visiblities
+    """
+
     G = np.zeros(R.shape, dtype=complex)
     g = np.zeros((R.shape[0], R.shape[2]), dtype=complex)
     temp = np.ones((R.shape[0], R.shape[1]), dtype=complex)
@@ -466,6 +568,29 @@ def extrapolation_function(
     u=0,
     v=0,
 ):
+    """
+    Perform the extrapolation loop and calibration.
+    
+    :param baseline: The baseline to use
+    :type baseline: Float
+
+    :param true_sky_model: The true sky model to use the loop with
+    :type true_sky_model: A 2d numpy array
+
+    :param cal_sky_model: The true sky model to use the loop with
+    :type cal_sky_model: A 2d numpy array
+
+    :param phi: The phi matrix
+    :type phi: Numpy 2d array
+
+    :param u: The U value of the UV tracks
+    :type u: Integer
+
+    :param v: The V value of the UV tracks
+    :type v: Integer
+
+    :returns: The gains of the extrapoloation.
+    """
     temp = np.ones(Phi.shape, dtype=complex)
     ut = u
     vt = v

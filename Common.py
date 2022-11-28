@@ -5,6 +5,17 @@ import matplotlib.colors as colors
 
 
 def magic_baseline(p=0, q=1):
+    """
+    A function to decide if the baseline should be plotted or not.
+
+    :param p: The P part of the baseline
+    :type p: Integer
+
+    :param q: The Q part of the baseline
+    :type q: Integer
+
+    :returns: A boolean to decide if the baseline should be included or not
+    """
     if (p == 0) and (q == 13):
         return True
     if (p == 7) and (q == 13):
@@ -20,6 +31,21 @@ def magic_baseline(p=0, q=1):
 
 
 def load_g_pickle(phi, k, j):
+    """
+    A function to load the pickle files the the gain observation
+
+    :param phi: The phi matrix
+    :type phi: Numpy 2d array
+
+    :param k: The k index of the phi matrix
+    :type k: Integer
+    
+    :param j: The j index of the phi matrix
+    :type j: Integer
+
+    :returns: The values needed for plotting the observation
+    """
+
     name = "data/G/g_" + str(k) + "_" + str(j) + "_" + str(phi[k, j]) + ".p"
 
     pkl_file = open(name, "rb")
@@ -36,6 +62,21 @@ def load_g_pickle(phi, k, j):
 
 
 def load_14_10_pickle(phi, k, j):
+    """
+    A function to load the pickle files the the 14 antenna observation
+
+    :param phi: The phi matrix
+    :type phi: Numpy 2d array
+
+    :param k: The k index of the phi matrix
+    :type k: Integer
+    
+    :param j: The j index of the phi matrix
+    :type j: Integer
+
+    :returns: The values needed for plotting the observation
+    """
+
     name = (
         "data/10_baseline/14_10_baseline_"
         + str(k)
@@ -81,10 +122,32 @@ def load_14_10_pickle(phi, k, j):
 
 
 def cut(inp):
+    """
+    A function to cut the input in half
+    
+    :param inp: The input to cut
+    :type inp: A 2d numpy array
+
+    :returns: The cut input
+    """
     return inp.real[int(inp.shape[0] / 2), :]
 
 
 def img(inp, delta_u, delta_v):
+    """
+    This function does the FFT transformations on the visibility plane
+    
+    :param inp: The input to transform
+    :type inp: A 2d numpy array
+
+    :param delta_u: The visibility delta u value
+    :type delta_u: Float
+
+    :param delta_v: The visibility delta v value
+    :type delta_v: Float
+
+    :returns: The Fourier transformed image
+    """
     zz = inp
     zz = np.roll(zz, -int(zz.shape[0] / 2), axis=0)
     zz = np.roll(zz, -int(zz.shape[0] / 2), axis=1)
@@ -96,6 +159,32 @@ def img(inp, delta_u, delta_v):
 
 
 def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
+    """
+    This function does the FFT transformations on the visibility plane and plots the image
+    
+    :param image: The input to transform
+    :type image: A 2d numpy array
+
+    :param psf: The point spread function
+    :type psf: A 2d numpy array
+
+    :param l_cor: The array to center the image correctly
+    :type l_cor: A 1d numpy array
+
+    :param delta_u: The visibility delta u value
+    :type delta_u: Float
+
+    :param sigma: The sigma value to add to the output image
+    :type sigma: Float
+
+    :param name: The name that the output image will have
+    :type name: String
+
+    :param add_circle: To set that the output images have the required circles on them
+    :type add_circle: Boolean
+
+    :returns: The Fourier transformed image
+    """
     sigma = sigma * (np.pi / 180)
     zz_psf = psf
     zz_psf = np.roll(zz_psf, -int(zz_psf.shape[0] / 2), axis=0)
@@ -179,13 +268,29 @@ def image(image, psf, l_cor, delta_u, sigma, name, add_circle=False):
 
 
 def create_G_stef(R, M, imax, tau, temp, no_auto):
-    """This function finds argmin G ||R-GMG^H|| using StEFCal.
-    R is your observed visibilities matrx.
-    M is your predicted visibilities.
-    imax maximum amount of iterations.
-    tau stopping criteria.
-    g the antenna gains.
-    G = gg^H."""
+    """
+    This function finds argmin G ||R-GMG^H|| using StEFCal.
+
+    :param R: The observed visibility matrix
+    :type R: A 2d numpy array
+
+    :param M: The predicted visibilities
+    :type M: A 2d numpy array
+
+    :param imax: The maximum amount of iterations
+    :type imax: Integer
+
+    :param tau: The stopping criteria
+    :type tau: Integer
+
+    :param no_auto: Whether or not to perform auto correlletion 
+    :type no_auto: Boolean
+
+    :param temp: The temporary array to store calculations
+    :type temp: A 2d numpy array
+
+    :returns: The antenna gains
+    """
     N = R.shape[0]
     g_temp = np.ones((N,), dtype=complex)
     if no_auto:
@@ -217,11 +322,49 @@ def create_G_stef(R, M, imax, tau, temp, no_auto):
 
 
 def extrapolation_calculation(s, u_m, v_m):
+    """
+    Perform the extrapolation calculation on the input.
+
+    :param s: The value from the sky model
+    :type s: Float
+
+    :param u_m: The U part of the UV track
+    :type u_m: A 2d numpy array
+
+    :param v_m: The V part of the UV track
+    :type v_m: A 2d numpy array
+
+    :returns: The output of the extrapolation calculation
+    """
     return s[0] * np.exp(
         -2 * np.pi * 1j * (u_m * (s[1] * np.pi / 180.0) + v_m * (s[2] * np.pi / 180.0))
     )
 
 def extrapolation_loop(true_sky_model, cal_sky_model, u_m, v_m, R, M):
+    """
+    Perform the extrapolation loop.
+
+    :param true_sky_model: The true sky model to use the loop with
+    :type true_sky_model: A 2d numpy array
+
+    :param cal_sky_model: The calibration sky model to use the loop with
+    :type cal_sky_model: A 2d numpy array
+
+    :param u_m: The U part of the UV track
+    :type u_m: A 2d numpy array
+
+    :param v_m: The V part of the UV track
+    :type v_m: A 2d numpy array
+
+    :param R: The observed visibility matrix
+    :type R: A 2d numpy array
+
+    :param M: The predicted visibilities
+    :type M: A 2d numpy array
+
+    :returns: The output of the extrapolation loop, the observed and predicted visibility matrix
+    """
+
     for k in range(len(true_sky_model)):
         s = true_sky_model[k]
         if len(s) <= 3:
@@ -242,6 +385,21 @@ def extrapolation_loop(true_sky_model, cal_sky_model, u_m, v_m, R, M):
     return R, M
 
 def g_kernel_calculation(sigma, u_m, v_m):
+    """
+    Calculate the Kernel to apply to the images.
+
+    :param sigma: The sigma value to use in the kernel calculation
+    :type sigma: Float
+
+    :param u_m: The U part of the UV track
+    :type u_m: A 2d numpy array
+
+    :param v_m: The V part of the UV track
+    :type v_m: A 2d numpy array
+
+    :returns: The output of the extrapolation loop, the observed and predicted visibility matrix
+    """
+
     return (
         2
         * np.pi
